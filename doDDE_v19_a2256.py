@@ -1327,19 +1327,19 @@ for source in do_sources:
    output_template_im = 'templatemask_' + source
 	   
 
-   #if len(mslist) > 22:
-     #runbbs_diffskymodel_addback16(mslist, 'instrument_ap_smoothed', True, directions[source_id],imsizes[source_id],output_template_im, do_ap)
-   #else:
-     #runbbs_diffskymodel_addback(mslist, 'instrument_ap_smoothed', True, directions[source_id],imsizes[source_id],output_template_im, do_ap)
+   if len(mslist) > 22:
+     runbbs_diffskymodel_addback16(mslist, 'instrument_ap_smoothed', True, directions[source_id],imsizes[source_id],output_template_im, do_ap)
+   else:
+     runbbs_diffskymodel_addback(mslist, 'instrument_ap_smoothed', True, directions[source_id],imsizes[source_id],output_template_im, do_ap)
 
-   ## average and phaseshift with NDPPP
-   #for ms_id, ms in enumerate(mslist):
-     #parset = create_phaseshift_parset(ms, msavglist[ms_id], source, directions[source_id],\
-              #imsizes[source_id], dynamicrange[source_id])
-     #os.system('NDPPP ' + parset)
+   # average and phaseshift with NDPPP
+   for ms_id, ms in enumerate(mslist):
+     parset = create_phaseshift_parset(ms, msavglist[ms_id], source, directions[source_id],\
+              imsizes[source_id], dynamicrange[source_id])
+     os.system('NDPPP ' + parset)
 
 
-   #### PHASESHIFT the FULL resolution dataset, for MODEL_DATA FFT subtract
+   ### PHASESHIFT the FULL resolution dataset, for MODEL_DATA FFT subtract
    if outliersource[source_id] == 'False':
      parset = create_phaseshift_parset_full('allbands.concat.ms', 'allbands.concat.shifted.ms', directions[source_id],'DATA')
      os.system('NDPPP ' + parset + '&') # run in background
@@ -1353,20 +1353,20 @@ for source in do_sources:
 
 
 
-   #logging.info('Start selfcal DDE patch: '+ source)
-   #logging.info('Solint CommonScalarPhase: '+ str(cellsizetime_p[source_id]))
-   #logging.info('Solint A&P: '+ str(cellsizetime_a[source_id]))
-   #logging.info('Region file: '+ str(regionselfc[source_id]))   
+   logging.info('Start selfcal DDE patch: '+ source)
+   logging.info('Solint CommonScalarPhase: '+ str(cellsizetime_p[source_id]))
+   logging.info('Solint A&P: '+ str(cellsizetime_a[source_id]))
+   logging.info('Region file: '+ str(regionselfc[source_id]))   
 
    #os.system('python ' + SCRIPTPATH + '/selfcalv19.py ' + inputmslist + ' ' + source + ' ' + atrous_do[source_id] + ' ' + str(imsizes[source_id]) + ' ' + \
-                #str(nterms) + ' ' + str(cellsizetime_a[source_id]) + ' ' + str(cellsizetime_p[source_id]) + ' ' + TEC + ' ' + clock + ' ' + \
-   	        #str(dynamicrange[source_id]) + ' ' + regionselfc[source_id] + ' ' + str(uvrange) + ' ' + str(peelskymodel[source_id]) + ' ' +\
-   		#str(cellsize))
+   #             str(nterms) + ' ' + str(cellsizetime_a[source_id]) + ' ' + str(cellsizetime_p[source_id]) + ' ' + TEC + ' ' + clock + ' ' + \
+   #	        str(dynamicrange[source_id]) + ' ' + regionselfc[source_id] + ' ' + str(uvrange) + ' ' + str(peelskymodel[source_id]) + ' ' +\
+   #		str(cellsize))
    
    
-   #os.system('python '+SCRIPTPATH+'/selfcalv19_ww_cep3.py ' + inputmslist + ' ' + source + ' ' + atrous_do[source_id] + ' ' + str(imsizes[source_id]) + ' ' + \
-   #                 str(nterms) + ' ' + str(cellsizetime_a[source_id]) + ' ' + str(cellsizetime_p[source_id]) + ' ' + TEC + ' ' + clock + ' ' + \
-   #                 str(dynamicrange[source_id]) + ' ' + regionselfc[source_id])
+   os.system('python '+SCRIPTPATH+'/selfcalv19_ww_cep3.py ' + inputmslist + ' ' + source + ' ' + atrous_do[source_id] + ' ' + str(imsizes[source_id]) + ' ' + \
+                    str(nterms) + ' ' + str(cellsizetime_a[source_id]) + ' ' + str(cellsizetime_p[source_id]) + ' ' + TEC + ' ' + clock + ' ' + \
+                    str(dynamicrange[source_id]) + ' ' + regionselfc[source_id])
    
    
    
@@ -1377,77 +1377,77 @@ for source in do_sources:
      parmdb_selfcal     = msavglist[ms_id]+"/"+"instrument_merged"
      parmdb_master_out  = ms+"/"+"instrument_master_" + source
      parmdb_template    = msavglist[ms_id]+"/"+"instrument_template"   
-     #join_parmdb(ms, parmdb_selfcal,parmdb_template, parmdb_master_out)
+     join_parmdb(ms, parmdb_selfcal,parmdb_template, parmdb_master_out)
      parmdb_master_out  = "instrument_master_" + source   # reset because runbbs uses basename of ms
 
 
    # maybe there are some issues with the frequency boundaries if you solve on averaged data
-   #for ms_id, ms in enumerate(mslist): 
-     #parmdb_master_outtmp  = ms+"/"+"instrument_master_" + source
-     #os.system("taql 'update " + parmdb_master_outtmp + " set ENDX=1.e12'")
-     #os.system("taql 'update " + parmdb_master_outtmp + " set STARTX=1.0'")
+   for ms_id, ms in enumerate(mslist): 
+     parmdb_master_outtmp  = ms+"/"+"instrument_master_" + source
+     os.system("taql 'update " + parmdb_master_outtmp + " set ENDX=1.e12'")
+     os.system("taql 'update " + parmdb_master_outtmp + " set STARTX=1.0'")
 
-   #if outliersource[source_id] == 'False':
-     ## normalize the solutions to 1.0, for outlier sources do not(!) normalize 
-     ## this is a global normalization (one --single-- factor for all SB combined)
-     #nvalue = normalize_parmdbs(mslist,parmdb_master_out, parmdb_master_out+'_norm')
-     #logging.info('Normalized amps to 1.0, found mean amplitude value of ' + str(nvalue))
+   if outliersource[source_id] == 'False':
+     # normalize the solutions to 1.0, for outlier sources do not(!) normalize 
+     # this is a global normalization (one --single-- factor for all SB combined)
+     nvalue = normalize_parmdbs(mslist,parmdb_master_out, parmdb_master_out+'_norm')
+     logging.info('Normalized amps to 1.0, found mean amplitude value of ' + str(nvalue))
      
-   ## plot the solutions
-   #for ms in mslist:
-      #parmdb_master_plot  = ms+"/"+"instrument_master_" + source
-      #plotim_base         = ms.split('.')[0] + "_instrument_master_" + source
-      #os.system(SCRIPTPATH + '/plot_solutions_all_stations_v2.py \
-                 #-s -a -p --freq 150 ' + parmdb_master_plot + ' ' + plotim_base +'&')
+   # plot the solutions
+   for ms in mslist:
+      parmdb_master_plot  = ms+"/"+"instrument_master_" + source
+      plotim_base         = ms.split('.')[0] + "_instrument_master_" + source
+      os.system(SCRIPTPATH + '/plot_solutions_all_stations_v2.py \
+                 -s -a -p --freq 150 ' + parmdb_master_plot + ' ' + plotim_base +'&')
 
 
-   #print 'Updated frequency boundaries parmdb and normalized amps to 1.0'
-   #time.sleep(5)
+   print 'Updated frequency boundaries parmdb and normalized amps to 1.0'
+   time.sleep(5)
    # make new mslist for field averaged data
    msavglist = []
    for ms_id, ms in enumerate(mslist):
      msavglist.append(ms.split('.')[0] + '.' + source + '.ms.avgfield')
 
 
-   ########## check if all plot_solutions_all_stations_v2.py processes is finished
-   #cmd = "ps -f -u " + username + " | grep plot_solutions_all_stations_v2.py | grep -v grep |wc -l"
-   #output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])  
-   #while output > 0 : # "grep -v grep" to prevent counting the grep command
-     #time.sleep(2)
-     #output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
-   ##########
+   ######### check if all plot_solutions_all_stations_v2.py processes is finished
+   cmd = "ps -f -u " + username + " | grep plot_solutions_all_stations_v2.py | grep -v grep |wc -l"
+   output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])  
+   while output > 0 : # "grep -v grep" to prevent counting the grep command
+     time.sleep(2)
+     output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
+   #########
 
 
    if outliersource[source_id] == 'False':
-      #runbbs_diffskymodel_addbackfield(mslist, 'instrument_ap_smoothed', True,  directions[source_id],imsizes[source_id], output_template_im, do_ap)
-      #logging.info('Adding back rest of the field for DDE facet ' + source)
+      runbbs_diffskymodel_addbackfield(mslist, 'instrument_ap_smoothed', True,  directions[source_id],imsizes[source_id], output_template_im, do_ap)
+      logging.info('Adding back rest of the field for DDE facet ' + source)
    
-      #runbbs(mslist, skymodel, SCRIPTPATH + '/correctfield2.parset',parmdb_master_out+'_norm', False) 
+      runbbs(mslist, skymodel, SCRIPTPATH + '/correctfield2.parset',parmdb_master_out+'_norm', False) 
 
-      ############################################################################  
-      ## NDPPP phase shift, less averaging (NEW: run 2 in parallel)
-      #for ms_id, ms in enumerate(mslist):
-	#parset = create_phaseshift_parset_field(ms, msavglist[ms_id], source, directions[source_id])
+      ###########################################################################  
+      # NDPPP phase shift, less averaging (NEW: run 2 in parallel)
+      for ms_id, ms in enumerate(mslist):
+	parset = create_phaseshift_parset_field(ms, msavglist[ms_id], source, directions[source_id])
 	
-	#cmd = "ps -u " + username + " | grep NDPPP | wc -l"
-	#output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
+	cmd = "ps -u " + username + " | grep NDPPP | wc -l"
+	output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
 	
-	#while output > 1 : # max 2 processes (max 2, instead of 3, because we also phaseshift) 
-	  #time.sleep(10)
-	  #output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
-	  #pid = (Popen('pidof NDPPP', shell=True, stdout=PIPE).communicate()[0])    
-	  #pid_list = pid.split(' ')
-	## START NDPPP BECAUSE LESS/EQ 2 PROCESSES ARE RUNNING	
-	#os.system('NDPPP ' + parset + '&')
+	while output > 1 : # max 2 processes (max 2, instead of 3, because we also phaseshift) 
+	  time.sleep(10)
+	  output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
+	  pid = (Popen('pidof NDPPP', shell=True, stdout=PIPE).communicate()[0])    
+	  pid_list = pid.split(' ')
+	# START NDPPP BECAUSE LESS/EQ 2 PROCESSES ARE RUNNING	
+	os.system('NDPPP ' + parset + '&')
 
-      ## Check if all NDPPP processes are finished
-      #output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0]) 
-      #while output > 0 :
-	  #time.sleep(10)
-	  #output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
-	  #pid = (Popen('pidof NDPPP', shell=True, stdout=PIPE).communicate()[0])    
-	  #pid_list = pid.split(' ')
-      ############################################################################  
+      # Check if all NDPPP processes are finished
+      output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0]) 
+      while output > 0 :
+	  time.sleep(10)
+	  output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
+	  pid = (Popen('pidof NDPPP', shell=True, stdout=PIPE).communicate()[0])    
+	  pid_list = pid.split(' ')
+      ###########################################################################  
 
      
      
