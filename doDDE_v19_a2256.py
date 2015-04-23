@@ -3,7 +3,6 @@ import matplotlib
 import numpy
 import os
 import sys
-import lofar.parmdb
 from scipy import interpolate
 import time
 #import subprocess
@@ -673,6 +672,7 @@ def create_subtract_parset_field(outputcolumn):
 
 
 def join_parmdb(ms, parmdb_selfcal,parmdb_template, parmdb_out):
+  import lofar.parmdb
   pdb_s = lofar.parmdb.parmdb(parmdb_selfcal)
   pdb_t = lofar.parmdb.parmdb(parmdb_template)
  
@@ -715,8 +715,9 @@ def join_parmdb(ms, parmdb_selfcal,parmdb_template, parmdb_out):
    
 def normalize_parmdbs(mslist, parmdbname, parmdboutname):
  
+  import lofar.parmdb
   amplist = []
-  
+
   # create antenna list
   pol_list        = ['0:0','1:1']
   gain            = 'Gain'
