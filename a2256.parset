@@ -1,0 +1,29 @@
+
+
+username = pwd.getpwuid(os.getuid())[0]
+
+## USER INPUT ##
+SCRIPTPATH      =  '/home/'+username+'/scripts/a2256_hba/'
+
+buildmytasks    =  '/home/rvweeren/software/casapy/casapy-42.2.30986-1-64b/buildmytasks'
+os.system('cp /home/'+username+'/scripts/a2256_hba/*.rgn .')
+peelsourceinfo  =  '/home/'+username+'/scripts/a2256_hba/peel_source_info_a2256.txt'
+wsclean         =  '/home/rvweeren/software/WSClean/wsclean-1.7/build/wsclean'
+
+
+BANDS = range(200,209,10)
+NAME = "A2256"
+RES = "2ch10s"
+
+do_sources=['s1']
+
+nterms      = 1      # automatically adjusted if needed
+cellsize    = 1.5
+TEC         = "True" # automatically set to False if needed
+clock       = "False" # gives problems with phase continuity automatically set to False if needed
+makemasks   = False
+do_ap       = False # add back, correct with instrument_ap_smoothed
+uvrange     = 5.0 # wavelength
+
+
+
