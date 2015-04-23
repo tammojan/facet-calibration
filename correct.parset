@@ -1,0 +1,28 @@
+Strategy.InputColumn = DATA
+Strategy.ChunkSize   = 500 
+Strategy.UseSolver   = F
+Strategy.Steps       = [correct, copy]
+
+Step.correct.Model.Sources                 = []
+Step.correct.Model.CommonScalarPhase.Enable= F
+Step.correct.Model.Cache.Enable            = T    
+Step.correct.Model.DirectionalGain.Enable  = F 
+Step.correct.Model.Gain.Enable             = T
+Step.correct.Model.Phasors.Enable          = F 
+Step.correct.Operation                     = CORRECT
+Step.correct.Output.Column                 = CORRECTED_DATA
+Step.correct.Model.Beam.Enable             = F 
+Step.correct.Output.WriteCovariance        = F 
+
+Step.copy.Model.Sources                 = []
+Step.copy.Model.CommonScalarPhase.Enable= F
+Step.copy.Model.Cache.Enable            = T
+Step.copy.Model.DirectionalGain.Enable  = F
+Step.copy.Model.Gain.Enable             = F
+Step.copy.Model.Phasors.Enable          = F
+Step.copy.Operation                     = CORRECT
+Step.copy.Output.Column                 = MODEL_DATA
+Step.copy.Model.Beam.Enable             = F
+Step.copy.Output.WriteCovariance        = F
+
+

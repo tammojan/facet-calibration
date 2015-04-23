@@ -1,0 +1,8 @@
+# (Name, Type, Patch, Ra, Dec, I, Q, U, V, ReferenceFrequency='74e6', SpectralIndex='[]', MajorAxis, MinorAxis, Orientation) = format
+
+# The above line defines the field order and is required.
+
+, , dummy, 19:59:26, +40.44.00
+dummy_1, POINT,    dummy, 19:00:00.00, +40.00.00.00, 1e+00, 0.0, 0.0, 0.0, 74.0e6,  [0.0]
+
+

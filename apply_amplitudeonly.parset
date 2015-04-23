@@ -1,0 +1,18 @@
+Strategy.InputColumn = CORRECTED_DATA_PHASE
+Strategy.ChunkSize   = 12000 # read all data to prevent flagging, some stefcal issue
+Strategy.UseSolver   = F
+Strategy.Steps       = [correct]
+
+
+Step.correct.Model.CommonScalarPhase.Enable= F
+Step.correct.Model.Cache.Enable            = T    
+Step.correct.Model.DirectionalGain.Enable  = F 
+Step.correct.Model.Gain.Enable             = T
+Step.correct.Model.Phasors.Enable          = F
+Step.correct.Operation                     = CORRECT
+Step.correct.Output.Column                 = CORRECTED_DATA
+Step.correct.Model.Beam.Enable             = F 
+Step.correct.Output.WriteCovariance        = F 
+
+
+
