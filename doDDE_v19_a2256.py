@@ -1321,6 +1321,7 @@ for source in do_sources:
    for ms_id, ms in enumerate(mslist):
      parset = create_phaseshift_parset(ms, msavglist[ms_id], source, directions[source_id],\
               imsizes[source_id], dynamicrange[source_id])
+     os.system('rm -rf ' + msavglist[ms_id])
      os.system('NDPPP ' + parset)
 
 
@@ -1425,6 +1426,7 @@ for source in do_sources:
 	  pid = (Popen('pidof NDPPP', shell=True, stdout=PIPE).communicate()[0])    
 	  pid_list = pid.split(' ')
 	# START NDPPP BECAUSE LESS/EQ 2 PROCESSES ARE RUNNING	
+	os.system('rm -rf ' + msavglist[ms_id])
 	os.system('NDPPP ' + parset + '&')
 
       # Check if all NDPPP processes are finished
