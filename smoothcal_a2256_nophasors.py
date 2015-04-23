@@ -2,9 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
-import pyrap.tables as pt
 import os
-import lofar.parmdb
 import numpy as numpy
 import math
 #import lofar.expion.parmdbmain
@@ -109,15 +107,18 @@ output_phasezero = True  # if True the phases will be set to zero (for amplitude
              # if False the phases will be left untouched
 #######################################
 
+import pyrap.tables as pt
+anttab     = pt.table(msname + '/ANTENNA')
+antenna_list    = anttab.getcol('NAME')
+anttab.close()
+
+import lofar.parmdb
 pdb = lofar.parmdb.parmdb(instrument_name)
 parms = pdb.getValuesGrid('*')
 
 key_names = parms.keys()
 print key_names
 
-anttab     = pt.table(msname + '/ANTENNA')
-antenna_list    = anttab.getcol('NAME')
-anttab.close()
 
 print 'Stations available:', antenna_list
 window = 4

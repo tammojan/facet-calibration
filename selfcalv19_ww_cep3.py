@@ -3,7 +3,6 @@ matplotlib.use('GTK')
 import numpy
 import os
 import sys
-import lofar.parmdb
 from scipy import interpolate
 import time
 from subprocess import Popen, PIPE, STDOUT
@@ -28,6 +27,7 @@ SCRIPTPATH = os.path.dirname(sys.argv[0])
 
 def create_merged_parmdb_spline(parmdb_a,parmdb_p, parmdb_t, parmdb_out,cellsizetime_a, cellsizetime_b):
 
+    import lofar.parmdb
 
     pdb_a = lofar.parmdb.parmdb(parmdb_a)
     pdb_p = lofar.parmdb.parmdb(parmdb_p)
@@ -89,6 +89,7 @@ def create_merged_parmdb_spline(parmdb_a,parmdb_p, parmdb_t, parmdb_out,cellsize
 
 def create_merged_parmdb(ms, parmdb_a,parmdb_p, parmdb_t, parmdb_out,cellsizetime_a, cellsizetime_b):
 
+    import lofar.parmdb
     #pdb_pre = lofar.parmdb.parmdb(pre_apply_parmdb)
     pdb_a   = lofar.parmdb.parmdb(parmdb_a)
     pdb_p   = lofar.parmdb.parmdb(parmdb_p)
