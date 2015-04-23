@@ -229,9 +229,6 @@ def runbbs_diffskymodel_addback(mslist, parmdb, replacesource, direction, imsize
       os.system(cmd)
       time.sleep(10)  # otherwise add.parset is deleted (takes time for BBS to start up)
    else:
-      if do_ap:
-	print 'do_ap not supported'
-	sys.exit()
       print 'No source to add back, are you sure the DDE position is correct?'
       os.system("taql 'update " + ms + " set ADDED_DATA_SOURCE=SUBTRACTED_DATA_ALL'")
       
@@ -1305,6 +1302,8 @@ for source in do_sources:
      parset = create_phaseshift_parset_full('allbands.concat.ms', 'allbands.concat.shifted.ms', directions[source_id],'DATA')
      os.system('NDPPP ' + parset + '&') # run in background
 
+   if do_ap:
+    runbbs_2(msavglist, mslist, dummyskymodel ,SCRIPTPATH+'/correct.parset','instrument_ap_smoothed')
 
    # do the selfcal loop
    # make string ms list for input selfcal 
