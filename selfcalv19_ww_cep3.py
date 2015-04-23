@@ -392,10 +392,10 @@ def runbbs(mslist, skymodel, parset, parmdb, applycal, TEC):
         for ms in mslist:
             log      =  ms + '.bbslog'
             if applycal:
-                cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + '&'
+                cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '&>' + log + '&'
                 #cmd = 'calibrate-stand-alone -t 4 --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + '&'
             else:
-                cmd = 'calibrate-stand-alone -f --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + '&'
+                cmd = 'calibrate-stand-alone -f --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '&>' + log + '&'
                 #cmd = 'calibrate-stand-alone -t 4 -f --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + '&'
             print cmd
             os.system(cmd)
@@ -405,9 +405,9 @@ def runbbs(mslist, skymodel, parset, parmdb, applycal, TEC):
         while(done < len(mslist)):
             done = 0
             for ms in mslist:
-                cmd = "grep 'INFO - bbs-reducer terminated successfully.' " + ms + ".bbslog"
+                cmd = "grep 'bbs-reducer terminated successfully.' " + ms + ".bbslog"
                 output=Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
-                if output[0:4] == 'INFO':
+                if 'INFO' in output:
                     done = done + 1
                     print ms, 'is done'
             time.sleep(5)
