@@ -208,7 +208,7 @@ def runbbs_diffskymodel_addback(mslist, parmdb, replacesource, direction, imsize
    log      =  ms + '.bbslog'
    
    #set skymodel # ~weeren does not work in numpy.load 
-   skymodel =  '/home/'+username+'/scripts/a2256_hba/' + ms.split('.')[0] + '.skymodel'
+   skymodel =  SKYMODELPATH + ms.split('.')[0] + '.skymodel'
    
    # find sources to add back, make parset
    
@@ -258,7 +258,7 @@ def runbbs_diffskymodel_addback16(mslist, parmdb, replacesource, direction, imsi
    log      =  ms + '.bbslog'
    
    #set skymodel # ~weeren does not work in numpy.load 
-   #skymodel =  '/home/'+username+'/scripts/a2256_hba/' + ms.split('.')[0] + '.skymodel'
+   #skymodel =  SKYMODELPATH + ms.split('.')[0] + '.skymodel'
    skymodel = ms.split('.')[0] + '.skymodel'
    
    
@@ -304,7 +304,7 @@ def runbbs_diffskymodel_addback16(mslist, parmdb, replacesource, direction, imsi
    log      =  ms + '.bbslog'
    
    #set skymodel # ~weeren does not work in numpy.load 
-   skymodel =  '/home/'+username+'/scripts/a2256_hba/' + ms.split('.')[0] + '.skymodel'
+   skymodel =  SKYMODELPATH + ms.split('.')[0] + '.skymodel'
    
    # find sources to add back, make parset
    #callist, callistarraysources = cal_return_slist(output_template_im +'.masktmp',skymodel, direction, imsize)
@@ -351,7 +351,7 @@ def runbbs_diffskymodel_addbackfield(mslist, parmdb, replacesource, direction, i
    log      =  ms + '.bbslog'
    
    #set skymodel
-   skymodel =  '/home/'+username+'/scripts/a2256_hba/' + ms.split('.')[0] + '.skymodel'
+   skymodel =  SKYMODELPATH + ms.split('.')[0] + '.skymodel'
    
    # find peeling sources (from previous step)
    #callist, callistarraysources = cal_return_slist(output_template_im +'.masktmp',skymodel, direction, imsize)
