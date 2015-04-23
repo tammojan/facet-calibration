@@ -325,7 +325,7 @@ def runbbs(mslist, skymodel, parset, parmdb, applycal, TEC):
         # allow user settings in home directory to over-ride either
       
         cdparset='/home/'+username+'/pgsql-setup.py'
-        if os.isfile(cdparset):
+        if os.path.isfile(cdparset):
             print 'Getting pgsql setup from',cdparset
             execfile(cdparset)
         elif 'para' in os.uname()[1]:
