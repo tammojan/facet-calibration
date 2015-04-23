@@ -1,0 +1,68 @@
+s1 17h30m16.600,+79d49m04.00 False False 800 1 20 5600 HD empty empty empty False
+s2 16h57m53.400,+79d27m52.00 False False 512 1 30 5600 HD empty s2field.rgn empty False
+s3 16h48m39.700,+75d46m11.00 False False 512 1 60 5600 LD s3.rgn empty empty False
+s4 16h02m17.700,+80d15m42.00 False False 512 2 60 5600 LD s4.rgn empty empty False
+s5 16h51m34.700,+78d28m44.00 False False 512 2 60 5600 LD s5.rgn s5.rgn empty False
+s6 16h55m17.000,+77d58m27.00 False False 512 1 60 5600 LD empty empty empty False
+s7 17h05m23.900,+77d56m02.00 False True 512 1 60 5600 LD empty s7field.rgn empty False
+s8 17h08m11.400,+80d06m42.00 False False 512 1 60 5600 LD empty empty empty False
+s9 17h26m19.000,+77d26m56.00 False False 800 1 60 5600 LD empty empty empty False
+s10 16h09m27.600,+79d39m33.00 False False 512 1 60 5600 LD empty empty empty False
+s11 17h25m15.000,+79d07m00.00 False True 800 1 60 5600 LD empty s11field.rgn empty False
+s12 17h43m39.200,+80d04m10.00 False False 512 1 90 5600 LD empty empty empty False
+s13 17h50m46.100,+79d09m45.00 False False 800 2 120 5600 LD empty empty empty False
+s14 18h00m40.100,+78d28m04.00 False False 512 2 120 5600 LD empty empty empty False
+s15 17h33m04.600,+77d58m18.00 False False 512 2 120 5600 LD empty empty empty False
+s16 17h30m33.000,+78d47m49.00 False False 512 2 120 5600 LD empty empty empty False
+s17 17h24m00.200,+78d48m07.00 False False 800 2 120 5600 LD empty empty empty False
+s18 17h24m04.200,+78d22m17.00 False False 1024 2 120 5600 LD empty empty empty False
+s19 17h16m40.000,+78d46m28.00 False False 1200 2 120 5600 LD empty empty empty False
+s20 16h51m22.000,+78d52m10.00 False False 1024 2 120 5600 LD empty empty empty False
+s21 16h14m36.000,+79d13m19.00 False False 1200 2 120 5600 LD empty empty empty False
+s22 17h01m46.800,+76d52m23.00 False False 1024 2 120 5600 LD empty empty empty False
+# update s22
+s23 17h25m30.000,+77d08m02.00 False False 800 2 120 5600 LD empty empty empty False
+s24 16h43m21.900,+78d00m24.00 False False 1024 2 120 5600 LD empty empty empty False
+s25 16h57m28.200,+78d07m10.00 False False 512 2 120 5600 LD empty empty empty False
+s26 17h06m04.700,+77d06m38.00 True True 1600 2 120 5600 LD s26.rgn s26.rgn empty False
+# update s26
+s27 17h14m17.200,+76d12m39.00 False False 512 2 120 5600 LD empty empty empty False
+s28 17h22m03.800,+77d55m17.00 False False 1024 2 120 5600 LD empty empty empty False
+s29 17h12m03.700,+77d45m49.00 False False 512 2 120 5600 LD empty empty empty False
+s30 17h31m18.600,+79d10m43.00 False False 1024 2 180 5600 LD empty empty empty False
+# update s30
+s31 17h24m03.000,+80d10m02.00 False False 800 2 120 5600 LD empty empty empty False
+s32 17h01m47.600,+80d33m32.00 False False 1024 2 120 5600 LD empty empty empty False
+# update pos 32
+s33 16h47m02.900,+79d06m06.00 False False 512 2 120 5600 LD empty empty empty False
+# need to incude more flux s33
+s34 16h50m02.000,+76d35m00.00 False False 1800 2 120 5600 LD empty s34field.rgn empty False
+# update s34
+s35 16h30m32.300,+78d28m21.00 False False 1024 2 240 5600 LD empty s35field.rgn empty False
+# update pos, need more flux s35
+s36 17h54m54.700,+79d58m38.00 False False 1024 2 180 5600 LD empty empty empty False
+s37 16h58m51.500,+79d56m25.00 False False 512 2 120 5600 LD empty empty empty False
+# check s37, too faint?
+s38 16h33m50.600,+78d51m22.00 False False 1024 2 120 5600 LD empty empty empty False
+# s38 update pos
+s39 15h59m34.700,+78d15m59.00 False False 512 2 120 5600 LD empty empty empty False
+s40 16h18m01.300,+76d24m02.00 False False 512 2 120 5600 LD empty empty empty False
+s41 16h30m01.400,+77d05m39.00 False False 1600 2 120 5600 LD empty empty empty False
+s42 17h23m13.600,+75d33m24.00 False False 512 2 120 5600 LD empty empty empty False
+s43 17h46m26.300,+76d22m06.00 False False 1024 2 120 5600 LD empty empty empty False
+s44 17h49m19.000,+77d47m05.00 False False 512 2 120 5600 LD empty empty empty False
+s45 17h44m40.700,+81d01m07.00 False False 1200 2 240 5600 LD empty empty empty False
+# s45 too faint
+s46 17h23m39.000,+81d41m27.00 False False 1200 2 120 5600 LD empty empty empty False
+# update pos
+s47 16h26m23.800,+81d08m22.00 False False 1600 2 240 5600 LD empty s47field.rgn empty False
+s48 16h15m30.800,+78d15m17.00 False False 512 2 120 5600 LD empty empty empty False
+s49 16h41m32.300,+79d27m54.00 False False 1200 2 120 5600 LD empty empty empty False
+# update pos
+#s50 17h25m30.000,+77d08m02.00 False False 512 2 120 5600 LD empty empty empty False
+#s51 16h43m21.900,+78d00m24.00 False False 512 2 120 5600 LD empty empty empty False
+#s52 16h57m42.800,+78d04m31.00 False False 512 2 120 5600 LD empty empty empty False
+#s53 17h06m04.700,+77d06m38.00 False False 512 2 120 5600 LD empty empty empty False
+s54 17h03m43.500,+78d43m03.00 True True 1920 1 120 5600 LD a2256.rgn a2256.rgn empty False
+s55 18h42m09.000,+79d46m17.00 True True 1200 8 240 1600 LD s55.rgn s55.rgn /home/rvweeren/scripts/a2256_hba/3c390.3.skymodel True
+#s55 18h42m09.000,+79d46m17.00 True True 1200 8 240 1600 LD s55.rgn s55.rgn empty False # 3C390.3
