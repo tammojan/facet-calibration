@@ -13,54 +13,14 @@ import pyrap.images
 import pwd
 import logging
 pi       = numpy.pi
-username = pwd.getpwuid(os.getuid())[0]
+import sys
 
-
-## USER INPUT ##
-SCRIPTPATH      =  '/home/'+username+'/scripts/a2256_hba/'
-
-buildmytasks    =  '/home/rvweeren/software/casapy/casapy-42.2.30986-1-64b/buildmytasks'
-os.system('cp /home/'+username+'/scripts/a2256_hba/*.rgn .')
-peelsourceinfo  =  '/home/'+username+'/scripts/a2256_hba/peel_source_info_a2256.txt'
-wsclean         =  '/home/rvweeren/software/WSClean/wsclean-1.7/build/wsclean'
-
-
-BANDS = range(200,209,10)
-NAME = "A2256"
-RES = "2ch10s"
-
-do_sources=['s1']
-
-
-nterms      = 1      # automatically adjusted if needed
-cellsize    = 1.5
-TEC         = "True" # automatically set to False if needed
-clock       = "False" # gives problems with phase continuity automatically set to False if needed
-makemasks   = False
-do_ap       = False # add back, correct with instrument_ap_smoothed
-uvrange     = 5.0 # wavelength
-
-
-
-####################################
-######### DO THESE SOURCES #########
-
-##
-
-# selfcal function
-# create_phaseshift_parset2
-
-##
-
-
-# s26 not done, needs mask
-# s25 screwed up mask..
-
-####################################
-####################################
-
-## END USER INPUT ##
-
+if len(sys.argv)<2:
+   raise Exception('Give the path to the setup code for the facet')
+else:
+   print 'Using',sys.argv[1],'as the setup code'
+   execfile(sys.argv[1])
+   print 'script path is',SCRIPTPATH
 
 logging.basicConfig(filename='dde.log',level=logging.DEBUG, format='%(asctime)s -  %(message)s', datefmt='%Y-%d-%m %H:%M:%S')
 logging.info('\n')
@@ -150,9 +110,9 @@ def runbbs(mslist, skymodel, parset, parmdb, replacesource):
  while(done < len(mslist)):
    done = 0
    for ms in mslist:
-     cmd = "grep 'INFO - bbs-reducer terminated successfully.' " + ms + ".bbslog"
+     cmd = "grep 'bbs-reducer terminated successfully.' " + ms + ".bbslog"
      output=Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
-     if output[0:4] == 'INFO':     
+     if 'INFO' in output:     
         done = done + 1
 	print ms, 'is done'
    time.sleep(5)
@@ -179,9 +139,9 @@ def runbbs16(mslist, skymodel, parset, parmdb, replacesource):
  while(done < len(mslist1)):
    done = 0
    for ms in mslist1:
-     cmd = "grep 'INFO - bbs-reducer terminated successfully.' " + ms + ".bbslog"
+     cmd = "grep 'bbs-reducer terminated successfully.' " + ms + ".bbslog"
      output=Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
-     if output[0:4] == 'INFO':     
+     if 'INFO' in output:     
         done = done + 1
 	print ms, 'is done'
    time.sleep(5)
@@ -202,9 +162,9 @@ def runbbs16(mslist, skymodel, parset, parmdb, replacesource):
  while(done < len(mslist2)):
    done = 0
    for ms in mslist2:
-     cmd = "grep 'INFO - bbs-reducer terminated successfully.' " + ms + ".bbslog"
+     cmd = "grep 'bbs-reducer terminated successfully.' " + ms + ".bbslog"
      output=Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
-     if output[0:4] == 'INFO':     
+     if 'INFO' in output:     
         done = done + 1
 	print ms, 'is done'
    time.sleep(5) 
@@ -282,9 +242,9 @@ def runbbs_diffskymodel_addback(mslist, parmdb, replacesource, direction, imsize
  while(done < len(mslist)):
    done = 0
    for ms in mslist:
-     cmd = "grep 'INFO - bbs-reducer terminated successfully.' " + ms + ".bbslog"
+     cmd = "grep 'bbs-reducer terminated successfully.' " + ms + ".bbslog"
      output=Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
-     if output[0:4] == 'INFO':     
+     if 'INFO' in output:     
         done = done + 1
 	print ms, 'is done'
    time.sleep(5)
@@ -332,9 +292,9 @@ def runbbs_diffskymodel_addback16(mslist, parmdb, replacesource, direction, imsi
  while(done < len(mslist1)):
    done = 0
    for ms in mslist1:
-     cmd = "grep 'INFO - bbs-reducer terminated successfully.' " + ms + ".bbslog"
+     cmd = "grep 'bbs-reducer terminated successfully.' " + ms + ".bbslog"
      output=Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
-     if output[0:4] == 'INFO':     
+     if 'INFO' in output:     
         done = done + 1
 	print ms, 'is done'
    time.sleep(5)
@@ -376,9 +336,9 @@ def runbbs_diffskymodel_addback16(mslist, parmdb, replacesource, direction, imsi
  while(done < len(mslist2)):
    done = 0
    for ms in mslist2:
-     cmd = "grep 'INFO - bbs-reducer terminated successfully.' " + ms + ".bbslog"
+     cmd = "grep 'bbs-reducer terminated successfully.' " + ms + ".bbslog"
      output=Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
-     if output[0:4] == 'INFO':     
+     if 'INFO' in output:     
         done = done + 1
 	print ms, 'is done'
    time.sleep(5) 
@@ -435,9 +395,9 @@ def runbbs_diffskymodel_addbackfield(mslist, parmdb, replacesource, direction, i
  while(done < len(mslist)):
    done = 0
    for ms in mslist:
-     cmd = "grep 'INFO - bbs-reducer terminated successfully.' " + ms + ".bbslog"
+     cmd = "grep 'bbs-reducer terminated successfully.' " + ms + ".bbslog"
      output=Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
-     if output[0:4] == 'INFO':     
+     if 'INFO' in output:     
         done = done + 1
 	print ms, 'is done'
    time.sleep(5)
@@ -456,9 +416,9 @@ def runbbs_2(mslist, msparmdb, skymodel, parset, parmdb):
  while(done < len(mslist)):
    done = 0
    for ms in mslist:
-     cmd = "grep 'INFO - bbs-reducer terminated successfully.' " + ms + ".bbslog"
+     cmd = "grep 'bbs-reducer terminated successfully.' " + ms + ".bbslog"
      output=Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
-     if output[0:4] == 'INFO':     
+     if 'INFO' in output:     
         done = done + 1
 	print ms, 'is done'
    time.sleep(5)
