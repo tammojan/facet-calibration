@@ -1228,18 +1228,6 @@ pointingcenter = str(pointingcenter[0]) +'rad,' + str(pointingcenter[1])+'rad'
 print pointingcenter
 tt.close()
 
-
-
-nterms      = 1      # automatically adjusted if needed
-cellsize    = 1.5
-TEC         = "True" # automatically set to False if needed
-clock       = "False" # gives problems with phase continuity automatically set to False if needed
-makemasks   = False
-do_ap       = False # add back, correct with instrument_ap_smoothed
-uvrange     = 5.0 # wavelength
-
-
-
 #if len(mslist) == 1:
 #  TEC    = "False" # no TEC fitting for one (channel) dataset
 #  nterms = 1
