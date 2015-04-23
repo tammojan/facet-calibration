@@ -1008,6 +1008,10 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms
  cleandepth1 = str(depth*1.5) #+ 'mJy'
  cleandepth2 = str(depth)     #+ 'mJy'
 
+ wideband = False
+ if len(mslist) > 5: 
+   wideband = True
+   
  # speed up the imaging if possible by reducing image size within the mask region
  newsize = find_newsize(inputmask)
  if newsize < imsize: # ok so we can use a smaller image size then
@@ -1050,10 +1054,18 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms
  os.system('rm -rf ' + outms)
  os.system('NDPPP ' + parsetname)
 
- cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
- cmd2 = '-scale ' + cellsizeim + ' -weight briggs 0.0 -niter ' + str(niter) + ' -threshold '+ cleandepth1 + ' '
- cmd3 = '-minuv-l '+ str(uvrange) +' -mgain 0.75 -fitbeam -datacolumn DATA -no-update-model-required ' + outms
- 
+ if wideband:
+   channelsout =  1 # there is a factor of 5 averaging
+   cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
+   cmd2 = '-scale ' + cellsizeim + ' -weight briggs 0.0 -niter ' + str(niter) + ' -threshold '+ cleandepth1 + ' '
+   cmd3 = '-minuv-l '+ str(uvrange) \
+          +' -mgain 0.75 -fitbeam -datacolumn DATA -no-update-model-required -joinchannels -channelsout ' +\
+	  str(channelsout) + ' '  + outms
+ else:  
+   cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
+   cmd2 = '-scale ' + cellsizeim + ' -weight briggs 0.0 -niter ' + str(niter) + ' -threshold '+ cleandepth1 + ' '
+   cmd3 = '-minuv-l '+ str(uvrange) +' -mgain 0.75 -fitbeam -datacolumn DATA -no-update-model-required ' + outms
+
  print cmd1+cmd2+cmd3
  os.system(cmd1+cmd2+cmd3)
 
@@ -1096,10 +1108,16 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms
  os.system('rm -rf ' + imout + '-*')
  niter = niter*5 # increase niter, tune manually if needed, try to reach threshold
 
- cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
- cmd2 = '-scale ' + cellsizeim + ' -weight briggs 0.0 -niter ' + str(niter) + ' -threshold '+ cleandepth2 + ' '
- cmd3 = '-minuv-l '+ str(uvrange) +' -mgain 0.6 -fitbeam -datacolumn DATA -no-update-model-required -casamask ' + \
-        mask_sources+'field' + ' '+ outms
+ if wideband:
+   cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
+   cmd2 = '-scale ' + cellsizeim + ' -weight briggs 0.0 -niter ' + str(niter) + ' -threshold '+ cleandepth2 + ' '
+   cmd3 = '-minuv-l '+ str(uvrange) +' -mgain 0.6 -fitbeam -datacolumn DATA -no-update-model-required -casamask ' + \
+          mask_sources+'field' + ' -joinchannels -channelsout ' + str(channelsout) + ' ' + outms
+ else:
+   cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
+   cmd2 = '-scale ' + cellsizeim + ' -weight briggs 0.0 -niter ' + str(niter) + ' -threshold '+ cleandepth2 + ' '
+   cmd3 = '-minuv-l '+ str(uvrange) +' -mgain 0.6 -fitbeam -datacolumn DATA -no-update-model-required -casamask ' + \
+          mask_sources+'field' + ' '+ outms
  
  print cmd1+cmd2+cmd3
  os.system(cmd1+cmd2+cmd3)
@@ -1111,21 +1129,30 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms
  return imout, mask_sources+'field', imsize
 
 
-def do_fieldFFT(ms,image,imsize,cellsize,wsclean):
+def do_fieldFFT(ms,image,imsize,cellsize,wsclean,mslist):
  niter   = 1
  cellsizeim = str(cellsize)+ 'arcsec'
  #wsclean =  '/home/rvweeren/software/WSClean/wsclean-1.7/build/wsclean'
 
  # note no uvrange here!
  # also no re-order
- cmd1 = wsclean + ' -predict -name ' + image + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
- cmd2 = '-scale ' + cellsizeim + ' -weight briggs 0.0 -niter ' + str(niter) + ' '
- cmd3 = '-mgain 0.85 -fitbeam -datacolumn DATA '+ ' ' + ms
+ 
+ wideband = False
+ if len(mslist) > 5: 
+   wideband = True
+ if wideband:
+   channelsout =  5 # DO NOT CHANGE !! (in make_image_wsclean_wideband there is averaging)
+   cmd1 = wsclean + ' -predict -name ' + image + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
+   cmd2 = '-scale ' + cellsizeim + ' -weight briggs 0.0 -niter ' + str(niter) + ' '
+   cmd3 = '-mgain 0.85 -fitbeam -datacolumn DATA '+ '-joinchannels -channelsout ' + str(channelsout) + ' ' + ms
+ else:
+   cmd1 = wsclean + ' -predict -name ' + image + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
+   cmd2 = '-scale ' + cellsizeim + ' -weight briggs 0.0 -niter ' + str(niter) + ' '
+   cmd3 = '-mgain 0.85 -fitbeam -datacolumn DATA '+ ' ' + ms
  
  print cmd1+cmd2+cmd3
  os.system(cmd1+cmd2+cmd3)
  return
-
 source_info_rec = numpy.genfromtxt(peelsourceinfo, \
                                    dtype="S50,S25,S5,S5,i8,i8,i8,i8,S2,S255,S255,S255,S5", \
                                    names=["sourcelist","directions","atrous_do","mscale_field","imsizes",\
@@ -1445,7 +1472,7 @@ for source in do_sources:
 
 
       # DO THE FFT
-      do_fieldFFT('allbands.concat.shifted.ms',imout, imsizef, cellsize, wsclean)
+      do_fieldFFT('allbands.concat.shifted.ms',imout, imsizef, cellsize, wsclean, msavglist)
       logging.info('FFTed model of DDE facet: ' + source)
 
       # SHIFT PHASE CENTER BACK TO ORIGINAL
