@@ -1289,7 +1289,7 @@ for source in do_sources:
    logging.info('')
    logging.info('DOING DDE patch: '+ source)   
    
-   skymodel   = SCRIPTPATH + '/dummy.skymodel' ## update every time again with new source, not used, just a dummy for correct
+   dummyskymodel   = SCRIPTPATH + '/dummy.skymodel' ## update every time again with new source, not used, just a dummy for correct
 
    msavglist = []
    for ms_id, ms in enumerate(mslist):
