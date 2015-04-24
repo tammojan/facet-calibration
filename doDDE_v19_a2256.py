@@ -1398,7 +1398,7 @@ for source in do_sources:
       runbbs_diffskymodel_addbackfield(mslist, 'instrument_ap_smoothed', True,  directions[source_id],imsizes[source_id], output_template_im, do_ap)
       logging.info('Adding back rest of the field for DDE facet ' + source)
    
-      runbbs(mslist, skymodel, SCRIPTPATH + '/correctfield2.parset',parmdb_master_out+'_norm', False) 
+      runbbs(mslist, dummyskymodel, SCRIPTPATH + '/correctfield2.parset',parmdb_master_out+'_norm', False) 
 
       ###########################################################################  
       # NDPPP phase shift, less averaging (NEW: run 2 in parallel)
