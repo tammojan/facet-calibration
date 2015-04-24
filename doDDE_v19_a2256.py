@@ -1362,11 +1362,11 @@ for source in do_sources:
    tmpn  = str(msavglist[0]) 
 
    output_template_im = 'templatemask_' + source
-   if not os.path.exists(output_template_im):
-      raise  Exception('facet mask missing: '+output_template_im)
+   if not os.path.exists(output_template_im+'.masktmp'):
+      raise  Exception('facet mask missing: '+output_template_im+'.masktmp')
 
    selfcaldir = directions[source_id]
-   facetsize = image_size_from_mask(output_template_im)
+   facetsize = image_size_from_mask(output_template_im+'.masktmp')
 
    logging.info("Selfcal direction: "+selfcaldir)
    logging.info("facetmask: "+str(facetsize))
