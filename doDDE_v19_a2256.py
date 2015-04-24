@@ -175,7 +175,7 @@ def runbbs16(mslist, skymodel, parset, parmdb, replacesource):
    time.sleep(5) 
  return
 
-def create_subtract_parset_field_outlier(outputcolumn):
+def create_subtract_parset_field_outlier(outputcolumn,TEC):
   bbs_parset = 'sub.parset' 
   os.system('rm -f ' + bbs_parset)
   f=open(bbs_parset, 'w')
@@ -193,8 +193,8 @@ def create_subtract_parset_field_outlier(outputcolumn):
   f.write('Step.subtract.Model.Gain.Enable               = T\n')
   f.write('Step.subtract.Model.Rotation.Enable           = F\n')
   f.write('Step.subtract.Model.CommonScalarPhase.Enable  = T\n')
-  #if TEC   == "True":
-  #   f.write('Step.subtract.Model.TEC.Enable    = T\n') 
+  if TEC   == "True":
+     f.write('Step.subtract.Model.TEC.Enable    = T\n') 
   #if clock == "True":
   #   f.write('Step.subtract.Model.Clock.Enable  = T\n') 
   f.write('Step.subtract.Model.CommonRotation.Enable     = F\n')
@@ -642,7 +642,7 @@ def create_subtract_parset(outputcolumn):
   f.close()
   return bbs_parset
 
-def create_subtract_parset_field(outputcolumn):
+def create_subtract_parset_field(outputcolumn,TEC):
   bbs_parset = 'sub.parset' 
   os.system('rm -f ' + bbs_parset)
   f=open(bbs_parset, 'w')
@@ -660,8 +660,8 @@ def create_subtract_parset_field(outputcolumn):
   f.write('Step.subtract.Model.Gain.Enable               = T\n')
   f.write('Step.subtract.Model.Rotation.Enable           = F\n')
   f.write('Step.subtract.Model.CommonScalarPhase.Enable  = T\n')
-  #if TEC   == "True":
-  #   f.write('Step.subtract.Model.TEC.Enable  = T\n') 
+  if TEC   == "True":
+     f.write('Step.subtract.Model.TEC.Enable  = T\n') 
   #if clock == "True":
   #   f.write('Step.subtract.Model.Clock.Enable  = T\n') 
   f.write('Step.subtract.Model.CommonRotation.Enable     = F\n')
@@ -672,49 +672,59 @@ def create_subtract_parset_field(outputcolumn):
   f.close()
   return bbs_parset
 
+def join_parmdb(ms, parmdb_selfcal,parmdb_nondde, parmdb_template, parmdb_out, TEC, clock):
+    import lofar.parmdb
+    pdb_s = lofar.parmdb.parmdb(parmdb_selfcal)
+    pdb_p = lofar.parmdb.parmdb(parmdb_nondde)
+    pdb_t = lofar.parmdb.parmdb(parmdb_template)
+
+    parms_s = pdb_s.getValuesGrid("*")
+    parms_p = pdb_p.getValuesGrid("*")
+    parms_t = pdb_t.getValuesGrid("*")
+
+    keynames = parms_s.keys()
+    os.system('rm -rf ' + parmdb_out)
+
+    for key in keynames:
+        # copy over the selfcal solutions, can copy all (Real, Imag, CommonScalarPhase, TEC, clock)
+        parms_t[key]['values'][:,0] = numpy.copy(parms_s[key]['values'][:,0])
+
+    pol_list = ['0:0','1:1']
+    gain     = 'Gain'
+    anttab     = pt.table(ms + '/ANTENNA')
+    antenna_list    = anttab.getcol('NAME')
+    anttab.close()
+
+    for pol in pol_list:
+        for antenna in antenna_list:
+
+            real1 = numpy.copy(parms_p[gain + ':' + pol + ':Real:'+ antenna]['values'][:, 0])
+            imag1 = numpy.copy(parms_p[gain + ':' + pol + ':Imag:'+ antenna]['values'][:, 0])
+
+            real2 = numpy.copy(parms_s[gain + ':' + pol + ':Real:'+ antenna]['values'][:, 0])
+            imag2 = numpy.copy(parms_s[gain + ':' + pol + ':Imag:'+ antenna]['values'][:, 0])
 
 
-def join_parmdb(ms, parmdb_selfcal,parmdb_template, parmdb_out):
-  import lofar.parmdb
-  pdb_s = lofar.parmdb.parmdb(parmdb_selfcal)
-  pdb_t = lofar.parmdb.parmdb(parmdb_template)
- 
-  parms_s = pdb_s.getValuesGrid("*")
-  parms_t = pdb_t.getValuesGrid("*")
- 
-  keynames = parms_s.keys()
-  os.system('rm -rf ' + parmdb_out)
- 
-  for key in keynames:
-   # copy over the selfcal solutions, can copy all (Real, Imag, CommonScalarPhase, TEC, clock)
-    parms_t[key]['values'][:,0] = numpy.copy(parms_s[key]['values'][:,0])
+            G1 = real1 + 1j*imag1
+            G2 = real2 + 1j*imag2
 
-  pol_list = ['0:0','1:1']
-  gain     = 'Gain'
-  anttab     = pt.table(ms + '/ANTENNA')
-  antenna_list    = anttab.getcol('NAME')
-  anttab.close()
- 
-  for pol in pol_list:
-    for antenna in antenna_list:
-    
-      
-      real2 = numpy.copy(parms_s[gain + ':' + pol + ':Real:'+ antenna]['values'][:, 0])
-      imag2 = numpy.copy(parms_s[gain + ':' + pol + ':Imag:'+ antenna]['values'][:, 0])     
-      
-      G2 = real2 + 1j*imag2
-      
-      Gnew = numpy.copy(G2)
-      
-      
-      parms_t[gain + ':' + pol + ':Imag:'+ antenna]['values'][:, 0] = numpy.copy(numpy.imag(Gnew))  
-      parms_t[gain + ':' + pol + ':Real:'+ antenna]['values'][:, 0] = numpy.copy(numpy.real(Gnew))  
+            #G_new = G_nondde*G_selfcal
 
-  pdbnew = lofar.parmdb.parmdb(parmdb_out, create=True)
-  pdbnew.addValues(parms_t)
-  pdbnew.flush()
-  return
-   
+            if TEC == "True":
+                Gnew = numpy.copy(G2)
+            else:
+                Gnew = numpy.copy(G1*G2)
+
+
+            parms_t[gain + ':' + pol + ':Imag:'+ antenna]['values'][:, 0] = numpy.copy(numpy.imag(Gnew))
+            parms_t[gain + ':' + pol + ':Real:'+ antenna]['values'][:, 0] = numpy.copy(numpy.real(Gnew))
+
+
+    #lofar.expion.parmdbmain.store_parms(parmdb_out, parms_t, create_new = True)
+    pdbnew = lofar.parmdb.parmdb(parmdb_out, create=True)
+    pdbnew.addValues(parms_t)
+    pdbnew.flush()
+    return
    
 def normalize_parmdbs(mslist, parmdbname, parmdboutname):
  
@@ -1387,11 +1397,20 @@ for source in do_sources:
    if StartAtStep in ['preSC', 'doSC', 'postSC']:
       # combine selfcal solutions with non-DDE phases
       for ms_id, ms in enumerate(mslist): 
-        parmdb_selfcal     = msavglist[ms_id]+"/"+"instrument_merged"
-        parmdb_master_out  = ms+"/"+"instrument_master_" + source
-        parmdb_template    = msavglist[ms_id]+"/"+"instrument_template"   
-        join_parmdb(ms, parmdb_selfcal,parmdb_template, parmdb_master_out)
-        parmdb_master_out  = "instrument_master_" + source   # reset because runbbs uses basename of ms
+         parmdb_selfcal     = msavglist[ms_id]+"/"+"instrument_merged"
+                #parmdb_nondde      = ms+"/"+"instrument_ap_smoothed_ampto1" # contains only phase corrections
+         parmdb_nondde      = ms+"/"+"instrument_ap_smoothed" # contains only phase corrections
+         this_parmdb_master_out  = ms+"/"+"instrument_master_" + source
+         parmdb_template    = msavglist[ms_id]+"/"+"instrument_template"
+         join_parmdb(ms, parmdb_selfcal,parmdb_nondde, parmdb_template, this_parmdb_master_out, TEC, clock)
+         print 'joined SC and DDE parmdbs for {ms}'.format(ms=ms)
+
+# stefcal code, doesn't work at the moment
+#        parmdb_selfcal     = msavglist[ms_id]+"/"+"instrument_merged"
+#        parmdb_master_out  = ms+"/"+"instrument_master_" + source
+#        parmdb_template    = msavglist[ms_id]+"/"+"instrument_template"   
+#        join_parmdb(ms, parmdb_selfcal,parmdb_template, parmdb_master_out)
+#        parmdb_master_out  = "instrument_master_" + source   # reset because runbbs uses basename of ms
 
 
       # maybe there are some issues with the frequency boundaries if you solve on averaged data
@@ -1410,9 +1429,12 @@ for source in do_sources:
       for ms in mslist:
          parmdb_master_plot  = ms+"/"+"instrument_master_" + source
          plotim_base         = ms.split('.')[0] + "_instrument_master_" + source
-         os.system(SCRIPTPATH + '/plot_solutions_all_stations_v2.py \
+         if TEC=='True':
+            os.system(SCRIPTPATH + '/plot_solutions_all_stations_v2.py \
+                    -t -a -p --freq 150 ' + parmdb_master_plot + ' ' + plotim_base +'&')
+         else:
+            os.system(SCRIPTPATH + '/plot_solutions_all_stations_v2.py \
                     -s -a -p --freq 150 ' + parmdb_master_plot + ' ' + plotim_base +'&')
-
 
       print 'Updated frequency boundaries parmdb and normalized amps to 1.0'
       time.sleep(5)
@@ -1439,8 +1461,10 @@ for source in do_sources:
       runbbs_diffskymodel_addbackfield(mslist, 'instrument_ap_smoothed', True,  directions[source_id],imsizes[source_id], output_template_im, do_ap)
       logging.info('Adding back rest of the field for DDE facet ' + source)
    
-      runbbs(mslist, dummyskymodel, SCRIPTPATH + '/correctfield2.parset',parmdb_master_out+'_norm', False) 
-
+      if TEC=='True':
+         runbbs(mslist, dummyskymodel, SCRIPTPATH + '/correctfield2+TEC.parset',parmdb_master_out+'_norm', False) 
+      else:
+         runbbs(mslist, dummyskymodel, SCRIPTPATH + '/correctfield2.parset',parmdb_master_out+'_norm', False) 
       ###########################################################################  
       # NDPPP phase shift, less averaging (NEW: run 2 in parallel)
       for ms_id, ms in enumerate(mslist):
@@ -1543,11 +1567,11 @@ for source in do_sources:
    #### DO THE SUBTRACT ####
    if peelskymodel[source_id] != 'empty': # should also cover "outliersource"
      print 'Subtracting source with a user defined skymodel', peelskymodel[source_id]   
-     parset   = create_subtract_parset_field_outlier('SUBTRACTED_DATA_ALL')
+     parset   = create_subtract_parset_field_outlier('SUBTRACTED_DATA_ALL',TEC)
      runbbs(mslist, peelskymodel[source_id], parset, parmdb_master_out, True) # NOTE: no 'normalization' and replace sourcedb
      logging.info('Subtracted outlier source from data for DDE : ' + source)
    else:
-     parset   = create_subtract_parset_field('SUBTRACTED_DATA_ALL')
+     parset   = create_subtract_parset_field('SUBTRACTED_DATA_ALL',TEC)
      runbbs(mslist, ' ', parset, parmdb_master_out+'_norm', False) # replace-sourcedb not needed since we use "@column"
      logging.info('Subtracted facet model from data for DDE : ' + source)
  
