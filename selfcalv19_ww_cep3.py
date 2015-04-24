@@ -323,11 +323,16 @@ def runbbs(mslist, skymodel, parset, parmdb, applycal, TEC):
 
         # postgres db settings are different for paracluster
         # allow user settings in home directory to over-ride either
-      
-        cdparset='/home/'+username+'/pgsql-setup.py'
+        # temp fix till we have a proper parset
+        cdparset='/home/'+username+'/pgsql-setup.txt'
         if os.path.isfile(cdparset):
             print 'Getting pgsql setup from',cdparset
-            execfile(cdparset)
+            lines=[line.strip() for line in open(cdparset)]
+            clusterdesc=lines[0]
+            db=lines[1]
+            dbuser=lines[2]
+            dbname=lines[3]
+
         elif 'para' in os.uname()[1]:
             clusterdesc = '/home/wwilliams/para/paranew.clusterdesc'
             db = 'kolkje'
@@ -388,14 +393,8 @@ def runbbs(mslist, skymodel, parset, parmdb, applycal, TEC):
             if 'FAIL' in output:
                 raise Exception('calibrate has failed too many times' )
 
-
-
-
-
-
-
-
     else:
+        # Normal calibrate for amplitude
         for ms in mslist:
             log      =  ms + '.bbslog'
             if applycal:
