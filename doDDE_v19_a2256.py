@@ -1078,13 +1078,13 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms
  if wideband:
    channelsout =  1 # there is a factor of 5 averaging
    cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
-   cmd2 = '-scale ' + cellsizeim + ' -weight briggs 0.0 -niter ' + str(niter) + ' -threshold '+ cleandepth1 + ' '
+   cmd2 = '-scale ' + cellsizeim + ' -weight briggs -0.25 -niter ' + str(niter) + ' -threshold '+ cleandepth1 + ' '
    cmd3 = '-minuv-l '+ str(uvrange) \
           +' -mgain 0.75 -fitbeam -datacolumn DATA -no-update-model-required -joinchannels -channelsout ' +\
 	  str(channelsout) + ' '  + outms
  else:  
    cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
-   cmd2 = '-scale ' + cellsizeim + ' -weight briggs 0.0 -niter ' + str(niter) + ' -threshold '+ cleandepth1 + ' '
+   cmd2 = '-scale ' + cellsizeim + ' -weight briggs -0.25 -niter ' + str(niter) + ' -threshold '+ cleandepth1 + ' '
    cmd3 = '-minuv-l '+ str(uvrange) +' -mgain 0.75 -fitbeam -datacolumn DATA -no-update-model-required ' + outms
 
  print cmd1+cmd2+cmd3
@@ -1524,71 +1524,73 @@ for source in do_sources:
              pid = (Popen('pidof NDPPP', shell=True, stdout=PIPE).communicate()[0])    
              pid_list = pid.split(' ')
          ###########################################################################  
-      ## STEP 4 -- do facet, currently always run ##
+      ## STEP 4a -- do facet ##
 
       ###### MAKE FACET IMAGE #####
 
       # imsize None forces the code to work out the image size from the mask size
-      msavglist = []
-      for ms_id, ms in enumerate(mslistorig): # remake msavglist from mslistorig
-         msavglist.append(ms.split('.')[0] + '.' + source + '.ms.avgfield')      
+      if StartAtStep in ['preSC', 'doSC', 'postSC','preFACET','doFACET']:
+         msavglist = []
+         for ms_id, ms in enumerate(mslistorig): # remake msavglist from mslistorig
+            msavglist.append(ms.split('.')[0] + '.' + source + '.ms.avgfield')      
 
-      imout,mask_out, imsizef = make_image_wsclean(msavglist, source, 'field0', 5, 3, nterms, 'True', None, output_template_im +'.masktmp', mscale_field[source_id],regionfield[source_id],cellsize, uvrange,wsclean)
-      logging.info('Imaged full DDE facet: ' + source)
+         imout,mask_out, imsizef = make_image_wsclean(msavglist, source, 'field0', 5, 3, nterms, 'True', None, output_template_im +'.masktmp', mscale_field[source_id],regionfield[source_id],cellsize, uvrange,wsclean)
+         logging.info('Imaged full DDE facet: ' + source)
 
       ## STEP 4b -- post facet ##
 
-      # BACKUP SUBTRACTED DATA IN CASE OF CRASH
-      ###########################################################################  
-      # (NEW: run in parallel)
-      for ms_id, ms in enumerate(mslist):  
-	cmd = "ps -u " + username + " | grep taql | wc -l"
-	output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
-	
-	while output > 3 : # max 4 processes  
-	  time.sleep(10)
-	  output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
-	  
-	# START taql BECAUSE LESS/EQ 2 PROCESSES ARE RUNNING	
-	os.system("taql 'update " + ms + " set CORRECTED_DATA=SUBTRACTED_DATA_ALL' &")
+      if StartAtStep in ['preSC', 'doSC', 'postSC','preFACET','doFACET','postFACET']:
+         # BACKUP SUBTRACTED DATA IN CASE OF CRASH
+         ###########################################################################  
+         # (NEW: run in parallel)
+         for ms_id, ms in enumerate(mslist):  
+           cmd = "ps -u " + username + " | grep taql | wc -l"
+           output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
 
-      # Check if all taql processes are finished
-      output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0]) 
-      while output > 0 :
-	  time.sleep(10)
-	  output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
-      logging.info('Backup SUBTRACTED_DATA_ALL')   
-      ###########################################################################  
+           while output > 3 : # max 4 processes  
+             time.sleep(10)
+             output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
+
+           # START taql BECAUSE LESS/EQ 2 PROCESSES ARE RUNNING	
+           os.system("taql 'update " + ms + " set CORRECTED_DATA=SUBTRACTED_DATA_ALL' &")
+
+         # Check if all taql processes are finished
+         output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0]) 
+         while output > 0 :
+             time.sleep(10)
+             output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
+         logging.info('Backup SUBTRACTED_DATA_ALL')   
+         ###########################################################################  
 
 
-      # DO THE FFT
-      do_fieldFFT('allbands.concat.shifted.ms',imout, imsizef, cellsize, wsclean, msavglist)
-      logging.info('FFTed model of DDE facet: ' + source)
+         # DO THE FFT
+         do_fieldFFT('allbands.concat.shifted.ms',imout, imsizef, cellsize, wsclean, msavglist)
+         logging.info('FFTed model of DDE facet: ' + source)
 
-      # SHIFT PHASE CENTER BACK TO ORIGINAL
-      parset = create_phaseshift_parset_full('allbands.concat.shifted.ms', 'allbands.concat.shiftedback.ms',\
-				    pointingcenter,'MODEL_DATA')
+         # SHIFT PHASE CENTER BACK TO ORIGINAL
+         parset = create_phaseshift_parset_full('allbands.concat.shifted.ms', 'allbands.concat.shiftedback.ms',\
+                                       pointingcenter,'MODEL_DATA')
 
-      os.system('NDPPP ' + parset) 
-      os.system('rm -rf allbands.concat.shifted.ms') # clean up
+         os.system('NDPPP ' + parset) 
+         os.system('rm -rf allbands.concat.shifted.ms') # clean up
 
-      # Add MODEL_DATA (allbands.concat.shiftedback.ms) into ADDED_DATA_SOURCE from mslist
+         # Add MODEL_DATA (allbands.concat.shiftedback.ms) into ADDED_DATA_SOURCE from mslist
 
-      freq_tab1= pt.table('allbands.concat.ms' + '/SPECTRAL_WINDOW')
-      numchan1    = freq_tab1.getcol('NUM_CHAN')
-      freq_tab2= pt.table(mslist[0] + '/SPECTRAL_WINDOW')
-      numchan2    = freq_tab2.getcol('NUM_CHAN')
-      freq_tab1.close()
-      freq_tab2.close()
+         freq_tab1= pt.table('allbands.concat.ms' + '/SPECTRAL_WINDOW')
+         numchan1    = freq_tab1.getcol('NUM_CHAN')
+         freq_tab2= pt.table(mslist[0] + '/SPECTRAL_WINDOW')
+         numchan2    = freq_tab2.getcol('NUM_CHAN')
+         freq_tab1.close()
+         freq_tab2.close()
 
-      if (numchan1[0]) == (numchan2[0]*len(mslist)):
-	os.system('python ' + SCRIPTPATH + '/copy_over_columns.py '+ msliststr +\
-		  ' ' +'allbands.concat.shiftedback.ms'+' ' + 'ADDED_DATA_SOURCE')
-      else:
-	os.system('python ' + SCRIPTPATH + '/copy_over_columns.py '+ mslistorigstr +\
-		  ' ' +'allbands.concat.shiftedback.ms'+' ' + 'ADDED_DATA_SOURCE')
-    
-      os.system('rm -rf allbands.concat.shiftedback.ms') # clean up
+         if (numchan1[0]) == (numchan2[0]*len(mslist)):
+           os.system('python ' + SCRIPTPATH + '/copy_over_columns.py '+ msliststr +\
+                     ' ' +'allbands.concat.shiftedback.ms'+' ' + 'ADDED_DATA_SOURCE')
+         else:
+           os.system('python ' + SCRIPTPATH + '/copy_over_columns.py '+ mslistorigstr +\
+                     ' ' +'allbands.concat.shiftedback.ms'+' ' + 'ADDED_DATA_SOURCE')
+
+         os.system('rm -rf allbands.concat.shiftedback.ms') # clean up
 
    #### OUTLIER CASE ####
    else:  # do this because we are not going to add back field sources
@@ -1601,21 +1603,23 @@ for source in do_sources:
          os.system("taql 'update " + ms + " set CORRECTED_DATA=SUBTRACTED_DATA_ALL'")  
       logging.info('Backup SUBTRACTED_DATA_ALL for outliersource')
 
-        
+   if StartAtStep in ['preSC', 'doSC', 'postSC','preFACET','doFACET','postFACET']:        
    #### DO THE SUBTRACT ####
-   if peelskymodel[source_id] != 'empty': # should also cover "outliersource"
-     print 'Subtracting source with a user defined skymodel', peelskymodel[source_id]   
-     parset   = create_subtract_parset_field_outlier('SUBTRACTED_DATA_ALL',TEC)
-     runbbs(mslist, peelskymodel[source_id], parset, parmdb_master_out, True) # NOTE: no 'normalization' and replace sourcedb
-     logging.info('Subtracted outlier source from data for DDE : ' + source)
-   else:
-     parset   = create_subtract_parset_field('SUBTRACTED_DATA_ALL',TEC)
-     runbbs(mslist, ' ', parset, parmdb_master_out+'_norm', False) # replace-sourcedb not needed since we use "@column"
-     logging.info('Subtracted facet model from data for DDE : ' + source)
- 
-   # CHECK IF THE SUBTRACT WORKED OK by making dirty low-res images
-   inputmslist = ''
-   for ms in mslist:
-      inputmslist = inputmslist + ' ' + ms  
-   #os.system('python ' + SCRIPTPATH + '/verify_subtract_v3.py ' + inputmslist + ' 0.3 ' + source)
-   os.system('python '+ SCRIPTPATH+'/verify_subtract_v5.py ' + inputmslist + ' 0.15 ' + source)
+      if peelskymodel[source_id] != 'empty': # should also cover "outliersource"
+        print 'Subtracting source with a user defined skymodel', peelskymodel[source_id]   
+        parset   = create_subtract_parset_field_outlier('SUBTRACTED_DATA_ALL',TEC)
+        runbbs(mslist, peelskymodel[source_id], parset, parmdb_master_out, True) # NOTE: no 'normalization' and replace sourcedb
+        logging.info('Subtracted outlier source from data for DDE : ' + source)
+      else:
+        parset   = create_subtract_parset_field('SUBTRACTED_DATA_ALL',TEC)
+        runbbs(mslist, ' ', parset, parmdb_master_out+'_norm', False) # replace-sourcedb not needed since we use "@column"
+        logging.info('Subtracted facet model from data for DDE : ' + source)
+
+      # CHECK IF THE SUBTRACT WORKED OK by making dirty low-res images
+      inputmslist = ''
+      for ms in mslist:
+         inputmslist = inputmslist + ' ' + ms  
+      #os.system('python ' + SCRIPTPATH + '/verify_subtract_v3.py ' + inputmslist + ' 0.3 ' + source)
+      os.system('python '+ SCRIPTPATH+'/verify_subtract_v5.py ' + inputmslist + ' 0.15 ' + source)
+
+   logging.info('finished '+source)
