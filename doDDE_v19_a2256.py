@@ -16,10 +16,16 @@ import sys
 
 if len(sys.argv)<2:
    raise Exception('Give the path to the setup code for the facet')
-else:
-   print 'Using',sys.argv[1],'as the setup code'
-   execfile(sys.argv[1])
-   print 'script path is',SCRIPTPATH
+
+print 'Using',sys.argv[1],'as the setup code'
+execfile(sys.argv[1])
+print 'script path is',SCRIPTPATH
+
+try:
+   StartAtStep
+except NameError:
+   print 'No starting step specified, begin at the beginning'
+   StartAtStep='preSC'
 
 logging.basicConfig(filename='dde.log',level=logging.DEBUG, format='%(asctime)s -  %(message)s', datefmt='%Y-%d-%m %H:%M:%S')
 logging.info('\n')
@@ -1273,22 +1279,46 @@ logging.info('Cellsize: '+str(cellsize)+ ' arcsec')
 
 
 for source in do_sources: 
- 
+
    source_id = sourcelist.index(source)
       
+   print 'DOING DDE patch:', source
+   logging.info('')
+   logging.info('DOING DDE patch: '+ source)   
+
+# tidying-up code from Wendy's version
+
+   if StartAtStep in ['preSC']:
+      # remove selfcal images #
+      logging.info("removing any existing sc ms")
+      os.system("rm -rf *."+source+".ms")
+   if StartAtStep in ['preSC', 'doSC']:
+      # remove selfcal images #
+      logging.info("removing any existing selfcal images")
+      os.system("rm -rf im*_cluster"+source+"*")
+      #os.system("rm -rf allbands.concat.shifted_'+source+'.ms")
+   if StartAtStep in ['preSC', 'doSC', 'postSC','preFACET','doFACET']:
+      # remove selfcal images #
+      logging.info("removing any existing facet images")
+      os.system("rm -rf imfield*_cluster"+source+"*")
+   if StartAtStep in ['preSC', 'doSC', 'postSC','preFACET']:
+      logging.info("removing any existing facet imaging average MS")
+      os.system("rm -rf *."+source+".ms.avgfield*")
+
    #check if allbands.concat.shifted.ms is present
    if os.path.isdir('allbands.concat.shifted.ms'):
      print 'allbands.concat.shifted.ms already exists'
-     #raise Exception('delete measurement set and then restart')
+     if StartAtStep in ['preSC']:
+        #raise Exception('delete measurement set and then restart')
+        os.system('rm -rf allbands.concat.shifted_'+source+'.ms')
+        logging.info('removing')
+     else:
+        logging.info('...but continuing because we are redoing selfcal')
 
    if not os.path.isdir('allbands.concat.ms'):
      print 'allbands.concat.ms does not exist'
      raise Exception('make measurement set and then restart')
 
-   print 'DOING DDE patch:', source
-   logging.info('')
-   logging.info('DOING DDE patch: '+ source)   
-   
    dummyskymodel   = SCRIPTPATH + '/dummy.skymodel' ## update every time again with new source, not used, just a dummy for correct
 
    msavglist = []
@@ -1300,99 +1330,110 @@ for source in do_sources:
    output_template_im = 'templatemask_' + source
 	   
 
-   if len(mslist) > 22:
-     runbbs_diffskymodel_addback16(mslist, 'instrument_ap_smoothed', True, directions[source_id],imsizes[source_id],output_template_im, do_ap)
-   else:
-     runbbs_diffskymodel_addback(mslist, 'instrument_ap_smoothed', True, directions[source_id],imsizes[source_id],output_template_im, do_ap)
+   ## STEP 1: prep for SC ##
+   if StartAtStep in ['preSC']:
+## FIXME -- hard-wired CPU limit in what follows
+      if len(mslist) > 22:
+         runbbs_diffskymodel_addback16(mslist, 'instrument_ap_smoothed', True, directions[source_id],imsizes[source_id],output_template_im, do_ap)
+      else:
+         runbbs_diffskymodel_addback(mslist, 'instrument_ap_smoothed', True, directions[source_id],imsizes[source_id],output_template_im, do_ap)
 
-   # average and phaseshift with NDPPP
-   for ms_id, ms in enumerate(mslist):
-     parset = create_phaseshift_parset(ms, msavglist[ms_id], source, directions[source_id],\
-              imsizes[source_id], dynamicrange[source_id])
-     os.system('rm -rf ' + msavglist[ms_id])
-     os.system('NDPPP ' + parset)
+      # average and phaseshift with NDPPP
+      for ms_id, ms in enumerate(mslist):
+         parset = create_phaseshift_parset(ms, msavglist[ms_id], source, directions[source_id],imsizes[source_id], dynamicrange[source_id])
+         os.system('rm -rf ' + msavglist[ms_id])
+         os.system('NDPPP ' + parset)
 
 
    ### PHASESHIFT the FULL resolution dataset, for MODEL_DATA FFT subtract
-   if outliersource[source_id] == 'False':
-     parset = create_phaseshift_parset_full('allbands.concat.ms', 'allbands.concat.shifted.ms', directions[source_id],'DATA')
-     os.system('NDPPP ' + parset + '&') # run in background
+      if outliersource[source_id] == 'False':
+         parset = create_phaseshift_parset_full('allbands.concat.ms', 'allbands.concat.shifted.ms', directions[source_id],'DATA')
+         os.system('NDPPP ' + parset + '&') # run in background
 
-   if do_ap:
-    runbbs_2(msavglist, mslist, dummyskymodel ,SCRIPTPATH+'/correct.parset','instrument_ap_smoothed')
+   # correct with amps and phases from selfcal
+      if do_ap:
+         runbbs_2(msavglist, mslist, dummyskymodel ,SCRIPTPATH+'/correct.parset','instrument_ap_smoothed')
 
-   # do the selfcal loop
-   # make string ms list for input selfcal 
-   inputmslist = ''
-   for ms in msavglist:
-      inputmslist = inputmslist + ' ' + ms       
+   ## END STEP 1
+   ## STEP 2a: SC ##
+   if StartAtStep in ['preSC', 'doSC']:
+      logging.info('selfcal started '+source)
+      # do the selfcal loop
+      # make string ms list for input selfcal 
+      inputmslist = ''
+      for ms in msavglist:
+         inputmslist = inputmslist + ' ' + ms       
+
+      logging.info('Start selfcal DDE patch: '+ source)
+      logging.info('Solint CommonScalarPhase: '+ str(cellsizetime_p[source_id]))
+      logging.info('Solint A&P: '+ str(cellsizetime_a[source_id]))
+      logging.info('Region file: '+ str(regionselfc[source_id]))   
+
+      #os.system('python ' + SCRIPTPATH + '/selfcalv19.py ' + inputmslist + ' ' + source + ' ' + atrous_do[source_id] + ' ' + str(imsizes[source_id]) + ' ' + \
+      #             str(nterms) + ' ' + str(cellsizetime_a[source_id]) + ' ' + str(cellsizetime_p[source_id]) + ' ' + TEC + ' ' + clock + ' ' + \
+      #	        str(dynamicrange[source_id]) + ' ' + regionselfc[source_id] + ' ' + str(uvrange) + ' ' + str(peelskymodel[source_id]) + ' ' +\
+      #		str(cellsize))
 
 
+      os.system('python '+SCRIPTPATH+'/selfcalv19_ww_cep3.py ' + inputmslist + ' ' + source + ' ' + atrous_do[source_id] + ' ' + str(imsizes[source_id]) + ' ' + \
+                       str(nterms) + ' ' + str(cellsizetime_a[source_id]) + ' ' + str(cellsizetime_p[source_id]) + ' ' + TEC + ' ' + clock + ' ' + \
+                       str(dynamicrange[source_id]) + ' ' + regionselfc[source_id])
 
-   logging.info('Start selfcal DDE patch: '+ source)
-   logging.info('Solint CommonScalarPhase: '+ str(cellsizetime_p[source_id]))
-   logging.info('Solint A&P: '+ str(cellsizetime_a[source_id]))
-   logging.info('Region file: '+ str(regionselfc[source_id]))   
-
-   #os.system('python ' + SCRIPTPATH + '/selfcalv19.py ' + inputmslist + ' ' + source + ' ' + atrous_do[source_id] + ' ' + str(imsizes[source_id]) + ' ' + \
-   #             str(nterms) + ' ' + str(cellsizetime_a[source_id]) + ' ' + str(cellsizetime_p[source_id]) + ' ' + TEC + ' ' + clock + ' ' + \
-   #	        str(dynamicrange[source_id]) + ' ' + regionselfc[source_id] + ' ' + str(uvrange) + ' ' + str(peelskymodel[source_id]) + ' ' +\
-   #		str(cellsize))
    
    
-   os.system('python '+SCRIPTPATH+'/selfcalv19_ww_cep3.py ' + inputmslist + ' ' + source + ' ' + atrous_do[source_id] + ' ' + str(imsizes[source_id]) + ' ' + \
-                    str(nterms) + ' ' + str(cellsizetime_a[source_id]) + ' ' + str(cellsizetime_p[source_id]) + ' ' + TEC + ' ' + clock + ' ' + \
-                    str(dynamicrange[source_id]) + ' ' + regionselfc[source_id])
-   
-   
-   
-   logging.info('Finished selfcal DDE patch: '+ source)
+      logging.info('Finished selfcal DDE patch: '+ source)
 
-   # combine selfcal solutions with non-DDE phases
-   for ms_id, ms in enumerate(mslist): 
-     parmdb_selfcal     = msavglist[ms_id]+"/"+"instrument_merged"
-     parmdb_master_out  = ms+"/"+"instrument_master_" + source
-     parmdb_template    = msavglist[ms_id]+"/"+"instrument_template"   
-     join_parmdb(ms, parmdb_selfcal,parmdb_template, parmdb_master_out)
-     parmdb_master_out  = "instrument_master_" + source   # reset because runbbs uses basename of ms
+   ## STEP 2b:  SC wrap up ##
+   if StartAtStep in ['preSC', 'doSC', 'postSC']:
+      # combine selfcal solutions with non-DDE phases
+      for ms_id, ms in enumerate(mslist): 
+        parmdb_selfcal     = msavglist[ms_id]+"/"+"instrument_merged"
+        parmdb_master_out  = ms+"/"+"instrument_master_" + source
+        parmdb_template    = msavglist[ms_id]+"/"+"instrument_template"   
+        join_parmdb(ms, parmdb_selfcal,parmdb_template, parmdb_master_out)
+        parmdb_master_out  = "instrument_master_" + source   # reset because runbbs uses basename of ms
 
 
-   # maybe there are some issues with the frequency boundaries if you solve on averaged data
-   for ms_id, ms in enumerate(mslist): 
-     parmdb_master_outtmp  = ms+"/"+"instrument_master_" + source
-     os.system("taql 'update " + parmdb_master_outtmp + " set ENDX=1.e12'")
-     os.system("taql 'update " + parmdb_master_outtmp + " set STARTX=1.0'")
+      # maybe there are some issues with the frequency boundaries if you solve on averaged data
+      for ms_id, ms in enumerate(mslist): 
+        parmdb_master_outtmp  = ms+"/"+"instrument_master_" + source
+        os.system("taql 'update " + parmdb_master_outtmp + " set ENDX=1.e12'")
+        os.system("taql 'update " + parmdb_master_outtmp + " set STARTX=1.0'")
 
-   if outliersource[source_id] == 'False':
-     # normalize the solutions to 1.0, for outlier sources do not(!) normalize 
-     # this is a global normalization (one --single-- factor for all SB combined)
-     nvalue = normalize_parmdbs(mslist,parmdb_master_out, parmdb_master_out+'_norm')
-     logging.info('Normalized amps to 1.0, found mean amplitude value of ' + str(nvalue))
-     
-   # plot the solutions
-   for ms in mslist:
-      parmdb_master_plot  = ms+"/"+"instrument_master_" + source
-      plotim_base         = ms.split('.')[0] + "_instrument_master_" + source
-      os.system(SCRIPTPATH + '/plot_solutions_all_stations_v2.py \
-                 -s -a -p --freq 150 ' + parmdb_master_plot + ' ' + plotim_base +'&')
+      if outliersource[source_id] == 'False':
+        # normalize the solutions to 1.0, for outlier sources do not(!) normalize 
+        # this is a global normalization (one --single-- factor for all SB combined)
+        nvalue = normalize_parmdbs(mslist,parmdb_master_out, parmdb_master_out+'_norm')
+        logging.info('Normalized amps to 1.0, found mean amplitude value of ' + str(nvalue))
 
-
-   print 'Updated frequency boundaries parmdb and normalized amps to 1.0'
-   time.sleep(5)
-   # make new mslist for field averaged data
-   msavglist = []
-   for ms_id, ms in enumerate(mslist):
-     msavglist.append(ms.split('.')[0] + '.' + source + '.ms.avgfield')
+      # plot the solutions
+      for ms in mslist:
+         parmdb_master_plot  = ms+"/"+"instrument_master_" + source
+         plotim_base         = ms.split('.')[0] + "_instrument_master_" + source
+         os.system(SCRIPTPATH + '/plot_solutions_all_stations_v2.py \
+                    -s -a -p --freq 150 ' + parmdb_master_plot + ' ' + plotim_base +'&')
 
 
-   ######### check if all plot_solutions_all_stations_v2.py processes is finished
-   cmd = "ps -f -u " + username + " | grep plot_solutions_all_stations_v2.py | grep -v grep |wc -l"
-   output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])  
-   while output > 0 : # "grep -v grep" to prevent counting the grep command
-     time.sleep(2)
-     output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
-   #########
+      print 'Updated frequency boundaries parmdb and normalized amps to 1.0'
+      time.sleep(5)
+      # make new mslist for field averaged data
+      msavglist = []
+      for ms_id, ms in enumerate(mslist):
+        msavglist.append(ms.split('.')[0] + '.' + source + '.ms.avgfield')
 
+
+      ######### check if all plot_solutions_all_stations_v2.py processes is finished
+      cmd = "ps -f -u " + username + " | grep plot_solutions_all_stations_v2.py | grep -v grep |wc -l"
+      output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])  
+      while output > 0 : # "grep -v grep" to prevent counting the grep command
+        time.sleep(2)
+        output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
+      #########
+
+######################################
+# Code unchanged from here
+# This part will ALWAYS RUN
+#####################################
 
    if outliersource[source_id] == 'False':
       runbbs_diffskymodel_addbackfield(mslist, 'instrument_ap_smoothed', True,  directions[source_id],imsizes[source_id], output_template_im, do_ap)
@@ -1425,9 +1466,6 @@ for source in do_sources:
 	  pid = (Popen('pidof NDPPP', shell=True, stdout=PIPE).communicate()[0])    
 	  pid_list = pid.split(' ')
       ###########################################################################  
-
-     
-     
 
       ###### MAKE FACET IMAGE #####
       msavglist = []
