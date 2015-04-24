@@ -1468,6 +1468,10 @@ for source in do_sources:
          runbbs(mslist, dummyskymodel, SCRIPTPATH + '/correctfield2.parset',parmdb_master_out+'_norm', False) 
       ###########################################################################  
       # NDPPP phase shift, less averaging (NEW: run 2 in parallel)
+      msavglist = []
+      for ms_id, ms in enumerate(mslistorig): # remake msavglist from mslistorig
+        msavglist.append(ms.split('.')[0] + '.' + source + '.ms.avgfield')      
+
       for ms_id, ms in enumerate(mslist):
 	parset = create_phaseshift_parset_field(ms, msavglist[ms_id], source, directions[source_id])
 	
@@ -1493,9 +1497,6 @@ for source in do_sources:
       ###########################################################################  
 
       ###### MAKE FACET IMAGE #####
-      msavglist = []
-      for ms_id, ms in enumerate(mslistorig): # remake msavglist from mslistorig
-        msavglist.append(ms.split('.')[0] + '.' + source + '.ms.avgfield')
       
       imout,mask_out, imsizef = make_image_wsclean(msavglist, source, 'field0', 5, 3, nterms, 'True', fieldsize[source_id], \
 				  output_template_im +'.masktmp', mscale_field[source_id],regionfield[source_id],cellsize, uvrange,wsclean)
