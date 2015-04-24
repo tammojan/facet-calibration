@@ -1404,14 +1404,14 @@ for source in do_sources:
          parmdb_template    = msavglist[ms_id]+"/"+"instrument_template"
          join_parmdb(ms, parmdb_selfcal,parmdb_nondde, parmdb_template, this_parmdb_master_out, TEC, clock)
          print 'joined SC and DDE parmdbs for {ms}'.format(ms=ms)
+         parmdb_master_out  = "instrument_master_" + source   # reset because runbbs uses basename of ms
 
 # stefcal code, doesn't work at the moment
 #        parmdb_selfcal     = msavglist[ms_id]+"/"+"instrument_merged"
 #        parmdb_master_out  = ms+"/"+"instrument_master_" + source
 #        parmdb_template    = msavglist[ms_id]+"/"+"instrument_template"   
 #        join_parmdb(ms, parmdb_selfcal,parmdb_template, parmdb_master_out)
-#        parmdb_master_out  = "instrument_master_" + source   # reset because runbbs uses basename of ms
-
+#        
 
       # maybe there are some issues with the frequency boundaries if you solve on averaged data
       for ms_id, ms in enumerate(mslist): 
@@ -1457,6 +1457,7 @@ for source in do_sources:
 # This part will ALWAYS RUN
 #####################################
 
+   parmdb_master_out="instrument_master_" + source
    if outliersource[source_id] == 'False':
       runbbs_diffskymodel_addbackfield(mslist, 'instrument_ap_smoothed', True,  directions[source_id],imsizes[source_id], output_template_im, do_ap)
       logging.info('Adding back rest of the field for DDE facet ' + source)
