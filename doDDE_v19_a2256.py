@@ -1147,9 +1147,11 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms
  os.system(cmd1+cmd2+cmd3)
 
  # convert from FITS to casapy format
- os.system('casapy --nologger -c ' + SCRIPTPATH +'/fits2image.py ' + \
-           imout + '-image.fits' + ' ' + imout +'.image')
-       
+ # os.system('casapy --nologger -c ' + SCRIPTPATH +'/fits2image.py ' + \
+ #           imout + '-image.fits' + ' ' + imout +'.image')
+ finalim=pyrap.images.image(imout+'-image.fits')
+ finalim.saveas(imout +'.image')
+
  return imout, mask_sources+'field', imsize
 
 
