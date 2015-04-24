@@ -27,6 +27,8 @@ except NameError:
    print 'No starting step specified, begin at the beginning'
    StartAtStep='preSC'
 
+print 'StartAtStep is',StartAtStep
+
 logging.basicConfig(filename='dde.log',level=logging.DEBUG, format='%(asctime)s -  %(message)s', datefmt='%Y-%d-%m %H:%M:%S')
 logging.info('\n')
 
@@ -1015,6 +1017,9 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
 
 def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous_do, imsize, inputmask, mscale, region,cellsize,uvrange,wsclean):
 
+ if imsize is None:
+    imsize = image_size_from_mask(inputmask)
+
  niter   = numpy.int(5000 * (numpy.sqrt(numpy.float(len(mslist)))))
  cellsizeim = str(cellsize) +'arcsec'
  #wsclean =  '/home/rvweeren/software/WSClean/wsclean-1.6+MORESANE+MASKS4/build/wsclean'
@@ -1093,6 +1098,9 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms
  mask_name  = imout + '.fitsmask'
  casa_mask  = imout + '.casamask'
  
+ maskim=pyrap.images.image(mask_name)
+ maskim.saveas(casa_mask)
+
  # Convert to casapy format and includ region file
  if region != 'empty':
    os.system('casapy --nologger -c ' + SCRIPTPATH+'/fitsandregion2image.py '\
@@ -1148,7 +1156,6 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms
 def do_fieldFFT(ms,image,imsize,cellsize,wsclean,mslist):
  niter   = 1
  cellsizeim = str(cellsize)+ 'arcsec'
- #wsclean =  '/home/rvweeren/software/WSClean/wsclean-1.7/build/wsclean'
 
  # note no uvrange here!
  # also no re-order
@@ -1169,6 +1176,20 @@ def do_fieldFFT(ms,image,imsize,cellsize,wsclean,mslist):
  print cmd1+cmd2+cmd3
  os.system(cmd1+cmd2+cmd3)
  return
+
+def image_size_from_mask(mask):
+    im = pyrap.images.image(mask)
+    sh = im.shape()
+    if sh[-1] != sh[-2]:
+        print "image is not square!"
+        print sh[-1], sh[-2]
+    npix = sh[-1]
+    return npix
+
+
+### END of FUNCTION DEFS, MAIN SCRIPT STARTS HERE# 
+
+
 source_info_rec = numpy.genfromtxt(peelsourceinfo, \
                                    dtype="S50,S25,S5,S5,i8,i8,i8,i8,S2,S255,S255,S255,S5", \
                                    names=["sourcelist","directions","atrous_do","mscale_field","imsizes",\
@@ -1337,7 +1358,16 @@ for source in do_sources:
 
    # set image region
    tmpn  = str(msavglist[0]) 
+
    output_template_im = 'templatemask_' + source
+   if not os.path.exists(output_template_im):
+      raise  Exception('facet mask missing: '+output_template_im)
+
+   selfcaldir = directions[source_id]
+   facetsize = image_size_from_mask(output_template_im)
+
+   logging.info("Selfcal direction: "+selfcaldir)
+   logging.info("facetmask: "+str(facetsize))
 	   
 
    ## STEP 1: prep for SC ##
@@ -1452,55 +1482,61 @@ for source in do_sources:
         output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
       #########
 
-######################################
-# Code unchanged from here
-# This part will ALWAYS RUN
-#####################################
 
    parmdb_master_out="instrument_master_" + source
    if outliersource[source_id] == 'False':
-      runbbs_diffskymodel_addbackfield(mslist, 'instrument_ap_smoothed', True,  directions[source_id],imsizes[source_id], output_template_im, do_ap)
-      logging.info('Adding back rest of the field for DDE facet ' + source)
-   
-      if TEC=='True':
-         runbbs(mslist, dummyskymodel, SCRIPTPATH + '/correctfield2+TEC.parset',parmdb_master_out+'_norm', False) 
-      else:
-         runbbs(mslist, dummyskymodel, SCRIPTPATH + '/correctfield2.parset',parmdb_master_out+'_norm', False) 
-      ###########################################################################  
-      # NDPPP phase shift, less averaging (NEW: run 2 in parallel)
-      msavglist = []
-      for ms_id, ms in enumerate(mslistorig): # remake msavglist from mslistorig
-        msavglist.append(ms.split('.')[0] + '.' + source + '.ms.avgfield')      
+      if StartAtStep in ['preSC', 'doSC', 'postSC','preFACET']:
+         ## STEP 3: prep for facet ##
+         parmdb_master_out="instrument_master_" + source
+         runbbs_diffskymodel_addbackfield(mslist, 'instrument_ap_smoothed', True,  directions[source_id],imsizes[source_id], output_template_im, do_ap)
+         logging.info('Adding back rest of the field for DDE facet ' + source)
 
-      for ms_id, ms in enumerate(mslist):
-	parset = create_phaseshift_parset_field(ms, msavglist[ms_id], source, directions[source_id])
-	
-	cmd = "ps -u " + username + " | grep NDPPP | wc -l"
-	output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
-	
-	while output > 1 : # max 2 processes (max 2, instead of 3, because we also phaseshift) 
-	  time.sleep(10)
-	  output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
-	  pid = (Popen('pidof NDPPP', shell=True, stdout=PIPE).communicate()[0])    
-	  pid_list = pid.split(' ')
-	# START NDPPP BECAUSE LESS/EQ 2 PROCESSES ARE RUNNING	
-	os.system('rm -rf ' + msavglist[ms_id])
-	os.system('NDPPP ' + parset + '&')
+         if TEC=='True':
+            runbbs(mslist, dummyskymodel, SCRIPTPATH + '/correctfield2+TEC.parset',parmdb_master_out+'_norm', False) 
+         else:
+            runbbs(mslist, dummyskymodel, SCRIPTPATH + '/correctfield2.parset',parmdb_master_out+'_norm', False) 
+         ###########################################################################  
+         # NDPPP phase shift, less averaging (NEW: run 2 in parallel)
+         msavglist = []
+         for ms_id, ms in enumerate(mslistorig): # remake msavglist from mslistorig
+           msavglist.append(ms.split('.')[0] + '.' + source + '.ms.avgfield')      
 
-      # Check if all NDPPP processes are finished
-      output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0]) 
-      while output > 0 :
-	  time.sleep(10)
-	  output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
-	  pid = (Popen('pidof NDPPP', shell=True, stdout=PIPE).communicate()[0])    
-	  pid_list = pid.split(' ')
-      ###########################################################################  
+         for ms_id, ms in enumerate(mslist):
+           parset = create_phaseshift_parset_field(ms, msavglist[ms_id], source, directions[source_id])
+
+           cmd = "ps -u " + username + " | grep NDPPP | wc -l"
+           output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
+
+           while output > 1 : # max 2 processes (max 2, instead of 3, because we also phaseshift) 
+             time.sleep(10)
+             output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
+             pid = (Popen('pidof NDPPP', shell=True, stdout=PIPE).communicate()[0])    
+             pid_list = pid.split(' ')
+           # START NDPPP BECAUSE LESS/EQ 2 PROCESSES ARE RUNNING	
+           os.system('rm -rf ' + msavglist[ms_id])
+           os.system('NDPPP ' + parset + '&')
+
+         # Check if all NDPPP processes are finished
+         output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0]) 
+         while output > 0 :
+             time.sleep(10)
+             output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
+             pid = (Popen('pidof NDPPP', shell=True, stdout=PIPE).communicate()[0])    
+             pid_list = pid.split(' ')
+         ###########################################################################  
+      ## STEP 4 -- do facet, currently always run ##
 
       ###### MAKE FACET IMAGE #####
-      
-      imout,mask_out, imsizef = make_image_wsclean(msavglist, source, 'field0', 5, 3, nterms, 'True', fieldsize[source_id], \
-				  output_template_im +'.masktmp', mscale_field[source_id],regionfield[source_id],cellsize, uvrange,wsclean)
+
+      # imsize None forces the code to work out the image size from the mask size
+      msavglist = []
+      for ms_id, ms in enumerate(mslistorig): # remake msavglist from mslistorig
+         msavglist.append(ms.split('.')[0] + '.' + source + '.ms.avgfield')      
+
+      imout,mask_out, imsizef = make_image_wsclean(msavglist, source, 'field0', 5, 3, nterms, 'True', None, output_template_im +'.masktmp', mscale_field[source_id],regionfield[source_id],cellsize, uvrange,wsclean)
       logging.info('Imaged full DDE facet: ' + source)
+
+      ## STEP 4b -- post facet ##
 
       # BACKUP SUBTRACTED DATA IN CASE OF CRASH
       ###########################################################################  

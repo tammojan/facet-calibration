@@ -13,9 +13,11 @@ print 'inputim', inputim
 print 'imageout', imageout
 print 'region', region
 
-importfits(fitsimage=inputim,imagename=imageout,whichrep=0,\
-           whichhdu=-1,zeroblanks=True,overwrite=True,defaultaxes=False,\
-	   defaultaxesvalues=[],beam=[])
+# don't importfits here to work round CASA bug
+# conversion is done in calling code instead
+#importfits(fitsimage=inputim,imagename=imageout,whichrep=0,\
+#           whichhdu=-1,zeroblanks=True,overwrite=True,defaultaxes=False,\
+#	   defaultaxesvalues=[],beam=[])
 
 
 if region != 'None':
