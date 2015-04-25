@@ -13,7 +13,7 @@ peelsourceinfo  =  '/home/'+username+'/scripts/a2256_hba/peel_source_info_a2256.
 wsclean         =  '/home/rvweeren/software/WSClean/wsclean-1.7/build/wsclean'
 
 
-BANDS = range(200,209,10)
+BANDS = range(200,219,10)  # miminum number of blocks is 2 !!
 NAME = "A2256"
 RES = "2ch10s"
 
@@ -22,6 +22,7 @@ do_sources=['s1']
 nterms      = 1      # automatically adjusted if needed
 cellsize    = 1.5
 TEC         = "True" # automatically set to False if needed
+                     # Note current code only works with TEC = 'True'
 clock       = "False" # gives problems with phase continuity automatically set to False if needed
 makemasks   = False
 do_ap       = True # add back, correct with instrument_ap_smoothed
