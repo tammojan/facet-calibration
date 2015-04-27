@@ -3,13 +3,13 @@ import matplotlib
 import numpy
 import os
 import sys
-import lofar.parmdb
 from scipy import interpolate
 import time
 from subprocess import Popen, PIPE
 import pyrap.tables as pt
-from coordinates_mode import *
 import pyrap.images
+import lofar.parmdb
+from coordinates_mode import *
 import pwd
 
 # location of this script - note this script should be in subdirectory 'use'

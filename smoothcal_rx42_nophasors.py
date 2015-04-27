@@ -2,14 +2,13 @@
 # -*- coding: utf-8 -*-
 
 import sys
-#import pyrap.tables as pt
 import os
-import lofar.parmdb
 import numpy as numpy
 import math
 #import lofar.expion.parmdbmain
 import scipy.signal
 import pyrap.tables as pt
+import lofar.parmdb
 
 
 def median_smooth(ampl, half_window):
