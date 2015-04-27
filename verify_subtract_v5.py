@@ -14,7 +14,7 @@ import pwd
 
 # location of this script - note this script should be in subdirectory 'use'
 #SCRIPTPATH = os.path.dirname(sys.argv[0])
-SCRIPTPATH = os.path.dirname(os.path.abspath(sys.argv[0]))
+SCRIPTPATH = os.path.dirname(os.path.abspath(__file__))
 
 
 pi = numpy.pi

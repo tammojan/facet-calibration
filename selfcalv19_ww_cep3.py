@@ -13,7 +13,7 @@ import pwd
 username = pwd.getpwuid(os.getuid())[0]
 
 # location of this script - all scripts/parsets it uses are contained in subdirectory 'use'
-SCRIPTPATH = os.path.dirname(sys.argv[0])
+SCRIPTPATH = os.path.dirname(os.path.abspath(__file__))
 
 # to run casa when not logged in
 # Step 0. Run in screen
