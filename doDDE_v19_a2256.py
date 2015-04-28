@@ -27,6 +27,12 @@ except NameError:
    print 'No starting step specified, begin at the beginning'
    StartAtStep='preSC'
 
+try:
+   WSCleanRobust
+except NameError:
+   WSCleanRobust=-0.25 # default preserves old value
+   print 'No WSClean robust set, defaulting to',WSCleanRobust
+
 print 'StartAtStep is',StartAtStep
 
 logging.basicConfig(filename='dde.log',level=logging.DEBUG, format='%(asctime)s -  %(message)s', datefmt='%Y-%d-%m %H:%M:%S')
@@ -37,8 +43,6 @@ os.system('cp ' + SCRIPTPATH + '/ftw.xml .')
 os.system('cp ' + SCRIPTPATH + '/task_ftw.py .')
 
 os.system(buildmytasks) # make casapy tasks
-
-
 
 
 from coordinates_mode import *
@@ -1015,7 +1019,7 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
   
  return imout, mask_sources+'field', imsize
 
-def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous_do, imsize, inputmask, mscale, region,cellsize,uvrange,wsclean):
+def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous_do, imsize, inputmask, mscale, region,cellsize,uvrange,wsclean,WSCleanRobust):
 
  if imsize is None:
     imsize = image_size_from_mask(inputmask)
@@ -1078,13 +1082,13 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms
  if wideband:
    channelsout =  1 # there is a factor of 5 averaging
    cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
-   cmd2 = '-scale ' + cellsizeim + ' -weight briggs -0.25 -niter ' + str(niter) + ' -threshold '+ cleandepth1 + ' '
+   cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + '-cleanborder 0 -threshold '+ cleandepth1 + ' '
    cmd3 = '-minuv-l '+ str(uvrange) \
           +' -mgain 0.75 -fitbeam -datacolumn DATA -no-update-model-required -joinchannels -channelsout ' +\
 	  str(channelsout) + ' '  + outms
  else:  
    cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
-   cmd2 = '-scale ' + cellsizeim + ' -weight briggs -0.25 -niter ' + str(niter) + ' -threshold '+ cleandepth1 + ' '
+   cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' -cleanborder 0 -threshold '+ cleandepth1 + ' '
    cmd3 = '-minuv-l '+ str(uvrange) +' -mgain 0.75 -fitbeam -datacolumn DATA -no-update-model-required ' + outms
 
  print cmd1+cmd2+cmd3
@@ -1134,12 +1138,12 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms
 
  if wideband:
    cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
-   cmd2 = '-scale ' + cellsizeim + ' -weight briggs 0.0 -niter ' + str(niter) + ' -threshold '+ cleandepth2 + ' '
+   cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' -cleanborder 0 -threshold '+ cleandepth2 + ' '
    cmd3 = '-minuv-l '+ str(uvrange) +' -mgain 0.6 -fitbeam -datacolumn DATA -no-update-model-required -casamask ' + \
           mask_sources+'field' + ' -joinchannels -channelsout ' + str(channelsout) + ' ' + outms
  else:
    cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
-   cmd2 = '-scale ' + cellsizeim + ' -weight briggs 0.0 -niter ' + str(niter) + ' -threshold '+ cleandepth2 + ' '
+   cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' -cleanborder 0 -threshold '+ cleandepth2 + ' '
    cmd3 = '-minuv-l '+ str(uvrange) +' -mgain 0.6 -fitbeam -datacolumn DATA -no-update-model-required -casamask ' + \
           mask_sources+'field' + ' '+ outms
  
@@ -1155,7 +1159,7 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms
  return imout, mask_sources+'field', imsize
 
 
-def do_fieldFFT(ms,image,imsize,cellsize,wsclean,mslist):
+def do_fieldFFT(ms,image,imsize,cellsize,wsclean,mslist,WSCleanRobust):
  niter   = 1
  cellsizeim = str(cellsize)+ 'arcsec'
 
@@ -1168,12 +1172,12 @@ def do_fieldFFT(ms,image,imsize,cellsize,wsclean,mslist):
  if wideband:
    channelsout =  5 # DO NOT CHANGE !! (in make_image_wsclean_wideband there is averaging)
    cmd1 = wsclean + ' -predict -name ' + image + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
-   cmd2 = '-scale ' + cellsizeim + ' -weight briggs 0.0 -niter ' + str(niter) + ' '
-   cmd3 = '-mgain 0.85 -fitbeam -datacolumn DATA '+ '-joinchannels -channelsout ' + str(channelsout) + ' ' + ms
+   cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' '
+   cmd3 = '-cleanborder 0 -mgain 0.85 -fitbeam -datacolumn DATA '+ '-joinchannels -channelsout ' + str(channelsout) + ' ' + ms
  else:
    cmd1 = wsclean + ' -predict -name ' + image + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
-   cmd2 = '-scale ' + cellsizeim + ' -weight briggs 0.0 -niter ' + str(niter) + ' '
-   cmd3 = '-mgain 0.85 -fitbeam -datacolumn DATA '+ ' ' + ms
+   cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' '
+   cmd3 = '-cleanborder 0 -mgain 0.85 -fitbeam -datacolumn DATA '+ ' ' + ms
  
  print cmd1+cmd2+cmd3
  os.system(cmd1+cmd2+cmd3)
@@ -1536,7 +1540,7 @@ for source in do_sources:
          for ms_id, ms in enumerate(mslistorig): # remake msavglist from mslistorig
             msavglist.append(ms.split('.')[0] + '.' + source + '.ms.avgfield')      
 
-         imout,mask_out, imsizef = make_image_wsclean(msavglist, source, 'field0', 5, 3, nterms, 'True', None, output_template_im +'.masktmp', mscale_field[source_id],regionfield[source_id],cellsize, uvrange,wsclean)
+         imout,mask_out, imsizef = make_image_wsclean(msavglist, source, 'field0', 5, 3, nterms, 'True', None, output_template_im +'.masktmp', mscale_field[source_id],regionfield[source_id],cellsize, uvrange,wsclean,WSCleanRobust)
          logging.info('Imaged full DDE facet: ' + source)
 
       ## STEP 4b -- post facet ##
@@ -1566,7 +1570,7 @@ for source in do_sources:
 
 
          # DO THE FFT
-         do_fieldFFT('allbands.concat.shifted.ms',imout, imsizef, cellsize, wsclean, msavglist)
+         do_fieldFFT('allbands.concat.shifted.ms',imout, imsizef, cellsize, wsclean, msavglist, WSCleanRobust)
          logging.info('FFTed model of DDE facet: ' + source)
 
          # SHIFT PHASE CENTER BACK TO ORIGINAL
