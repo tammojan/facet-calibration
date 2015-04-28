@@ -1546,6 +1546,18 @@ for source in do_sources:
       ## STEP 4b -- post facet ##
 
       if StartAtStep in ['preSC', 'doSC', 'postSC','preFACET','doFACET','postFACET']:
+
+# if we are restarting, it's possible that allbands.concat.shifted.ms may have been deleted earlier. So re-create it if it doesn't exist
+
+         if not(os.path.isdir('allbands.concat.shifted.ms')):
+            print 'allbands.concat.shifted.ms does not exist, re-creating'
+            parset = create_phaseshift_parset_full('allbands.concat.ms', 'allbands.concat.shifted.ms', directions[source_id],'DATA')
+            os.system('NDPPP ' + parset)
+         if StartAtStep=='postFACET':
+            # imout won't be set, so guess it
+            imout='imfield0_cluster'+source
+            imsizef=image_size_from_mask(output_template_im +'.masktmp')
+
          # BACKUP SUBTRACTED DATA IN CASE OF CRASH
          ###########################################################################  
          # (NEW: run in parallel)
@@ -1574,6 +1586,7 @@ for source in do_sources:
          logging.info('FFTed model of DDE facet: ' + source)
 
          # SHIFT PHASE CENTER BACK TO ORIGINAL
+         logging.info('Shift model back to pointing centre')
          parset = create_phaseshift_parset_full('allbands.concat.shifted.ms', 'allbands.concat.shiftedback.ms',\
                                        pointingcenter,'MODEL_DATA')
 

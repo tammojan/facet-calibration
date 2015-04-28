@@ -45,7 +45,7 @@ def create_phaseshift_parset_field(msin, msout):
   
   
 el=len(sys.argv)
-print el
+#print el
 
 mslist    = sys.argv[1:el-2]
 res_val   = numpy.float(str(sys.argv[el-2]))
@@ -74,7 +74,9 @@ for ms_id, ms in enumerate(mslist):
        output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
 
      # START NDPPP BECAUSE LESS/EQ 2 PROCESSES ARE RUNNING	
-     os.system('NDPPP ' + parset + '&')
+     ncmd='NDPPP ' + parset+' &>'+ms.split('.')[0] +'.ndppp_avgphaseshift_check.log &'
+     print 'Running',ncmd
+     os.system(ncmd)
 
 # Check if all NDPPP processes are finished
 output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0]) 
