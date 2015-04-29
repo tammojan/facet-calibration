@@ -45,7 +45,7 @@ if __name__ == '__main__':
  # DO THE SOURCE DETECTION
  img = bdsm.process_image(image_name, mean_map='zero', rms_box=(300,60), thresh_pix=numpy.float(o.threshpix), \
                           thresh_isl=numpy.float(o.threshisl), atrous_do=o.atrous_do,  \
-			  adaptive_rms_box=False, adaptive_thresh=150, rms_box_bright=(70,10), atrous_jmax=3)
+			  adaptive_rms_box=True, adaptive_thresh=150, rms_box_bright=(70,10), atrous_jmax=3)
 
  #img.show_fit()
 
