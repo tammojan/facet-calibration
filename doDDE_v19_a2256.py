@@ -1095,7 +1095,7 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms
  os.system(cmd1+cmd2+cmd3)
 
  # create the mask
- os.system('python ' + SCRIPTPATH + '/makecleanmask_10sb_wsclean.py --threshpix '+str(threshpix)+\
+ os.system('python ' + SCRIPTPATH + '/makecleanmask_field_wsclean.py --threshpix '+str(threshpix)+\
            ' --threshisl '+str(threshisl) +' --atrous_do '+ str(atrous_do) + \
  	   ' --casaregion  '+ region + ' '  + imout +'-image.fits')
 
