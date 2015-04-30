@@ -13,6 +13,7 @@ import pwd
 import logging
 pi       = numpy.pi
 import sys
+import blank
 
 if len(sys.argv)<2:
    raise Exception('Give the path to the setup code for the facet')
@@ -32,6 +33,12 @@ try:
 except NameError:
    WSCleanRobust=-0.25 # default preserves old value
    print 'No WSClean robust set, defaulting to',WSCleanRobust
+
+try:
+   BlankField
+except NameError:
+   BlankField=False
+   print 'BlankField not set, defaulting to',BlankField
 
 print 'StartAtStep is',StartAtStep
 
@@ -1019,7 +1026,7 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
   
  return imout, mask_sources+'field', imsize
 
-def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous_do, imsize, inputmask, mscale, region,cellsize,uvrange,wsclean,WSCleanRobust):
+def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous_do, imsize, inputmask, mscale, region,cellsize,uvrange,wsclean,WSCleanRobust,BlankField):
 
  if imsize is None:
     imsize = image_size_from_mask(inputmask)
@@ -1094,12 +1101,17 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms
  print cmd1+cmd2+cmd3
  os.system(cmd1+cmd2+cmd3)
 
+ if BlankField:
+    mask_image=blank.blank_facet(imout+'-image.fits',inputmask)
+ else:
+    mask_image=imout+'-image.fits'
+
  # create the mask
  os.system('python ' + SCRIPTPATH + '/makecleanmask_field_wsclean.py --threshpix '+str(threshpix)+\
            ' --threshisl '+str(threshisl) +' --atrous_do '+ str(atrous_do) + \
- 	   ' --casaregion  '+ region + ' '  + imout +'-image.fits')
+ 	   ' --casaregion  '+ region + ' '  + mask_image)
 
- mask_name  = imout + '.fitsmask'
+ mask_name  = mask_image + '.fitsmask'
  casa_mask  = imout + '.casamask'
  
  maskim=pyrap.images.image(mask_name)
@@ -1540,7 +1552,7 @@ for source in do_sources:
          for ms_id, ms in enumerate(mslistorig): # remake msavglist from mslistorig
             msavglist.append(ms.split('.')[0] + '.' + source + '.ms.avgfield')      
 
-         imout,mask_out, imsizef = make_image_wsclean(msavglist, source, 'field0', 5, 3, nterms, 'True', None, output_template_im +'.masktmp', mscale_field[source_id],regionfield[source_id],cellsize, uvrange,wsclean,WSCleanRobust)
+         imout,mask_out, imsizef = make_image_wsclean(msavglist, source, 'field0', 5, 3, nterms, 'True', None, output_template_im +'.masktmp', mscale_field[source_id],regionfield[source_id],cellsize, uvrange,wsclean,WSCleanRobust,BlankField)
          logging.info('Imaged full DDE facet: ' + source)
 
       ## STEP 4b -- post facet ##
