@@ -27,5 +27,5 @@ makemasks     = False
 do_ap         = False # add back, correct with instrument_ap_smoothed
 uvrange       = 5.0 # wavelength
 WSCleanRobust = 0.0 # Briggs robust factor for facet imaging
-
+BlankField    = False # experimental, False is the default
 

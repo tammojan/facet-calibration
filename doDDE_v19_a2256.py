@@ -13,7 +13,7 @@ import pwd
 import logging
 pi       = numpy.pi
 import sys
-import blank
+
 
 if len(sys.argv)<2:
    raise Exception('Give the path to the setup code for the facet')
@@ -54,6 +54,7 @@ os.system(buildmytasks) # make casapy tasks
 
 
 from coordinates_mode import *
+import blank
 
 # check high-DR
 
