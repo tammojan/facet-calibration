@@ -46,6 +46,7 @@ logging.basicConfig(filename='dde.log',level=logging.DEBUG, format='%(asctime)s 
 logging.info('\n')
 
 os.system('cp ' + SCRIPTPATH + '/coordinates_mode.py .')
+os.system('cp ' + SCRIPTPATH + '/blank.py .')
 os.system('cp ' + SCRIPTPATH + '/ftw.xml .')
 os.system('cp ' + SCRIPTPATH + '/task_ftw.py .')
 
