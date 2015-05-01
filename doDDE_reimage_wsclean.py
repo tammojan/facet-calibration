@@ -1333,17 +1333,15 @@ if __name__=='__main__':
        imsizef = image_size_from_mask(output_template_im)
        imout = 'im'+ 'field0' +'_cluster'+source
 
-       if not os.path.exists(imout+'.model'):
-           raise Exception(imout+'.model is missing')
+       if not os.path.exists(imout+'-model.fits'):
+           raise Exception(imout+'-model.fits is missing')
 
 
-       logging.info('running ft: '+imout+'.model')
-
+       logging.info('running ft: '+imout)
 
 
        # DO THE FFT
-       # fix to ft_allbands due to async problem...
-       do_fieldFFT('allbands.concat.shifted_'+source+'.ms',imout, imsizef, cellsize, wsclean, msavglist, WSCleanRobust)
+       do_fieldFFT('allbands.concat.shifted_'+source+'.ms',imout, imsizef, cellsize, wsclean, mslist, WSCleanRobust)
        logging.info('FFTed model of DDE facet: ' + source)
 
        # SHIFT PHASE CENTER BACK TO ORIGINAL
@@ -1427,5 +1425,5 @@ if __name__=='__main__':
 
        logging.info('making image')
        ### STEP 4a: do facet ##
-       # make large field image and make mask
+       # make large field image
        imout, imsizef = make_image_wsclean_nomask(msfieldavgfacetlist1, source, 'field1', 5, 3, nterms, 'True', None, output_template_im, mscale_field[source_id],regionfield[source_id],cellsize, uvrange,wsclean,WSCleanRobust)
