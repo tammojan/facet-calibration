@@ -502,8 +502,9 @@ def create_phaseshift_parset(msin, msout, source, direction, imsize, dynamicrang
   f.write('shift.phasecenter = [%s]\n' % direction)
   f.write('avg1.type = squash\n')
 
-  if StefCal:
-    if dynamicrange == 'LD':
+
+  if dynamicrange == 'LD':
+    if StefCal:
       if imsize <= 800:
 	f.write('avg1.freqstep = 20\n')
       else:
