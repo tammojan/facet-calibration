@@ -40,6 +40,7 @@ import pyfits
 import os
 import time
 import glob
+import re
 
 def main(args):
 
@@ -51,13 +52,47 @@ def main(args):
     psf_fwhm = [] # resolution
     frequency = [] # frequency of images (should be equal?)
 
-    basestring='imfield0_cluster'
+    basestring=args.basestring
     imlist=glob.glob(basestring+'*.image')
+
     images=[i for i in imlist if not('nm' in i)]
+
+    #construct image, facet number list
+    images=[]
+    fields=[]
+    fnumbers=[]
+    p=re.compile('imfield(\d)_cluster(.*)\.')
+    for i in imlist:
+        if 'nm' in i:
+            continue
+        m=p.match(i)
+        if m is None:
+            print 'failed to match',i
+        assert(m is not None)
+        images.append(i)
+        fields.append(m.group(1))
+        fnumbers.append(m.group(2))
+    fnumberset=set(fnumbers)
+    for f in fnumberset:
+        fieldlist=[]
+        for i,(field,facet) in enumerate(zip(fields,fnumbers)):
+            if f==facet:
+                fieldlist.append((field,i))
+        while len(fieldlist)>1:
+            # more than one field for the same facet...
+            delfield,i=min(fieldlist)
+            print 'de-duplicating',images[i]
+            del(images[i])
+            del(fields[i])
+            del(fnumbers[i])
+            del(fieldlist[fieldlist.index((delfield,i))])
+    # now we have a non-redundant list
+    for i in range(len(images)):
+        print i,images[i],fields[i],fnumbers[i]
+
     # get the facet mask
-    for im in images:
-        facetnumber=im.replace(basestring,'').replace('.image','')
-        facets.append('templatemask_'+facetnumber+'.masktmp')
+    for fn in fnumbers:
+        facets.append('templatemask_'+fn+'.masktmp')
         if not os.path.exists(facets[-1]):
             print "Error: facet image",facets[-1],"does not exist"
             return 1
@@ -239,6 +274,7 @@ print "LOFAR mosaic generator, v"+version+'\n'
 parser = argparse.ArgumentParser(description="Mosaic MSSS images.")
 parser.add_argument('-v','--verbose',help='Give some verbose output [default False]',action='store_true',default=False)
 parser.add_argument('-o','--outfits',help='Output name of mosaic fits file [default mosaic.fits]',default='mosaic.fits')
+parser.add_argument('-b','--basestring',help='Base string for image names, may include wild cards [default imfield]',default='imfield')
 parser.add_argument('-p','--plotimg',help='Display image on screen? [default False]',action='store_true',default=False)
 parser.add_argument('-S','--stokes',help='Stokes parameter to use?  [default I]',default='I')
 parser.add_argument('-N','--NCP',help='Use NCP instead of SIN? This option does not work yet. [default False]',default=False,action='store_true')

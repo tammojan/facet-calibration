@@ -1164,7 +1164,10 @@ def make_image_wsclean_nomask(mslist, cluster, callnumber, threshpix, threshisl,
    print cmd1+cmd2+cmd3
    os.system(cmd1+cmd2+cmd3)
 
-   return imout, imsize
+   finalim=pyrap.images.image(imout+'-image.fits')
+   finalim.saveas(imout +'.image')
+
+   return imout, None, imsize
 
 
 def do_fieldFFT(ms,image,imsize,cellsize,wsclean,mslist,WSCleanRobust):
@@ -1426,4 +1429,4 @@ if __name__=='__main__':
        logging.info('making image')
        ### STEP 4a: do facet ##
        # make large field image
-       imout, imsizef = make_image_wsclean_nomask(msfieldavgfacetlist1, source, 'field1', 5, 3, nterms, 'True', None, output_template_im, mscale_field[source_id],regionfield[source_id],cellsize, uvrange,wsclean,WSCleanRobust)
+       make_image_wsclean_nomask(msfieldavgfacetlist1, source, 'field1', 5, 3, nterms, 'True', None, output_template_im, mscale_field[source_id],regionfield[source_id],cellsize, uvrange,wsclean,WSCleanRobust)
