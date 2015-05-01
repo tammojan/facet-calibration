@@ -305,10 +305,7 @@ def runbbs_diffskymodel_addback16(mslist, parmdb, replacesource, direction, imsi
       print cmd
       os.system(cmd)
       time.sleep(10)  # otherwise add.parset is deleted (takes time for BBS to start up)
-   else:
-      if do_ap:
-	print 'do_ap not supported'
-	sys.exit()     
+   else:     
       print 'No source to add back, are you sure the DDE position is correct?'
       os.system("taql 'update " + ms + " set ADDED_DATA_SOURCE=SUBTRACTED_DATA_ALL'")
 
@@ -350,9 +347,6 @@ def runbbs_diffskymodel_addback16(mslist, parmdb, replacesource, direction, imsi
       os.system(cmd)
       time.sleep(10)  # otherwise add.parset is deleted (takes time for BBS to start up)
    else:
-      if do_ap:
-	print 'do_ap not supported'
-	sys.exit()
       print 'No source to add back, are you sure the DDE position is correct?'
       os.system("taql 'update " + ms + " set ADDED_DATA_SOURCE=SUBTRACTED_DATA_ALL'")
       
@@ -1482,18 +1476,18 @@ for source in do_sources:
       logging.info('Solint A&P: '+ str(cellsizetime_a[source_id]))
       logging.info('Region file: '+ str(regionselfc[source_id]))   
 
-      #os.system('python ' + SCRIPTPATH + '/selfcalv19.py ' + inputmslist + ' ' + source + ' ' + atrous_do[source_id] + ' ' + str(imsizes[source_id]) + ' ' + \
-      #             str(nterms) + ' ' + str(cellsizetime_a[source_id]) + ' ' + str(cellsizetime_p[source_id]) + ' ' + TEC + ' ' + clock + ' ' + \
-      #	        str(dynamicrange[source_id]) + ' ' + regionselfc[source_id] + ' ' + str(uvrange) + ' ' + str(peelskymodel[source_id]) + ' ' +\
-      #		str(cellsize))
+      if StefCal:
+        os.system('python ' + SCRIPTPATH + '/selfcalv20.py ' + inputmslist + ' ' + source + ' ' + atrous_do[source_id] + ' ' + str(imsizes[source_id]) + ' ' + \
+                  str(nterms) + ' ' + str(cellsizetime_a[source_id]) + ' ' + str(cellsizetime_p[source_id]) + ' ' + TEC + ' ' + clock + ' ' + \
+                  str(dynamicrange[source_id]) + ' ' + regionselfc[source_id] + ' ' + str(uvrange) + ' ' + str(peelskymodel[source_id]) + ' ' +\
+                  str(cellsize))
 
+      else:
+         os.system('python '+SCRIPTPATH+'/selfcalv19_ww_cep3.py ' + inputmslist + ' ' + source + ' ' + atrous_do[source_id] + ' ' + str(imsizes[source_id]) + ' ' + \
+                   str(nterms) + ' ' + str(cellsizetime_a[source_id]) + ' ' + str(cellsizetime_p[source_id]) + ' ' + TEC + ' ' + clock + ' ' + \
+                   str(dynamicrange[source_id]) + ' ' + regionselfc[source_id])
 
-      os.system('python '+SCRIPTPATH+'/selfcalv19_ww_cep3.py ' + inputmslist + ' ' + source + ' ' + atrous_do[source_id] + ' ' + str(imsizes[source_id]) + ' ' + \
-                       str(nterms) + ' ' + str(cellsizetime_a[source_id]) + ' ' + str(cellsizetime_p[source_id]) + ' ' + TEC + ' ' + clock + ' ' + \
-                       str(dynamicrange[source_id]) + ' ' + regionselfc[source_id])
-
-   
-   
+     
       logging.info('Finished selfcal DDE patch: '+ source)
 
    ## STEP 2b:  SC wrap up ##
