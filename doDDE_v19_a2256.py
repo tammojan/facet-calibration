@@ -1410,13 +1410,15 @@ for source in do_sources:
          parset = create_phaseshift_parset_full('allbands.concat.ms', 'allbands.concat.shifted.ms', directions[source_id],'DATA')
          os.system('NDPPP ' + parset + '&') # run in background
 
-   # correct with amps and phases from selfcal
-      if do_ap:
-         runbbs_2(msavglist, mslist, dummyskymodel ,SCRIPTPATH+'/correct.parset','instrument_ap_smoothed')
 
    ## END STEP 1
    ## STEP 2a: SC ##
    if StartAtStep in ['preSC', 'doSC']:
+     
+      # correct with amps and phases from selfcal, needs to be done here because CORRECTED_DATA needs to be reset for the selfcal
+      if do_ap:
+        runbbs_2(msavglist, mslist, dummyskymodel ,SCRIPTPATH+'/correct.parset','instrument_ap_smoothed')
+
       logging.info('selfcal started '+source)
       # do the selfcal loop
       # make string ms list for input selfcal 
