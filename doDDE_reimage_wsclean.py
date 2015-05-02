@@ -12,6 +12,7 @@ import pyrap.tables as pt
 import pyrap.images
 import pwd
 import logging
+import blank
 from coordinates_mode import *
 pi = numpy.pi
 
@@ -162,9 +163,9 @@ def runbbs(mslist, skymodel, parset, parmdb, replacesource):
     for ms in mslist:
         log      =  ms + '.bbslog'
         if replacesource:
-            cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '&>' + log + '&'
+            cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2&>1 &'
         else:
-            cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '&>' + log + '&'
+            cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2&>1 &'
         print cmd
         os.system(cmd)
     time.sleep(10)
@@ -191,9 +192,9 @@ def runbbs16(mslist, skymodel, parset, parmdb, replacesource):
     for ms in mslist1:
         log      =  ms + '.bbslog'
         if replacesource:
-            cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '&>' + log + '&'
+            cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2&>1 &'
         else:
-            cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '&>' + log + '&'
+            cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2&>1 &'
         print cmd
         os.system(cmd)
     time.sleep(10)
@@ -214,9 +215,9 @@ def runbbs16(mslist, skymodel, parset, parmdb, replacesource):
     for ms in mslist2:
         log      =  ms + '.bbslog'
         if replacesource:
-            cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '&>' + log + '&'
+            cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2&>1 &'
         else:
-            cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '&>' + log + '&'
+            cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2&>1 &'
         print cmd
         os.system(cmd)
     time.sleep(10)
@@ -290,9 +291,9 @@ def runbbs_diffskymodel_addback(mslist, parmdb, replacesource, direction, imsize
 
 
         if replacesource:
-            cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '&>' + log + '&'
+            cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2&>1 &'
         else:
-            cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '&>' + log + '&'
+            cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2&>1 &'
         print cmd
         os.system(cmd)
         time.sleep(10)  # otherwise add.parset is deleted (takes time for BBS to start up)
@@ -332,9 +333,9 @@ def runbbs_diffskymodel_addback16(mslist, parmdb, replacesource, direction, imsi
         parset = create_add_parset_ms(callist, ms)
 
         if replacesource:
-            cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '&>' + log + '&'
+            cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2&>1 &'
         else:
-            cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '&>' + log + '&'
+            cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2&>1 &'
         print cmd
         os.system(cmd)
         time.sleep(10)  # otherwise add.parset is deleted (takes time for BBS to start up)
@@ -369,9 +370,9 @@ def runbbs_diffskymodel_addback16(mslist, parmdb, replacesource, direction, imsi
         parset = create_add_parset_ms(callist, ms)
 
         if replacesource:
-            cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '&>' + log + '&'
+            cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2&>1 &'
         else:
-            cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '&>' + log + '&'
+            cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2&>1 &'
         print cmd
         os.system(cmd)
         time.sleep(10)  # otherwise add.parset is deleted (takes time for BBS to start up)
@@ -424,9 +425,9 @@ def runbbs_diffskymodel_addbackfield(mslist, parmdb, replacesource, direction, i
         if len(addback_sourcelist) != 0: # otherwise do not have to add
             parset = create_add_parset_field_ms(addback_sourcelist, ms)
             if replacesource:
-                cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '&>' + log + '&'
+                cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2&>1 &'
             else:
-                cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '&>' + log + '&'
+                cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2&>1 &'
             print cmd
             os.system(cmd)
         else:
@@ -452,7 +453,7 @@ def runbbs_diffskymodel_addbackfield(mslist, parmdb, replacesource, direction, i
 def runbbs_2(mslist, msparmdb, skymodel, parset, parmdb):
     for ms_id, ms in enumerate(mslist):
         log      =  ms + '.bbslog'
-        cmd = 'calibrate-stand-alone --parmdb ' + msparmdb[ms_id]+'/'+parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '&>' + log + '&'
+        cmd = 'calibrate-stand-alone --parmdb ' + msparmdb[ms_id]+'/'+parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2&>1 &'
         print cmd
         os.system(cmd)
     time.sleep(10)
@@ -1194,6 +1195,148 @@ def do_fieldFFT(ms,image,imsize,cellsize,wsclean,mslist,WSCleanRobust):
    os.system(cmd1+cmd2+cmd3)
    return
 
+def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous_do, imsize, inputmask, mscale, region,cellsize,uvrange,wsclean,WSCleanRobust,BlankField):
+
+    if imsize is None:
+        imsize = image_size_from_mask(inputmask)
+
+    niter   = numpy.int(5000 * (numpy.sqrt(numpy.float(len(mslist)))))
+    cellsizeim = str(cellsize) +'arcsec'
+ 
+    depth =  1e-3*0.7 / (numpy.sqrt(numpy.float(len(mslist))))
+    cleandepth1 = str(depth*1.5) #+ 'mJy'
+    cleandepth2 = str(depth)     #+ 'mJy'
+
+    wideband = False
+    if len(mslist) > 5: 
+        wideband = True
+   
+    # speed up the imaging if possible by reducing image size within the mask region
+    newsize = find_newsize(inputmask)
+    if newsize < imsize: # ok so we can use a smaller image size then
+   #make a new template
+        os.system('casapy --nologger -c ' + SCRIPTPATH + '/make_empty_image.py '+ str(mslist[0]) + ' ' + inputmask+'2' + ' ' + str(newsize) + ' ' +'1.5arcsec')
+        os.system('casapy --nologger -c ' + SCRIPTPATH + '/regrid_image.py '    + inputmask      + ' ' + inputmask+'2' + ' ' + inputmask+'3')
+ 
+   # reset the imsize and the mask
+        imsize    = newsize
+        inputmask = inputmask+'3'
+ 
+ 
+    ms = ''
+    for m in mslist:
+        ms = ms + ' ' + m
+
+    imout = 'im'+ callnumber +'_cluster'+cluster+'nm'
+
+    os.system('rm -rf ' + imout + '-*') 
+
+ # NDPPP concat
+    outms      = 'field.ms'
+    parsetname = 'concatforwsclean.parset'
+ 
+    msinstr = ""
+ 
+    for ms_id, ms in enumerate(mslist):
+        msinstr = msinstr + "'" + ms + "'"
+        if ms_id < len(mslist)-1:
+            msinstr = msinstr + ", "
+    os.system('rm -rf ' + parsetname)
+    f=open(parsetname, 'w')
+    f.write('msin = [%s]\n' % msinstr) 
+    f.write('msin.datacolumn = DATA\n')
+    f.write('msin.missingdata=True\n')
+    f.write('msin.orderms=False\n')
+    f.write('msout=%s\n' % outms)
+    f.write('steps=[]\n')
+    f.close()
+    os.system('rm -rf ' + outms)
+    os.system('NDPPP ' + parsetname)
+
+    if wideband:
+        channelsout =  1 # there is a factor of 5 averaging
+        cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
+        cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + '-cleanborder 0 -threshold '+ cleandepth1 + ' '
+        cmd3 = '-minuv-l '+ str(uvrange) \
+          +' -mgain 0.75 -fitbeam -datacolumn DATA -no-update-model-required -joinchannels -channelsout ' +\
+	  str(channelsout) + ' '  + outms
+    else:  
+        cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
+        cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' -cleanborder 0 -threshold '+ cleandepth1 + ' '
+        cmd3 = '-minuv-l '+ str(uvrange) +' -mgain 0.75 -fitbeam -datacolumn DATA -no-update-model-required ' + outms
+
+    print cmd1+cmd2+cmd3
+    os.system(cmd1+cmd2+cmd3)
+
+    if BlankField:
+        mask_image=blank.blank_facet(imout+'-image.fits',inputmask)
+    else:
+        mask_image=imout+'-image.fits'
+
+ # create the mask
+    os.system('python ' + SCRIPTPATH + '/makecleanmask_field_wsclean.py --threshpix '+str(threshpix)+\
+           ' --threshisl '+str(threshisl) +' --atrous_do '+ str(atrous_do) + \
+ 	   ' --casaregion  '+ region + ' '  + mask_image)
+
+    mask_name  = mask_image + '.fitsmask'
+    casa_mask  = imout + '.casamask'
+ 
+    maskim=pyrap.images.image(mask_name)
+    maskim.saveas(casa_mask)
+
+    # Convert to casapy format and includ region file
+    if region != 'empty':
+        os.system('casapy --nologger -c ' + SCRIPTPATH+'/fitsandregion2image.py '\
+             + mask_name + ' ' + casa_mask + ' ' + region)
+    else:
+        os.system('casapy --nologger -c ' + SCRIPTPATH+'/fitsandregion2image.py '\
+             + mask_name + ' ' + casa_mask + ' ' + 'None')
+
+    mask_sources = imout+'.casamask'
+    os.system('rm -rf ' + mask_sources + 'field')
+    os.system('cp -r ' + mask_sources + ' ' + mask_sources + 'field')
+
+    # Merge the two masks and blank outside template field
+    img    = pyrap.images.image(mask_sources+'field')
+    pixels = numpy.copy(img.getdata())
+ 
+    img2    = pyrap.images.image(inputmask)
+    pixels2 = numpy.copy(img2.getdata())
+ 
+    idx = numpy.where(pixels2 == 0.0)
+    pixels[idx] = 0.0
+    img.putdata(pixels)
+    img.unlock()
+    del img
+    del img2
+ 
+ 
+    imout = 'im'+ callnumber +'_cluster'+cluster
+    os.system('rm -rf ' + imout + '-*')
+    niter = niter*5 # increase niter, tune manually if needed, try to reach threshold
+
+    if wideband:
+        cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
+        cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' -cleanborder 0 -threshold '+ cleandepth2 + ' '
+        cmd3 = '-minuv-l '+ str(uvrange) +' -mgain 0.6 -fitbeam -datacolumn DATA -no-update-model-required -casamask ' + \
+          mask_sources+'field' + ' -joinchannels -channelsout ' + str(channelsout) + ' ' + outms
+    else:
+        cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
+        cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' -cleanborder 0 -threshold '+ cleandepth2 + ' '
+        cmd3 = '-minuv-l '+ str(uvrange) +' -mgain 0.6 -fitbeam -datacolumn DATA -no-update-model-required -casamask ' + \
+          mask_sources+'field' + ' '+ outms
+ 
+    print cmd1+cmd2+cmd3
+    os.system(cmd1+cmd2+cmd3)
+
+ # convert from FITS to casapy format
+ # os.system('casapy --nologger -c ' + SCRIPTPATH +'/fits2image.py ' + \
+ #           imout + '-image.fits' + ' ' + imout +'.image')
+    finalim=pyrap.images.image(imout+'-image.fits')
+    finalim.saveas(imout +'.image')
+
+    return imout, mask_sources+'field', imsize
+
 #############
 # MAIN CODE #
 #############
@@ -1209,6 +1352,23 @@ if __name__=='__main__':
    print 'Using',sys.argv[1],'as the setup code'
    execfile(sys.argv[1])
    print 'script path is',SCRIPTPATH
+   try:
+       WSCleanRobust
+   except NameError:
+       WSCleanRobust=-0.25 # default preserves old value
+       print 'No WSClean robust set, defaulting to',WSCleanRobust
+
+   try:
+       BlankField
+   except NameError:
+       BlankField=False
+       print 'BlankField not set, defaulting to',BlankField
+
+   try:
+       NoMask
+   except NameError:
+       NoMask=False
+       print 'NoMask not set, defaulting to',NoMask
 
    source_info_rec = numpy.genfromtxt(peelsourceinfo, dtype="S10,S25,S5,S5,i8,i8,i8,i8,S2,S10,S10", names=["sourcelist","directions","atrous_do","mscale_field","imsizes","cellsizetime_p","cellsizetime_a","fieldsize","dynamicrange","regionselfc","regionfield"])
 
@@ -1429,4 +1589,7 @@ if __name__=='__main__':
        logging.info('making image')
        ### STEP 4a: do facet ##
        # make large field image
-       make_image_wsclean_nomask(msfieldavgfacetlist1, source, 'field1', 5, 3, nterms, 'True', None, output_template_im, mscale_field[source_id],regionfield[source_id],cellsize, uvrange,wsclean,WSCleanRobust)
+       if NoMask:
+           make_image_wsclean_nomask(msfieldavgfacetlist1, source, 'field1', 5, 3, nterms, 'True', None, output_template_im, mscale_field[source_id],regionfield[source_id],cellsize, uvrange,wsclean,WSCleanRobust)
+       else:
+           make_image_wsclean(msfieldavgfacetlist1, source, 'field1', 5, 3, nterms, 'True', None, output_template_im, mscale_field[source_id],regionfield[source_id],cellsize, uvrange,wsclean,WSCleanRobust,BlankField)
