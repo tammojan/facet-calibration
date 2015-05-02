@@ -163,9 +163,9 @@ def runbbs(mslist, skymodel, parset, parmdb, replacesource):
     for ms in mslist:
         log      =  ms + '.bbslog'
         if replacesource:
-            cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2&>1 &'
+            cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
         else:
-            cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2&>1 &'
+            cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
         print cmd
         os.system(cmd)
     time.sleep(10)
@@ -192,9 +192,9 @@ def runbbs16(mslist, skymodel, parset, parmdb, replacesource):
     for ms in mslist1:
         log      =  ms + '.bbslog'
         if replacesource:
-            cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2&>1 &'
+            cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
         else:
-            cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2&>1 &'
+            cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
         print cmd
         os.system(cmd)
     time.sleep(10)
@@ -215,9 +215,9 @@ def runbbs16(mslist, skymodel, parset, parmdb, replacesource):
     for ms in mslist2:
         log      =  ms + '.bbslog'
         if replacesource:
-            cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2&>1 &'
+            cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
         else:
-            cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2&>1 &'
+            cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
         print cmd
         os.system(cmd)
     time.sleep(10)
@@ -291,9 +291,9 @@ def runbbs_diffskymodel_addback(mslist, parmdb, replacesource, direction, imsize
 
 
         if replacesource:
-            cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2&>1 &'
+            cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
         else:
-            cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2&>1 &'
+            cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
         print cmd
         os.system(cmd)
         time.sleep(10)  # otherwise add.parset is deleted (takes time for BBS to start up)
@@ -333,9 +333,9 @@ def runbbs_diffskymodel_addback16(mslist, parmdb, replacesource, direction, imsi
         parset = create_add_parset_ms(callist, ms)
 
         if replacesource:
-            cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2&>1 &'
+            cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
         else:
-            cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2&>1 &'
+            cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
         print cmd
         os.system(cmd)
         time.sleep(10)  # otherwise add.parset is deleted (takes time for BBS to start up)
@@ -370,9 +370,9 @@ def runbbs_diffskymodel_addback16(mslist, parmdb, replacesource, direction, imsi
         parset = create_add_parset_ms(callist, ms)
 
         if replacesource:
-            cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2&>1 &'
+            cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
         else:
-            cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2&>1 &'
+            cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
         print cmd
         os.system(cmd)
         time.sleep(10)  # otherwise add.parset is deleted (takes time for BBS to start up)
@@ -425,9 +425,9 @@ def runbbs_diffskymodel_addbackfield(mslist, parmdb, replacesource, direction, i
         if len(addback_sourcelist) != 0: # otherwise do not have to add
             parset = create_add_parset_field_ms(addback_sourcelist, ms)
             if replacesource:
-                cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2&>1 &'
+                cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
             else:
-                cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2&>1 &'
+                cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
             print cmd
             os.system(cmd)
         else:
@@ -453,7 +453,7 @@ def runbbs_diffskymodel_addbackfield(mslist, parmdb, replacesource, direction, i
 def runbbs_2(mslist, msparmdb, skymodel, parset, parmdb):
     for ms_id, ms in enumerate(mslist):
         log      =  ms + '.bbslog'
-        cmd = 'calibrate-stand-alone --parmdb ' + msparmdb[ms_id]+'/'+parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2&>1 &'
+        cmd = 'calibrate-stand-alone --parmdb ' + msparmdb[ms_id]+'/'+parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
         print cmd
         os.system(cmd)
     time.sleep(10)
