@@ -46,7 +46,9 @@ except NameError:
    StefCal=False
    print 'StefCal not set, defaulting to', StefCal
    print 'Overwriting TEC user input, TEC will be when using StefCal'
-   TEC = False
+
+if StefCal:
+  TEC = "False" # cannot fit for TEC in StefCal
 
 print 'StartAtStep is',StartAtStep
 
@@ -127,9 +129,9 @@ def runbbs(mslist, skymodel, parset, parmdb, replacesource):
  for ms in mslist:
    log      =  ms + '.bbslog'
    if replacesource:
-     cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '&>' + log + '&'
+     cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
    else:
-     cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '&>' + log + '&'
+     cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
    print cmd
    os.system(cmd)
  time.sleep(10)
@@ -156,9 +158,9 @@ def runbbs16(mslist, skymodel, parset, parmdb, replacesource):
  for ms in mslist1:
    log      =  ms + '.bbslog'
    if replacesource:
-     cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '&>' + log + '&'
+     cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
    else:
-     cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '&>' + log + '&'
+     cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
    print cmd
    os.system(cmd)
  time.sleep(10)
@@ -179,9 +181,9 @@ def runbbs16(mslist, skymodel, parset, parmdb, replacesource):
  for ms in mslist2:
    log      =  ms + '.bbslog'
    if replacesource:
-     cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '&>' + log + '&'
+     cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
    else:
-     cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '&>' + log + '&'
+     cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
    print cmd
    os.system(cmd)
  time.sleep(10)
@@ -251,9 +253,9 @@ def runbbs_diffskymodel_addback(mslist, parmdb, replacesource, direction, imsize
    if len(callist) != 0: # otherwise do not have to add	   
       parset = create_add_parset_ms(callist, ms, do_ap)
       if replacesource:
-	cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '&>' + log + '&'
+        cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
       else:
-	cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '&>' + log + '&'
+        cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
       print cmd
       os.system(cmd)
       time.sleep(10)  # otherwise add.parset is deleted (takes time for BBS to start up)
@@ -299,9 +301,9 @@ def runbbs_diffskymodel_addback16(mslist, parmdb, replacesource, direction, imsi
       parset = create_add_parset_ms(callist, ms, do_ap)
       
       if replacesource:
-	cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '&>' + log + '&'
+        cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
       else:
-	cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '&>' + log + '&'
+        cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
       print cmd
       os.system(cmd)
       time.sleep(10)  # otherwise add.parset is deleted (takes time for BBS to start up)
@@ -340,9 +342,9 @@ def runbbs_diffskymodel_addback16(mslist, parmdb, replacesource, direction, imsi
    if len(callist) != 0: # otherwise do not have to add	  
       parset = create_add_parset_ms(callist, ms, do_ap)
       if replacesource:
-	cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '&>' + log + '&'
+        cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
       else:
-	cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '&>' + log + '&'
+        cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
       print cmd
       os.system(cmd)
       time.sleep(10)  # otherwise add.parset is deleted (takes time for BBS to start up)
@@ -398,9 +400,9 @@ def runbbs_diffskymodel_addbackfield(mslist, parmdb, replacesource, direction, i
    if len(addback_sourcelist) != 0: # otherwise do not have to add
       parset = create_add_parset_field_ms(addback_sourcelist, ms, do_ap)
       if replacesource:
-        cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '&>' + log + '&'
+        cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
       else:
-        cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '&>' + log + '&'
+        cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
       print cmd
       os.system(cmd)
    else:
@@ -426,7 +428,7 @@ def runbbs_diffskymodel_addbackfield(mslist, parmdb, replacesource, direction, i
 def runbbs_2(mslist, msparmdb, skymodel, parset, parmdb):
  for ms_id, ms in enumerate(mslist):
    log      =  ms + '.bbslog'
-   cmd = 'calibrate-stand-alone --parmdb ' + msparmdb[ms_id]+'/'+parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '&>' + log + '&'
+   cmd = 'calibrate-stand-alone --parmdb ' + msparmdb[ms_id]+'/'+parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
    print cmd
    os.system(cmd)
  time.sleep(10)
@@ -692,6 +694,7 @@ def create_subtract_parset_field(outputcolumn,TEC):
   return bbs_parset
 
 def join_parmdb_stefcal(ms, parmdb_selfcal,parmdb_template, parmdb_out):
+  import lofar.parmdb
   pdb_s = lofar.parmdb.parmdb(parmdb_selfcal)
   pdb_t = lofar.parmdb.parmdb(parmdb_template)
  
@@ -1277,27 +1280,6 @@ outliersource = source_info_rec["outliersource"]
 sourcelist = sourcelist.tolist()
 
 
-# order is important (from low to high freq)
-# frequencies should be contigeous, so also add names of bands that do not exist
-
-#mslistorig = ['A2256_SB200-209.2ch10s.ms',\
-#	      'A2256_SB210-219.2ch10s.ms', 'A2256_SB220-229.2ch10s.ms', 'A2256_SB230-239.2ch10s.ms']
-
-
-
-#mslistorig = ['A2256_SB050-059.2ch10s.ms',\
-#	      'A2256_SB060-069.2ch10s.ms', 'A2256_SB070-079.2ch10s.ms', 'A2256_SB080-089.2ch10s.ms',\
-#	      'A2256_SB090-099.2ch10s.ms', 'A2256_SB100-109.2ch10s.ms', 'A2256_SB110-119.2ch10s.ms',\
-#	      'A2256_SB120-129.2ch10s.ms', 'A2256_SB130-139.2ch10s.ms', 'A2256_SB140-149.2ch10s.ms',\
-#	      'A2256_SB150-159.2ch10s.ms', 'A2256_SB160-169.2ch10s.ms', 'A2256_SB170-179.2ch10s.ms',\
-#	      'A2256_SB180-189.2ch10s.ms', 'A2256_SB190-199.2ch10s.ms', 'A2256_SB200-209.2ch10s.ms',\
-#	      'A2256_SB210-219.2ch10s.ms', 'A2256_SB220-229.2ch10s.ms', 'A2256_SB230-239.2ch10s.ms',\
-#	      'A2256_SB240-249.2ch10s.ms', 'A2256_SB250-259.2ch10s.ms', 'A2256_SB260-269.2ch10s.ms',\
-#	      'A2256_SB270-279.2ch10s.ms', 'A2256_SB280-289.2ch10s.ms', 'A2256_SB290-299.2ch10s.ms',\
-#	      'A2256_SB300-309.2ch10s.ms',\
-#	      'A2256_SB310-319.2ch10s.ms', 'A2256_SB320-329.2ch10s.ms', 'A2256_SB330-339.2ch10s.ms',\
-#	      'A2256_SB340-349.2ch10s.ms',\
-#	      'A2256_SB350-359.2ch10s.ms']
 
 
 mslistorig = ["{name:s}_SB{b1:03d}-{b2:03d}.{res:s}.ms".format(name=NAME,res=RES,b1=b,b2=b+9) for b in BANDS]
@@ -1442,7 +1424,7 @@ for source in do_sources:
       else:
          runbbs_diffskymodel_addback(mslist, 'instrument_ap_smoothed', True, directions[source_id],imsizes[source_id],output_template_im, do_ap)
 
-      # average and phaseshift with NDPPP
+      ## average and phaseshift with NDPPP
       for ms_id, ms in enumerate(mslist):
          parset = create_phaseshift_parset(ms, msavglist[ms_id], source, directions[source_id],\
 	                                   imsizes[source_id], dynamicrange[source_id], StefCal)
@@ -1500,7 +1482,7 @@ for source in do_sources:
          this_parmdb_master_out  = ms+"/"+"instrument_master_" + source
          parmdb_template    = msavglist[ms_id]+"/"+"instrument_template"
          if StefCal:
-	   join_parmdb_stefcal(ms, parmdb_selfcal,parmdb_template, parmdb_master_out)
+	   join_parmdb_stefcal(ms, parmdb_selfcal,parmdb_template, this_parmdb_master_out)
 	 else:  
            join_parmdb(ms, parmdb_selfcal,parmdb_nondde, parmdb_template, this_parmdb_master_out, \
 	               TEC, clock)
