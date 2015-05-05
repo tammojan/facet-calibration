@@ -47,6 +47,14 @@ except NameError:
    print 'StefCal not set, defaulting to', StefCal
    print 'Overwriting TEC user input, TEC will be when using StefCal'
 
+try:
+  WScleanWBgroup
+except NameError:
+  if len(mslist) > WScleanWBgroup:
+    print 'WScleanWBgroup not set, defaulting to', 5 
+    # only print message here, because wideband is not used when len(mslist) <= WScleanWBgroup:
+  WScleanWBgroup = 5 # always set this, even if not used
+
 if StefCal:
   TEC = "False" # cannot fit for TEC in StefCal
 
@@ -61,6 +69,11 @@ os.system('cp ' + SCRIPTPATH + '/ftw.xml .')
 os.system('cp ' + SCRIPTPATH + '/task_ftw.py .')
 
 os.system(buildmytasks) # make casapy tasks
+
+
+freqavg_fullfacet = 5 # hardcode for now  
+# it has to be set to a multiple of the number of channels per block, 
+#so it dangerous to let a user set this without being aware of this)
 
 
 from coordinates_mode import *
@@ -542,9 +555,11 @@ def create_phaseshift_parset_formasks(msin, msout, source, direction):
   return ndppp_parset 
  
 
-def create_phaseshift_parset_field(msin, msout, source, direction):
+def create_phaseshift_parset_field(msin, msout, source, direction, freqavg):
   ndppp_parset = msin.split('.')[0] +'ndppp_avgphaseshift_field.parset' 
   os.system('rm -f ' + ndppp_parset)
+
+  #freqavg = 5
 
   f=open(ndppp_parset, 'w')
   f.write('msin ="%s"\n' % msin) 
@@ -556,7 +571,7 @@ def create_phaseshift_parset_field(msin, msout, source, direction):
   f.write('shift.type        = phaseshift\n')
   f.write('shift.phasecenter = [%s]\n' % direction)
   f.write('avg1.type = squash\n')
-  f.write('avg1.freqstep = 5\n')
+  f.write('avg1.freqstep = %s\n'% str(numpy.int(freqavg)))
   f.write('avg1.timestep = 3\n')    
   f.close()
   return ndppp_parset
@@ -1075,7 +1090,9 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
   
  return imout, mask_sources+'field', imsize
 
-def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous_do, imsize, inputmask, mscale, region,cellsize,uvrange,wsclean,WSCleanRobust,BlankField):
+def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous_do, imsize, inputmask, \
+                       mscale, region,cellsize,uvrange,wsclean,WSCleanRobust,BlankField, WScleanWBgroup, \
+		       freqavg_fullfacet, numchanperms):
 
  if imsize is None:
     imsize = image_size_from_mask(inputmask)
@@ -1090,7 +1107,7 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms
  cleandepth2 = str(depth)     #+ 'mJy'
 
  wideband = False
- if len(mslist) > 5: 
+ if len(mslist) > WScleanWBgroup: 
    wideband = True
    
  # speed up the imaging if possible by reducing image size within the mask region
@@ -1136,24 +1153,36 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms
  os.system('NDPPP ' + parsetname)
 
  if wideband:
-   channelsout =  1 # there is a factor of 5 averaging
+   channelsout = numpy.int(numpy.ceil(numpy.float(len(mslist))/numpy.float(WScleanWBgroup)))
+   print 'channelsout paramters is set to ', channelsout
+   print 'Bandwidth is divided into a total of ' + str(numpy.int(numpy.ceil(numpy.float(len(mslist))/numpy.float(WScleanWBgroup)))) + ' parts '
    cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
-   cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + '-cleanborder 0 -threshold '+ cleandepth1 + ' '
+   cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' -cleanborder 0 -threshold '+ cleandepth1 + ' '
    cmd3 = '-minuv-l '+ str(uvrange) \
-          +' -mgain 0.75 -fitbeam -datacolumn DATA -no-update-model-required -joinchannels -channelsout ' +\
+          +' -mgain 0.7 -fitbeam -datacolumn DATA -no-update-model-required -joinchannels -channelsout ' +\
 	  str(channelsout) + ' '  + outms
  else:  
    cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
    cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' -cleanborder 0 -threshold '+ cleandepth1 + ' '
-   cmd3 = '-minuv-l '+ str(uvrange) +' -mgain 0.75 -fitbeam -datacolumn DATA -no-update-model-required ' + outms
+   cmd3 = '-minuv-l '+ str(uvrange) +' -mgain 0.7 -fitbeam -datacolumn DATA -no-update-model-required ' + outms
 
  print cmd1+cmd2+cmd3
  os.system(cmd1+cmd2+cmd3)
 
+ # FIX for missing beam INFO in Wideband clean
+ if wideband:
+   insertbeaminfo_mfs(imout + '-MFS-image.fits',imout + '-0000-image.fits')
+
  if BlankField:
-    mask_image=blank.blank_facet(imout+'-image.fits',inputmask)
+    if wideband:
+      mask_image=blank.blank_facet(imout+'-MFS-image.fits',inputmask)
+    else:
+      mask_image=blank.blank_facet(imout+'-image.fits',inputmask)
  else:
-    mask_image=imout+'-image.fits'
+    if wideband:
+      mask_image=imout+'-MFS-image.fits'
+    else:
+      mask_image=imout+'-image.fits'
 
  # create the mask
  os.system('python ' + SCRIPTPATH + '/makecleanmask_field_wsclean.py --threshpix '+str(threshpix)+\
@@ -1192,7 +1221,7 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms
  del img
  del img2
  
- 
+
  imout = 'im'+ callnumber +'_cluster'+cluster
  os.system('rm -rf ' + imout + '-*')
  niter = niter*5 # increase niter, tune manually if needed, try to reach threshold
@@ -1214,13 +1243,42 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms
  # convert from FITS to casapy format
  # os.system('casapy --nologger -c ' + SCRIPTPATH +'/fits2image.py ' + \
  #           imout + '-image.fits' + ' ' + imout +'.image')
- finalim=pyrap.images.image(imout+'-image.fits')
+
+
+ # FIX for missing beam INFO in Wideband clean
+ if wideband:
+   insertbeaminfo_mfs(imout + '-MFS-image.fits',imout + '-0000-image.fits')
+
+
+ if wideband:   
+   finalim=pyrap.images.image(imout+'-MFS-image.fits')
+ else:
+   finalim=pyrap.images.image(imout+'-image.fits')
  finalim.saveas(imout +'.image')
 
  return imout, mask_sources+'field', imsize
 
 
-def do_fieldFFT(ms,image,imsize,cellsize,wsclean,mslist,WSCleanRobust):
+def insertbeaminfo_mfs(image, templateim):
+   import pyfits
+   hduimtemplate    = pyfits.open(templateim)  # open a FITS file
+   hduim            = pyfits.open(image, mode='update')  # open a FITS file
+   headertemplate = hduimtemplate[0].header 
+   header = hduim[0].header 
+   bmaj = headertemplate['BMAJ']
+   bmin = headertemplate['BMIN']
+   bpa  = headertemplate['BPA']
+   
+   header.update('BMAJ', bmaj, "")
+   header.update('BMIN', bmin, "")
+   header.update('BPA', bpa, "")
+   
+   hduim.flush()
+   hduim.close()
+   hduimtemplate.close()
+   return
+
+def do_fieldFFT(ms,image,imsize,cellsize,wsclean,mslist,WSCleanRobust,WScleanWBgroup, numchanperms):
  niter   = 1
  cellsizeim = str(cellsize)+ 'arcsec'
 
@@ -1228,10 +1286,10 @@ def do_fieldFFT(ms,image,imsize,cellsize,wsclean,mslist,WSCleanRobust):
  # also no re-order
  
  wideband = False
- if len(mslist) > 5: 
+ if len(mslist) > WScleanWBgroup: 
    wideband = True
  if wideband:
-   channelsout =  5 # DO NOT CHANGE !! (in make_image_wsclean_wideband there is averaging)
+   numpy.int(numpy.ceil(numpy.float(len(mslist))/numpy.float(WScleanWBgroup)))
    cmd1 = wsclean + ' -predict -name ' + image + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
    cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' '
    cmd3 = '-cleanborder 0 -mgain 0.85 -fitbeam -datacolumn DATA '+ '-joinchannels -channelsout ' + str(channelsout) + ' ' + ms
@@ -1308,8 +1366,16 @@ for ms in mslist:
 tt = pt.table(mslist[0] + '/FIELD')
 pointingcenter = tt.getcol('REFERENCE_DIR')[0][0]
 pointingcenter = str(pointingcenter[0]) +'rad,' + str(pointingcenter[1])+'rad'
-print pointingcenter
+#print pointingcenter
 tt.close()
+
+
+freq_tab     = pt.table(mslist[0]  + '/SPECTRAL_WINDOW')
+numchanperms = freq_tab.getcol('NUM_CHAN')[0]
+print 'Number of channels per ms is ', numchanperms
+freq_tab.close()
+
+
 
 #if len(mslist) == 1:
 #  TEC    = "False" # no TEC fitting for one (channel) dataset
@@ -1549,7 +1615,7 @@ for source in do_sources:
            msavglist.append(ms.split('.')[0] + '.' + source + '.ms.avgfield')      
 
          for ms_id, ms in enumerate(mslist):
-           parset = create_phaseshift_parset_field(ms, msavglist[ms_id], source, directions[source_id])
+           parset = create_phaseshift_parset_field(ms, msavglist[ms_id], source, directions[source_id], freqavg_fullfacet)
 
            cmd = "ps -u " + username + " | grep NDPPP | wc -l"
            output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
@@ -1581,8 +1647,14 @@ for source in do_sources:
          for ms_id, ms in enumerate(mslistorig): # remake msavglist from mslistorig
             msavglist.append(ms.split('.')[0] + '.' + source + '.ms.avgfield')      
 
-         imout,mask_out, imsizef = make_image_wsclean(msavglist, source, 'field0', 5, 3, nterms, 'True', None, output_template_im +'.masktmp', mscale_field[source_id],regionfield[source_id],cellsize, uvrange,wsclean,WSCleanRobust,BlankField)
+         imout,mask_out, imsizef = make_image_wsclean(msavglist, source, 'field0', 5, 3, nterms, 'True',\
+	                                              None, output_template_im +'.masktmp', \
+					              mscale_field[source_id],regionfield[source_id],\
+					              cellsize, uvrange,wsclean,WSCleanRobust,BlankField,\
+						      WScleanWBgroup, freqavg_fullfacet, numchanperms)
          logging.info('Imaged full DDE facet: ' + source)
+         if len(mslist) > WScleanWBgroup:
+            logging.info('WSCLEAN Wideband CLEAN algorithm was used')
 
       ## STEP 4b -- post facet ##
 
@@ -1623,7 +1695,8 @@ for source in do_sources:
 
 
          # DO THE FFT
-         do_fieldFFT('allbands.concat.shifted.ms',imout, imsizef, cellsize, wsclean, msavglist, WSCleanRobust)
+         do_fieldFFT('allbands.concat.shifted.ms',imout, imsizef, cellsize, wsclean, \
+	              msavglist, WSCleanRobust, WScleanWBgroup, numchanperms)
          logging.info('FFTed model of DDE facet: ' + source)
 
          # SHIFT PHASE CENTER BACK TO ORIGINAL
