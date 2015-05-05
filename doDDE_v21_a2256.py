@@ -71,9 +71,9 @@ os.system('cp ' + SCRIPTPATH + '/task_ftw.py .')
 os.system(buildmytasks) # make casapy tasks
 
 
-freqavg_fullfacet = 5 # hardcode for now  
+freqavg_fullfacet = 5 # hardcoded for now  
 # it has to be set to a multiple of the number of channels per block, 
-#so it dangerous to let a user set this without being aware of this)
+# so it is dangerous to let a user set this without being aware of this
 
 
 from coordinates_mode import *
@@ -1289,7 +1289,7 @@ def do_fieldFFT(ms,image,imsize,cellsize,wsclean,mslist,WSCleanRobust,WScleanWBg
  if len(mslist) > WScleanWBgroup: 
    wideband = True
  if wideband:
-   numpy.int(numpy.ceil(numpy.float(len(mslist))/numpy.float(WScleanWBgroup)))
+   channelsout = numpy.int(numpy.ceil(numpy.float(len(mslist))/numpy.float(WScleanWBgroup)))
    cmd1 = wsclean + ' -predict -name ' + image + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
    cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' '
    cmd3 = '-cleanborder 0 -mgain 0.85 -fitbeam -datacolumn DATA '+ '-joinchannels -channelsout ' + str(channelsout) + ' ' + ms
@@ -1690,7 +1690,7 @@ for source in do_sources:
          while output > 0 :
              time.sleep(10)
              output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
-         logging.info('Backup SUBTRACTED_DATA_ALL')   
+         logging.info('Backup SUBTRACTED_DATA_ALL: completed')   
          ###########################################################################  
 
 
