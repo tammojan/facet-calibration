@@ -398,10 +398,10 @@ def runbbs(mslist, skymodel, parset, parmdb, applycal, TEC):
         for ms in mslist:
             log      =  ms + '.bbslog'
             if applycal:
-                cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '&>' + log + '&'
+                cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
                 #cmd = 'calibrate-stand-alone -t 4 --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + '&'
             else:
-                cmd = 'calibrate-stand-alone -f --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '&>' + log + '&'
+                cmd = 'calibrate-stand-alone -f --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
                 #cmd = 'calibrate-stand-alone -t 4 -f --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + '&'
             print cmd
             os.system(cmd)

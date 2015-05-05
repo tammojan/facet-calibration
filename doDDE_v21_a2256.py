@@ -1448,9 +1448,9 @@ for source in do_sources:
       logging.info("removing any existing facet imaging average MS")
       os.system("rm -rf *."+source+".ms.avgfield*")
 
-   #check if allbands.concat.shifted.ms is present
-   if os.path.isdir('allbands.concat.shifted.ms'):
-     print 'allbands.concat.shifted.ms already exists'
+   #check if allbands.concat.shifted_'+source+'.ms' is present
+   if os.path.isdir('allbands.concat.shifted_'+source+'.ms'):
+     print 'allbands.concat.shifted_'+source+'.ms'
      if StartAtStep in ['preSC']:
         #raise Exception('delete measurement set and then restart')
         os.system('rm -rf allbands.concat.shifted_'+source+'.ms')
@@ -1500,7 +1500,7 @@ for source in do_sources:
 
    ### PHASESHIFT the FULL resolution dataset, for MODEL_DATA FFT subtract
       if outliersource[source_id] == 'False':
-         parset = create_phaseshift_parset_full('allbands.concat.ms', 'allbands.concat.shifted.ms', directions[source_id],'DATA')
+         parset = create_phaseshift_parset_full('allbands.concat.ms', 'allbands.concat.shifted_'+source+'.ms', directions[source_id],'DATA')
          os.system('NDPPP ' + parset + '&') # run in background
 
 
@@ -1660,11 +1660,11 @@ for source in do_sources:
 
       if StartAtStep in ['preSC', 'doSC', 'postSC','preFACET','doFACET','postFACET']:
 
-# if we are restarting, it's possible that allbands.concat.shifted.ms may have been deleted earlier. So re-create it if it doesn't exist
+# if we are restarting, it's possible that 'allbands.concat.shifted_'+source+'.ms' may have been deleted earlier. So re-create it if it doesn't exist
 
-         if not(os.path.isdir('allbands.concat.shifted.ms')):
-            print 'allbands.concat.shifted.ms does not exist, re-creating'
-            parset = create_phaseshift_parset_full('allbands.concat.ms', 'allbands.concat.shifted.ms', directions[source_id],'DATA')
+         if not(os.path.isdir('allbands.concat.shifted_'+source+'.ms''allbands.concat.shifted_'+source+'.ms')):
+            print 'allbands.concat.shifted_'+source+'.ms ' + 'does not exist, re-creating'
+            parset = create_phaseshift_parset_full('allbands.concat.ms', 'allbands.concat.shifted_'+source+'.ms', directions[source_id],'DATA')
             os.system('NDPPP ' + parset)
          if StartAtStep=='postFACET':
             # imout won't be set, so guess it
@@ -1695,17 +1695,18 @@ for source in do_sources:
 
 
          # DO THE FFT
-         do_fieldFFT('allbands.concat.shifted.ms',imout, imsizef, cellsize, wsclean, \
+         do_fieldFFT('allbands.concat.shifted_'+source+'.ms',imout, imsizef, cellsize, wsclean, \
 	              msavglist, WSCleanRobust, WScleanWBgroup, numchanperms)
          logging.info('FFTed model of DDE facet: ' + source)
 
          # SHIFT PHASE CENTER BACK TO ORIGINAL
          logging.info('Shift model back to pointing centre')
-         parset = create_phaseshift_parset_full('allbands.concat.shifted.ms', 'allbands.concat.shiftedback.ms',\
-                                       pointingcenter,'MODEL_DATA')
+         parset = create_phaseshift_parset_full('allbands.concat.shifted_'+source+'.ms',\
+	                                        'allbands.concat.shiftedback_'+source+'.ms',\
+                                                 pointingcenter,'MODEL_DATA')
 
          os.system('NDPPP ' + parset) 
-         os.system('rm -rf allbands.concat.shifted.ms') # clean up
+         os.system('rm -rf ' + 'allbands.concat.shifted_'+source+'.ms') # clean up
 
          # Add MODEL_DATA (allbands.concat.shiftedback.ms) into ADDED_DATA_SOURCE from mslist
 
@@ -1718,12 +1719,12 @@ for source in do_sources:
 
          if (numchan1[0]) == (numchan2[0]*len(mslist)):
            os.system('python ' + SCRIPTPATH + '/copy_over_columns.py '+ msliststr +\
-                     ' ' +'allbands.concat.shiftedback.ms'+' ' + 'ADDED_DATA_SOURCE')
+                     ' ' +'allbands.concat.shiftedback_'+source+'.ms'+' ' + 'ADDED_DATA_SOURCE')
          else:
            os.system('python ' + SCRIPTPATH + '/copy_over_columns.py '+ mslistorigstr +\
-                     ' ' +'allbands.concat.shiftedback.ms'+' ' + 'ADDED_DATA_SOURCE')
+                     ' ' +'allbands.concat.shiftedback_'+source+'.ms'+' ' + 'ADDED_DATA_SOURCE')
 
-         os.system('rm -rf allbands.concat.shiftedback.ms') # clean up
+         os.system('rm -rf ' + 'allbands.concat.shiftedback_'+source+'.ms') # clean up
 
    #### OUTLIER CASE ####
    else:  # do this because we are not going to add back field sources
@@ -1753,6 +1754,6 @@ for source in do_sources:
       for ms in mslist:
          inputmslist = inputmslist + ' ' + ms  
       #os.system('python ' + SCRIPTPATH + '/verify_subtract_v3.py ' + inputmslist + ' 0.3 ' + source)
-      os.system('python '+ SCRIPTPATH+'/verify_subtract_v5.py ' + inputmslist + ' 0.15 ' + source)
+      os.system('python '+ SCRIPTPATH+'/verify_subtract_v5.py ' + inputmslist + ' 0.1 ' + source)
 
    logging.info('finished '+source)
