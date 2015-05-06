@@ -5,6 +5,7 @@
 username = pwd.getpwuid(os.getuid())[0]
 
 ## USER INPUT ##
+
 SCRIPTPATH      =  '/home/'+username+'/scripts/a2256_hba/'
 
 buildmytasks    =  '/home/rvweeren/software/casapy/casapy-42.2.30986-1-64b/buildmytasks'
@@ -13,19 +14,25 @@ peelsourceinfo  =  '/home/'+username+'/scripts/a2256_hba/peel_source_info_a2256.
 wsclean         =  '/home/rvweeren/software/WSClean/wsclean-1.7/build/wsclean'
 
 
-BANDS = range(200,209,10)
+BANDS = range(160,239,10)
 NAME = "A2256"
 RES = "2ch10s"
 
-do_sources=['s1']
+do_sources=['s3','s4']
 
-nterms        = 1      # automatically adjusted if needed
+StartAtStep='preSC'
+
+
+nterms        = 1      #  will be forced to 2 if WScleanWBgroup < len(mslist)
 cellsize      = 1.5    # still hardcoded in a few places, do not change for now
 TEC           = "True" # automatically set to False if needed
-clock         = "False" # gives problems with phase continuity automatically set to False if needed
-makemasks     = False
-do_ap         = False # add back, correct with instrument_ap_smoothed
+makemasks     = False  # not used anymore, keep to False
+do_ap         = False # normally this should be True, correct with instrument_ap_smoothed
 uvrange       = 5.0 # wavelength
-WSCleanRobust = 0.0 # Briggs robust factor for facet imaging
-BlankField    = False # experimental, False is the default
+WSCleanRobust = -0.25 # Briggs robust factor for facet imaging
+BlankField    = True # experimental, False is the default
 StefCal       = False # experimental, not working at the moment
+
+# for wideband clean set WScleanWBgroup below (must be smaller then len(mslist))
+# for the -best- results use WScleanWBgroup=1, note this slows down the imaging considerably
+WScleanWBgroup= 1 # number of bocks over which the spectral index is assumed to be constant, used in Wideband clean

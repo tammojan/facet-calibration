@@ -48,15 +48,23 @@ except NameError:
    print 'Overwriting TEC user input, TEC will be when using StefCal'
 
 try:
-  WScleanWBgroup
+   WScleanWBgroup
 except NameError:
-  if len(mslist) > WScleanWBgroup:
-    print 'WScleanWBgroup not set, defaulting to', 5 
-    # only print message here, because wideband is not used when len(mslist) <= WScleanWBgroup:
-  WScleanWBgroup = 5 # always set this, even if not used
+   print 'WScleanWBgroup is not set, not using wideband clean algorithm'
+   # only print message here, because wideband is not used when len(mslist) <= WScleanWBgroup:
+   WScleanWBgroup = 1000 # large number so wideband is never used
 
 if StefCal:
-  TEC = "False" # cannot fit for TEC in StefCal
+   TEC = "False" # cannot fit for TEC in StefCal
+
+if len(mslist) > WScleanWBgroup: 
+   nterms = 2
+   print 'Forcing nterms=2 since wideband clean was requested'
+else:
+  if WScleanWBgroup < 1000:
+  print "WScleanWBgroup > len(mslist), wrong user input, exiting"
+  raise Exception('WScleanWBgroup must be lowered')
+
 
 print 'StartAtStep is',StartAtStep
 
@@ -1381,12 +1389,14 @@ freq_tab.close()
 #  TEC    = "False" # no TEC fitting for one (channel) dataset
 #  nterms = 1
 
-if len(mslist) > 8:
-  nterms = 2
-if len(mslist) > 40:
-  nterms = 3
-if len(mslist) < 20:
-  clock = "False"
+#if len(mslist) > 8:
+#  nterms = 2
+#if len(mslist) > 40:
+#  nterms = 3
+#if len(mslist) < 20:
+
+#### HARCODED, CLOCK FITTING IS ALWAYS DISABLED ####
+clock = "False"
 
 
 
