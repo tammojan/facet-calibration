@@ -271,7 +271,7 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
         if cluster == 'a2256': ## special case for a2256
             niter = niter*15 # clean very deep here
 
-        os.system('casapy --nologger --logfile casapy-'+imout+'.log -c '+SCRIPTPATH+'/casapy_cleanv4.py ' + ms + ' ' + imout + ' ' + 'None' +\
+        os.system('casapy --nogui --logfile casapy-'+imout+'.log -c '+SCRIPTPATH+'/casapy_cleanv4.py ' + ms + ' ' + imout + ' ' + 'None' +\
                 ' ' + '1mJy' + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + mscale)
         # make mask
         if nterms > 1:
@@ -290,10 +290,10 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
 
     if region != 'empty' : ## special cases
         niter = niter*3
-        os.system('casapy --nologger --logfile casapy-'+imout+'.log -c '+SCRIPTPATH+'/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask+','+region + \
+        os.system('casapy --nogui --logfile casapy-'+imout+'.log -c '+SCRIPTPATH+'/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask+','+region + \
                   ' ' + '1mJy' + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + mscale)
     else:
-        os.system('casapy --nologger --logfile casapy-'+imout+'.log -c '+SCRIPTPATH+'/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask + \
+        os.system('casapy --nogui --logfile casapy-'+imout+'.log -c '+SCRIPTPATH+'/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask + \
                   ' ' + '1mJy' + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + mscale)
 
     # convert to FITS
@@ -321,28 +321,12 @@ def runbbs(mslist, skymodel, parset, parmdb, applycal, TEC):
         key = str(uuid.uuid4())
         key = key[0:12]
 
-        # postgres db settings are different for paracluster
-        # allow user settings in home directory to over-ride either
-        # temp fix till we have a proper parset
-        cdparset='/home/'+username+'/pgsql-setup.txt'
-        if os.path.isfile(cdparset):
-            print 'Getting pgsql setup from',cdparset
-            lines=[line.strip() for line in open(cdparset)]
-            clusterdesc=lines[0]
-            db=lines[1]
-            dbuser=lines[2]
-            dbname=lines[3]
+        # postgres db settings
+        clusterdesc = '/home/jsm/elais-n1/new_pipeline/stacpolly.clusterdesc'
+        db = 'head'
+        dbuser = 'jsm'
+        dbname = 'jsm'
 
-        elif 'para' in os.uname()[1]:
-            clusterdesc = '/home/wwilliams/para/paranew.clusterdesc'
-            db = 'kolkje'
-            dbuser = 'shimwell'
-            dbname = 'shimwell'
-        else:
-            clusterdesc = '/home/williams/clusterdesc/cep3.clusterdesc'
-            db = 'ldb002.offline.lofar'
-            dbuser = 'postgres'
-            dbname = username
 
         if len(mslist) == 10000:  # 34 does not work now!!!!!!
             # this is a very special case for a full run, manually here to run with 3 solver controls
@@ -826,7 +810,7 @@ imout,mask = make_image(mslist, cluster, '0', 10, 6, nterms, atrous_do, imsize)
 # create skymodel for BBS
 os.system(SCRIPTPATH+'/casapy2bbs.py -m '+ mask + ' ' +'-t ' + str(nterms)+ ' ' + imout+'.model ' +  imout+'.skymodel')
 if FFT:
-    os.system('casapy --nologger -c '+SCRIPTPATH+'/ft_v2.py ' + msinputlist + ' ' + imout+'.model' \
+    os.system('casapy --nogui -c '+SCRIPTPATH+'/ft_v2.py ' + msinputlist + ' ' + imout+'.model' \
               + ' ' + str(nterms) + ' '+ str(wplanes))
 
 # phase only calibrate
@@ -847,7 +831,7 @@ imout,mask = make_image(mslist, cluster, '1', 15, 15, nterms, atrous_do, imsize)
 # create skymodel for BBS
 os.system(SCRIPTPATH+'/casapy2bbs.py -m '+ mask + ' ' +'-t ' + str(nterms)+ ' ' + imout+'.model ' +  imout+'.skymodel')
 if FFT:
-    os.system('casapy --nologger -c '+SCRIPTPATH+'/ft_v2.py ' + msinputlist + ' ' + imout+'.model' \
+    os.system('casapy --nogui -c '+SCRIPTPATH+'/ft_v2.py ' + msinputlist + ' ' + imout+'.model' \
               + ' ' + str(nterms) + ' '+ str(wplanes))
 
 
@@ -868,7 +852,7 @@ imout,mask = make_image(mslist, cluster, '2', 15, 15, nterms, atrous_do, imsize)
 ### CALIBRATE WITH BBS PHASE+AMP 1 ###
 os.system(SCRIPTPATH+'/casapy2bbs.py -m '+ mask + ' ' +'-t ' + str(nterms)+ ' ' + imout+'.model ' +  imout+'.skymodel')
 if FFT:
-    os.system('casapy --nologger -c '+SCRIPTPATH+'/ft_v2.py ' + msinputlist + ' ' + imout+'.model' \
+    os.system('casapy --nogui -c '+SCRIPTPATH+'/ft_v2.py ' + msinputlist + ' ' + imout+'.model' \
               + ' ' + str(nterms) + ' '+ str(wplanes))
 
 skymodel = imout+'.skymodel'
@@ -903,7 +887,7 @@ imout,mask = make_image(mslist, cluster, '3', 10, 10, nterms, atrous_do, imsize)
 # make model
 os.system(SCRIPTPATH+'/casapy2bbs.py -m '+ mask + ' ' +'-t ' + str(nterms)+ ' ' + imout+'.model ' +  imout+'.skymodel')
 if FFT:
-    os.system('casapy --nologger -c '+SCRIPTPATH+'/ft_v2.py ' + msinputlist + ' ' + imout+'.model' \
+    os.system('casapy --nogui -c '+SCRIPTPATH+'/ft_v2.py ' + msinputlist + ' ' + imout+'.model' \
               + ' ' + str(nterms) + ' '+ str(wplanes))
 
 #parmdb keep from previous step
@@ -951,7 +935,7 @@ imout,mask = make_image(mslist, cluster, '4', 10, 10, nterms, atrous_do, imsize)
 skymodelf= 'im_cluster'+cluster+ '.final.skymodel'
 os.system(SCRIPTPATH+'/casapy2bbs.py -m '+ mask + ' ' +'-t ' + str(nterms)+ ' ' + imout+'.model ' +  skymodelf)
 if FFT:
-    os.system('casapy --nologger -c '+SCRIPTPATH+'/ft_v2.py ' + msinputlist + ' ' + imout+'.model' \
+    os.system('casapy --nogui -c '+SCRIPTPATH+'/ft_v2.py ' + msinputlist + ' ' + imout+'.model' \
               + ' ' + str(nterms) + ' '+ str(wplanes))
 
 ### CREATED MERGED PARMDB SCALARPHASE+AMPS ###

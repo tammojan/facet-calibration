@@ -88,10 +88,10 @@ for ms in mslist:
  
  # convert to casapy format and includ region file
  if casaregion != '':
-   os.system('casapy --nologger -c  /home/rvweeren/scripts/a2256_hba/fitsandregion2image.py '\
+   os.system('casapy --nogui -c  /home/rvweeren/scripts/a2256_hba/fitsandregion2image.py '\
              + mask_name + ' ' + casa_mask + ' ' + casaregion)
  else:
-   os.system('casapy --nologger -c  /home/rvweeren/scripts/a2256_hba/fitsandregion2image.py '\
+   os.system('casapy --nogui -c  /home/rvweeren/scripts/a2256_hba/fitsandregion2image.py '\
              + mask_name + ' ' + casa_mask + ' ' + 'None')
  
  imhigh = imhigh + 'withmask'
@@ -117,7 +117,7 @@ for ms in mslist:
  # convert model fits image to casa .model format
  print 'Converting model to casapy format', fits_model, ' ==> ', casa_model
  
- os.system('casapy --nologger -c  /home/rvweeren/scripts/a2256_hba/fits2image.py '\
+ os.system('casapy --nogui -c  /home/rvweeren/scripts/a2256_hba/fits2image.py '\
              + fits_model + ' ' + casa_model)
 
  # ---------------------
@@ -178,10 +178,10 @@ for ms in mslist:
  
  # convert to casapy format and includ region file
  if casaregion != '':
-   os.system('casapy --nologger -c  /home/rvweeren/scripts/a2256_hba/fitsandregion2image.py '\
+   os.system('casapy --nogui -c  /home/rvweeren/scripts/a2256_hba/fitsandregion2image.py '\
              + mask_name + ' ' + casa_mask + ' ' + casaregion)
  else:
-   os.system('casapy --nologger -c  /home/rvweeren/scripts/a2256_hba/fitsandregion2image.py '\
+   os.system('casapy --nogui -c  /home/rvweeren/scripts/a2256_hba/fitsandregion2image.py '\
              + mask_name + ' ' + casa_mask + ' ' + 'None')
 
  imlow = imlow + 'withmask'
@@ -209,7 +209,7 @@ for ms in mslist:
  # convert model fits image to casa .model format
  print 'Converting model to casapy format', fits_model, ' ==> ', casa_model
  
- os.system('casapy --nologger -c  /home/rvweeren/scripts/a2256_hba/fits2image.py '\
+ os.system('casapy --nogui -c  /home/rvweeren/scripts/a2256_hba/fits2image.py '\
              + fits_model + ' ' + casa_model)
  # ---------------------
  # create the low-res skymodel

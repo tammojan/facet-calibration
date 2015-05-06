@@ -37,7 +37,7 @@ def create_phaseshift_parset_field(msin, msout):
   f.write('uv.uvmmax=2500.0\n')
   #f.write('uv.uvmmin=20.0\n')
   f.write('avg1.type = squash\n')
-  f.write('avg1.freqstep = 20\n')
+  f.write('avg1.freqstep = 30\n')
   f.write('avg1.timestep = 6\n')    
   f.close()
   return ndppp_parset
@@ -102,7 +102,7 @@ for ms in msavglist:
        output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
  
      imout = 'im'+ '_residual_' + source + '_' + ms.split('.')[0]
-     os.system('casapy --nologger -c '+SCRIPTPATH+'/casapy_cleanv4_checksubtract.py ' +\
+     os.system('casapy --nogui -c '+SCRIPTPATH+'/casapy_cleanv4_checksubtract.py ' +\
                 ms + ' ' + imout + ' ' + str(imsize)+ '&')
      time.sleep(20)
 
