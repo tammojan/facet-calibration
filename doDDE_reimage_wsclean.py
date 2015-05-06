@@ -487,7 +487,7 @@ def create_phaseshift_parset_full(msin, msout, direction, column):
     return ndppp_parset
 
 
-def create_phaseshift_parset(msin, msout, source, direction):
+def create_phaseshift_parset(msin, msout, source, direction, freqstep=30):
     ndppp_parset = (msin.split('.')[0]) +'_ndppp_avgphaseshift.parset'
     os.system('rm -f ' + ndppp_parset)
 
@@ -504,13 +504,13 @@ def create_phaseshift_parset(msin, msout, source, direction):
 
     # just to test
 
-    f.write('avg1.freqstep = 20\n')
+    f.write('avg1.freqstep = %i\n' % freqstep)
     f.write('avg1.timestep = 1\n')
     f.close()
     return ndppp_parset
 
 
-def create_phaseshift_parset_formasks(msin, msout, source, direction):
+def create_phaseshift_parset_formasks(msin, msout, source, direction, freqstep=30):
     ndppp_parset = (msin.split('.')[0]) +'_ndppp_avgphaseshift.parset'
     os.system('rm -f ' + ndppp_parset)
 
@@ -524,7 +524,7 @@ def create_phaseshift_parset_formasks(msin, msout, source, direction):
     f.write('shift.type        = phaseshift\n')
     f.write('shift.phasecenter = [%s]\n' % direction)
     f.write('avg1.type = squash\n')
-    f.write('avg1.freqstep = 20\n')
+    f.write('avg1.freqstep = %i\n' % freqstep)
     f.write('avg1.timestep = 1\n')
     f.close()
     return ndppp_parset

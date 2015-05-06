@@ -1,0 +1,36 @@
+##### "example parset file" ####
+#### USER INPUT #####
+
+
+username = pwd.getpwuid(os.getuid())[0]
+
+## USER INPUT ##
+SCRIPTPATH      =  '/home/jsm/elais-n1/facet-calibration'
+
+buildmytasks    =  '/home/jsm/casapy/buildmytasks'
+#os.system('cp /home/'+username+'/scripts/a2256_hba/*.rgn .')
+peelsourceinfo  =  '/home/jsm/elais-n1/new_pipeline/data_info/regions.txt'
+wsclean         =  '/home/jsm/LOFAR/local/release/bin/wsclean'
+
+#facet_info_dir = '/data/jsm/2015-04-21-DDs1/facet_info'
+#peel_src_info_file = "/home/jsm/elais-n1/new_pipeline/data_info/regions.txt"
+
+
+BANDS = range(170,210,10)
+NAME = "L138658_T2"
+RES = "3ch10s"
+
+do_sources=['s1']
+
+nterms        = 1      # automatically adjusted if needed
+cellsize      = 1.5    # still hardcoded in a few places, do not change for now
+TEC           = "True" # automatically set to False if needed
+clock         = "False" # gives problems with phase continuity automatically set to False if needed
+makemasks     = False
+do_ap         = False # add back, correct with instrument_ap_smoothed
+uvrange       = 5.0 # wavelength
+WSCleanRobust = 0.0 # Briggs robust factor for facet imaging
+BlankField    = False # experimental, False is the default
+StefCal       = False # experimental, not working at the moment
+freqstep      = 30
+#StartAtStep  = "preSC"
