@@ -5,6 +5,7 @@ import numpy
 import pwd
 from subprocess import Popen, PIPE
 import time
+import pyrap.images
 
 username = pwd.getpwuid(os.getuid())[0]
 
@@ -79,14 +80,17 @@ for ms in mslist:
  #########
  
  
- #os.system(cmd1+cmd2+cmd3)
+ os.system(cmd1+cmd2+cmd3)
 
 
  # create the mask
  
  cmd='python '+SCRIPTPATH+'/makecleanmask_10sb_wsclean.py --threshpix '+str(threshpix)+\
-             ' --threshisl '+str(threshisl) +' --atrous_do '+ str(atrous_do) + \
- 	     ' --casaregion  '+ casaregion +' '  + imhigh + '-image.fits'
+             ' --threshisl '+str(threshisl) +' --atrous_do '+ str(atrous_do)+' ' 
+ if casaregion!='':
+   cmd+='--casaregion  '+ casaregion +' '
+ cmd+=imhigh + '-image.fits'
+
  print cmd
  os.system(cmd)
  
@@ -127,8 +131,11 @@ for ms in mslist:
  # convert model fits image to casa .model format
  print 'Converting model to casapy format', fits_model, ' ==> ', casa_model
  
- os.system('casapy --nologger -c '+SCRIPTPATH+'/fits2image.py '\
-             + fits_model + ' ' + casa_model)
+ modelim=pyrap.images.image(fits_model)
+ modelim.saveas(casa_model)
+
+ #os.system('casapy --nologger -c '+SCRIPTPATH+'/fits2image.py '\
+ #            + fits_model + ' ' + casa_model)
 
  # ---------------------
  # make the skymodel
@@ -178,18 +185,21 @@ for ms in mslist:
 
  # ---------------------
  # create the lowres mask
- os.system('python '+SCRIPTPATH+'/makecleanmask_10sb_wsclean.py --threshpix '+str(5.0)+\
-            ' --threshisl '+str(4.0) +' --atrous_do '+ str(atrous_do) + \
-            ' --casaregion  '+ casaregion +' '  + imlow + '-image.fits')
+ cmd='python '+SCRIPTPATH+'/makecleanmask_10sb_wsclean.py --threshpix '+str(5.0)+\
+            ' --threshisl '+str(4.0) +' --atrous_do '+ str(atrous_do) + ' '
+ if casaregion!='':
+   cmd+='--casaregion  '+ casaregion +' '
+ cmd+=imlow + '-image.fits'
+ os.system(cmd)
 
-
+ # convert to CASA format
  mask_name  = imlow + '.fitsmask'
  casa_mask  = imlow + '.casamask'
  
  maskim=pyrap.images.image(mask_name)
  maskim.saveas(casa_mask)
 
-# convert to casapy format and includ region file
+ # include region file
  if casaregion != '':
    os.system('casapy --nologger -c '+SCRIPTPATH+'/fitsandregion2image.py '\
              + mask_name + ' ' + casa_mask + ' ' + casaregion)
@@ -221,9 +231,12 @@ for ms in mslist:
  
  # convert model fits image to casa .model format
  print 'Converting model to casapy format', fits_model, ' ==> ', casa_model
- 
- os.system('casapy --nologger -c '+SCRIPTPATH+'/fits2image.py '\
-             + fits_model + ' ' + casa_model)
+
+ modelim=pyrap.images.image(fits_model)
+ modelim.saveas(casa_model)
+
+ #os.system('casapy --nologger -c '+SCRIPTPATH+'/fits2image.py '\
+ #            + fits_model + ' ' + casa_model)
  # ---------------------
  # create the low-res skymodel
  
