@@ -15,7 +15,7 @@ Step.subtract.Output.Column                   = SUBTRACTED_DATA
 
 Step.correct1.Model.Sources                 = []
 Step.correct1.Model.DirectionalGain.Enable  = F
-Step.correct1.Model.Gain.Enable             = F
+Step.correct1.Model.Gain.Enable             = T
 Step.correct1.Model.Phasors.Enable          = F
 Step.correct1.Operation                     = CORRECT
 Step.correct1.Output.Column                 = MODEL_DATA # after this take from MODEL_DATA with NDPPP to image low-res
