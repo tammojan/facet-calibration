@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import os
 import numpy
 import sys
@@ -5,15 +6,23 @@ import glob
 import pyrap.tables as pt
 import lofar.parmdb
 
+if len(sys.argv)<5:
+    print 'Syntax:',sys.argv[0],' <MS name> <path to phase-only parmdb> <path to template A&P parmdb> <path to output parmdb>'
+    sys.exit(-1)
+
+ms=sys.argv[1]
+phase_only_parmdb=sys.argv[2]
+ap_parmdb_template=sys.argv[3]
+output_parmdb=sys.argv[4]
 
 ### STAR USER INPUT ###
-ms                 = 'A2256_SB050-059.2ch10s.ms'
-phase_only_parmdb  = 'A2256_SB050-059.2ch10s.ms/instrument_phaseonly' # contains
+#ms                 = 'A2256_SB050-059.2ch10s.ms'
+#phase_only_parmdb  = 'A2256_SB050-059.2ch10s.ms/instrument_phaseonly' # contains
 
-ap_parmdb_template = 'A2256_SB050-059.2ch10s.ms/instrument_ap_template'
+#ap_parmdb_template = 'A2256_SB050-059.2ch10s.ms/instrument_ap_template'
                      # you need to make this one
                      # same(!) timegrid as phase_only_parmdb, needs keys Real:0:0, Imag:0:0
-output_parmdb      = 'A2256_SB050-059.2ch10s.ms/instrument_ap_smoothed'
+#output_parmdb      = 'A2256_SB050-059.2ch10s.ms/instrument_ap_smoothed'
 ### END USER INPUT ###
 
 
