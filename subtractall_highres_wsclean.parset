@@ -1,0 +1,28 @@
+Strategy.InputColumn = DATA # now contains instrument_block10 phases
+Strategy.ChunkSize   = 250
+Strategy.Steps       = [subtract,correct1]
+
+Step.subtract.Model.Cache.Enable              = T
+Step.subtract.Model.Phasors.Enable            = F
+Step.subtract.Model.DirectionalGain.Enable    = F
+Step.subtract.Model.Gain.Enable               = F
+Step.subtract.Model.Rotation.Enable           = F
+Step.subtract.Model.CommonScalarPhase.Enable  = F
+Step.subtract.Model.CommonRotation.Enable     = F
+Step.subtract.Operation                       = SUBTRACT
+Step.subtract.Model.Beam.Enable               = F
+Step.subtract.Output.Column                   = SUBTRACTED_DATA
+
+Step.correct1.Model.Sources                 = []
+Step.correct1.Model.DirectionalGain.Enable  = F
+Step.correct1.Model.Gain.Enable             = F
+Step.correct1.Model.Phasors.Enable          = F
+Step.correct1.Operation                     = CORRECT
+Step.correct1.Output.Column                 = MODEL_DATA # after this take from MODEL_DATA with NDPPP to image low-res
+Step.correct1.Model.Beam.Enable             = F
+Step.correct1.Output.WriteCovariance        = F
+Step.correct1.Model.Beam.UseChannelFreq     = F
+
+
+#calibrate-stand-alone --replace-sourcedb --parmdb-name instrument_ap_smoothed RX42_SB000-009.4ch10s.ms subtractall_highres.parset highresimages/RX42_SB000-009_highres_image.restored.pbblk_forsourcelist.pybdsm.sky_in > l0s.txt &
+
