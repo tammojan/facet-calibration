@@ -10,48 +10,6 @@ import pyrap.images
 
 username = pwd.getpwuid(os.getuid())[0]
 
-
-def wsclean_wait():
-   warned=False
-     ######### check that no wsclean is running
-   cmd = "ps -f -u " + username + " | grep wsclean | grep -v _wsclean.py | grep -v wsclean.parset |grep -v grep |wc -l"
-   while True: # "grep -v grep" to prevent counting the grep command
-      output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])  
-      if output==0:
-         break
-      if not(warned):
-         print 'A wsclean is already running, waiting for it to finish'
-         warned=True
-      time.sleep(2)
-
-if len(sys.argv)<2:
-   raise Exception('Give the path to the setup code for the facet')
-
-# setup code must set SCRIPTPATH, wsclean, mslist, casaregion, and may
-# do anything else needed
-
-print 'Using',sys.argv[1],'as the setup code'
-execfile(sys.argv[1])
-print 'script path is',SCRIPTPATH
-
-print 'working on MS list',mslist
-try:
-  cleanup
-except NameError:
-  cleanup=False
-
-niterh = 40000
-niterl = 20000
-nterms = 1
-imsizeh= 6144
-imsizel= 4800 
-cellh  = '7.5arcsec'
-celll  = '25arcsec'
-
-threshisl = 2.5
-threshpix = 5
-atrous_do = "True"
-
 def create_ndppp_parset(msin, msout):
    ndppp_parset = msin.split('.')[0] +'ndppp_lowresavg.parset' 
    os.system('rm -f ' + ndppp_parset)
@@ -69,6 +27,50 @@ def create_ndppp_parset(msin, msout):
    f.close()
    return ndppp_parset
 
+def wsclean_wait():
+   warned=False
+     ######### check that no wsclean is running
+   cmd = "ps -f -u " + username + " | grep wsclean | grep -v _wsclean.py | grep -v wsclean.parset |grep -v grep |wc -l"
+   while True: # "grep -v grep" to prevent counting the grep command
+      output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])  
+      if output==0:
+         break
+      if not(warned):
+         print 'A wsclean is already running, waiting for it to finish'
+         warned=True
+      time.sleep(2)
+
+############ MAIN CODE ###########
+
+if len(sys.argv)<2:
+   raise Exception('Give the path to the setup code for the facet')
+
+# setup code must set SCRIPTPATH, wsclean, mslist, casaregion, and may
+# do anything else needed
+
+print 'Using',sys.argv[1],'as the setup code'
+execfile(sys.argv[1])
+print 'script path is',SCRIPTPATH
+
+print 'working on MS list',mslist
+try:
+  cleanup
+except NameError:
+  cleanup=False
+
+# parameters below should not need to be changed
+
+niterh = 40000
+niterl = 20000
+nterms = 1
+imsizeh= 6144
+imsizel= 4800 
+cellh  = '7.5arcsec'
+celll  = '25arcsec'
+
+threshisl = 2.5
+threshpix = 5
+atrous_do = "True"
 
 for ms in mslist:
 
