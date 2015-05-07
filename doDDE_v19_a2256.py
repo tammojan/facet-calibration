@@ -758,57 +758,61 @@ def normalize_parmdbs(mslist, parmdbname, parmdboutname):
    
 def return_slist(imagename, skymodel, ref_source):
  
- fluxweight = False
+    fluxweight = False
 
- data = load_bbs_skymodel(skymodel) 
+    data = load_bbs_skymodel(skymodel) 
 
- if len(numpy.shape(data)) == 1:  # in this case not issue and we do not use Pythonlibs
-   patchest,ra_patches,dec_patches, flux_patches =  compute_patch_center(data,fluxweight)
-   print 'option 1'
- if len(numpy.shape(data)) == 2: 
-   patchest,ra_patches,dec_patches, flux_patches = compute_patch_center_libsproblem(data,fluxweight)
-   print 'option 2'
+    if len(numpy.shape(data)) == 1:  # in this case not issue and we do not use Pythonlibs
+        patchest,ra_patches,dec_patches, flux_patches =  compute_patch_center(data,fluxweight)
+        print 'option 1'
+    if len(numpy.shape(data)) == 2: 
+        patchest,ra_patches,dec_patches, flux_patches = compute_patch_center_libsproblem(data,fluxweight)
+        print 'option 2'
 
- # remove sources already in the field and convert to radians
+    # remove sources already in the field and convert to radians
  
- if len(ref_source) == 1:
-   idx = numpy.where(patchest != ref_source)
-   ralist  = pi*(ra_patches[idx])/180.
-   declist = pi*(dec_patches[idx])/180.
-   patches = patchest[idx]
- else:
-   idx = numpy.asarray([numpy.where(patchest == y)[0][0] for y in ref_source])
-   accept_idx = sorted(set(range(patchest.size)) - set(idx))
+    if len(ref_source) == 1:
+        idx = numpy.where(patchest != ref_source)
+        ralist  = pi*(ra_patches[idx])/180.
+        declist = pi*(dec_patches[idx])/180.
+        patches = patchest[idx]
+    else:
+        idx = numpy.asarray([numpy.where(patchest == y)[0][0] for y in ref_source])
+        accept_idx = sorted(set(range(patchest.size)) - set(idx))
  
-   ralist  = pi*(ra_patches[accept_idx])/180.
-   declist = pi*(dec_patches[accept_idx])/180.
-   patches = patchest[accept_idx]
+        ralist  = pi*(ra_patches[accept_idx])/180.
+        declist = pi*(dec_patches[accept_idx])/180.
+        patches = patchest[accept_idx]
 
  
- img    = pyrap.images.image(imagename)
- pixels = numpy.copy(img.getdata())
- plist = []
- sh    = numpy.shape(pixels)[2:4]
+    img    = pyrap.images.image(imagename)
+    pixels = numpy.copy(img.getdata())
+    plist = []
+    sh    = numpy.shape(pixels)[2:4]
 
 
- for patch_id,patch in enumerate(patches):
-   coor = [0,1,declist[patch_id],ralist[patch_id]]
-   pix  = img.topixel(coor)[2:4]
+    for patch_id,patch in enumerate(patches):
+        coor = [0,1,declist[patch_id],ralist[patch_id]]
+        pix  = img.topixel(coor)[2:4]
  
-   if (pix[0] >= 0) and (pix[0] <= (sh[0]-1)) and \
-      (pix[1] >= 0) and (pix[1] <= (sh[1]-1)):
-     if pixels[0,0,pix[0],pix[1]] != 0.0:  # only include if withtin the clean mask (==1)
-       plist.append(patches[patch_id]) 
+        if ((pix[0] >= 0) and 
+            (pix[0] <= (sh[0]-1)) and 
+            (pix[1] >= 0) and 
+            (pix[1] <= (sh[1]-1))):
+            
+            if pixels[0,0,pix[0],pix[1]] != 0.0:  # only include if withtin the clean mask (==1)
+                plist.append(patches[patch_id]) 
 
- sourcess = ''
- if len(plist) == 1:
-   sourcess = str(plist[0])
- else:   
-   for patch in plist:
-     sourcess = sourcess+patch+','  
-   sourcess = sourcess[:-1]
+    sourcess = ''
+    if len(plist) == 1:
+        sourcess = str(plist[0])
+    else:   
+        for patch in plist:
+            sourcess = sourcess+patch+','  
+        sourcess = sourcess[:-1]
 
- return sourcess
+    return sourcess
+
 
 def angsep(ra1deg, dec1deg, ra2deg, dec2deg):
     """Returns angular separation between two coordinates (all in degrees)"""
@@ -825,167 +829,116 @@ def angsep(ra1deg, dec1deg, ra2deg, dec2deg):
     y=math.sin(ra1rad)*math.cos(dec1rad)*math.sin(ra2rad)*math.cos(dec2rad)
     z=math.sin(dec1rad)*math.sin(dec2rad)
 
-    if x+y+z >= 1: rad = 0
-    else: rad=math.acos(x+y+z)
+    if x+y+z >= 1: 
+        rad = 0
+    else: 
+        rad=math.acos(x+y+z)
 
     # Angular separation
     deg=rad*180/math.pi
     return deg
     
 
-def cal_return_slist(imagename,skymodel, direction, imsize):
+def cal_return_slist(imagename, skymodel, direction, imsize):
 
- factor = 0.8 # only add back in the center 80%
- cut = 1.5*(imsize/2.)*factor/3600.
+    factor = 0.8 # only add back in the center 80%
+    cut = 1.5*(imsize/2.)*factor/3600.
 
- ra  = direction.split(',')[0]
- dec = direction.split(',')[1]
-  
- ra1   = float(ra.split('h')[0])*15.
- ratmp = (ra.split('h')[1])
- ra2   = float(ratmp.split('m')[0])*15./60
- ra3   = float(ratmp.split('m')[1])*15./3600.
- ref_ra= ra1 + ra2 +ra3
+    ra  = direction.split(',')[0]
+    dec = direction.split(',')[1]
+    
+    ra1   = float(ra.split('h')[0])*15.
+    ratmp = (ra.split('h')[1])
+    ra2   = float(ratmp.split('m')[0])*15./60
+    ra3   = float(ratmp.split('m')[1])*15./3600.
+    ref_ra= ra1 + ra2 +ra3
 
- dec1   = float(dec.split('d')[0])
- dectmp = (dec.split('d')[1])
- dec2   = float(dectmp.split('m')[0])/60
- dec3   = float(dectmp.split('m')[1])/3600.
- ref_dec= dec1 + dec2 +dec3
+    dec1   = float(dec.split('d')[0])
+    dectmp = (dec.split('d')[1])
+    dec2   = float(dectmp.split('m')[0])/60
+    dec3   = float(dectmp.split('m')[1])/3600.
+    ref_dec= dec1 + dec2 +dec3
 
- fluxweight = False
-
-
- data = load_bbs_skymodel(skymodel) 
-
- if len(numpy.shape(data)) == 1:  # in this case not issue and we do not use Pythonlibs
-   patches,ra_patches,dec_patches, flux_patches =  compute_patch_center(data,fluxweight)
-   print 'option 1'
- if len(numpy.shape(data)) == 2: 
-   patches,ra_patches,dec_patches, flux_patches = compute_patch_center_libsproblem(data,fluxweight)
-   print 'option 2'
-
- ralist  = pi*(ra_patches)/180.
- declist = pi*(dec_patches)/180.
+    fluxweight = False
 
 
- plist = []
+    data = load_bbs_skymodel(skymodel) 
 
- print ref_ra, ref_dec
+    if len(numpy.shape(data)) == 1:  # in this case not issue and we do not use Pythonlibs
+        patches,ra_patches,dec_patches, flux_patches =  compute_patch_center(data,fluxweight)
+        print 'option 1'
+    if len(numpy.shape(data)) == 2: 
+        patches,ra_patches,dec_patches, flux_patches = compute_patch_center_libsproblem(data,fluxweight)
+        print 'option 2'
 
+    ralist  = pi*(ra_patches)/180.
+    declist = pi*(dec_patches)/180.
 
+    plist = []
+    print ref_ra, ref_dec
 
- # load image to check if source within boundaries
- img    = pyrap.images.image(imagename)
- pixels = numpy.copy(img.getdata())
- plist = []
- sh    = numpy.shape(pixels)[2:4]
+    # load image to check if source within boundaries
+    img    = pyrap.images.image(imagename)
+    pixels = numpy.copy(img.getdata())
+    plist = []
+    sh    = numpy.shape(pixels)[2:4]
 
-
- # CHECK TWO THINGS
- #  - sources fall within the image size
- #  - sources fall within the mask from the tessellation
- for patch_id,patch in enumerate(patches):
-   coor = [0,1,declist[patch_id],ralist[patch_id]]
-   pix  = img.topixel(coor)[2:4]
+    # CHECK TWO THINGS
+    #  - sources fall within the image size
+    #  - sources fall within the mask from the tessellation
+    for patch_id,patch in enumerate(patches):
+        coor = [0,1,declist[patch_id],ralist[patch_id]]
+        pix  = img.topixel(coor)[2:4]
    
-   # compute radial distance to image center
-   dis = angsep(ra_patches[patch_id],dec_patches[patch_id], ref_ra, ref_dec)
+        # compute radial distance to image center
+        dis = angsep(ra_patches[patch_id],dec_patches[patch_id], ref_ra, ref_dec)
  
-   if dis < cut: # ok sources is within image
-     # check if the sources is within the mask region (because mask can be smaller than image)
-     if (pix[0] >= 0) and (pix[0] <= (sh[0]-1)) and \
-        (pix[1] >= 0) and (pix[1] <= (sh[1]-1)):
-       if pixels[0,0,pix[0],pix[1]] != 0.0:  # only include if withtin the clean mask (==1)
-          plist.append(patches[patch_id]) 
+        if dis < cut: # ok sources is within image
+            # check if the sources is within the mask region (because mask can be smaller than image)
+            if (pix[0] >= 0) and (pix[0] <= (sh[0]-1)) and (pix[1] >= 0) and (pix[1] <= (sh[1]-1)):
+                if pixels[0,0,pix[0],pix[1]] != 0.0:  # only include if withtin the clean mask (==1)
+                    plist.append(patches[patch_id]) 
 
- # make the string type source list
- sourcess = ''
- if len(plist) == 1:
-   sourcess = str(plist[0])
- else:   
-   for patch in plist:
-     sourcess = sourcess+patch+','  
-   sourcess = sourcess[:-1]
+    # make the string type source list
+    sourcess = ''
+    if len(plist) == 1:
+        sourcess = str(plist[0])
+    else:   
+        for patch in plist:
+            sourcess = sourcess+patch+','  
+        sourcess = sourcess[:-1]
 
- return sourcess, plist
+    return sourcess, plist
 
 
 
 def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous_do, imsize, inputmask, mscale, region):
 
- niter   = numpy.int(2000 * (numpy.sqrt(numpy.float(len(mslist)))))
- 
- depth =  0.7 / (numpy.sqrt(numpy.float(len(mslist))))
- cleandepth1 = str(depth*1.5) + 'mJy'
- cleandepth2 = str(depth)    + 'mJy'
-
- # speed up the imaging if possible by reducing image size within the mask region
- newsize = find_newsize(inputmask)
- if newsize < imsize: # ok so we can use a smaller image size then
-   #make a new template
-   os.system('casapy --nogui -c '+ SCRIPTPATH +'/make_empty_image.py '+ str(mslist[0]) + ' ' + inputmask+'2' + ' ' + str(newsize) + ' ' +'1.5arcsec')
-   os.system('casapy --nogui -c '+ SCRIPTPATH +'/regrid_image.py '    + inputmask      + ' ' + inputmask+'2' + ' ' + inputmask+'3')
- 
-   # reset the imsize and the mask
-   imsize    = newsize
-   inputmask = inputmask+'3'
- 
- 
-########################
-########################
-
-if __name__ == "__main__":
-
-    if len(sys.argv)<2:
-    raise Exception('Give the path to the setup code for the facet')
-
-    print 'Using',sys.argv[1],'as the setup code'
-    execfile(sys.argv[1])
-    print 'script path is',SCRIPTPATH
-
-    try:
-    StartAtStep
-    except NameError:
-    print 'No starting step specified, begin at the beginning'
-    StartAtStep='preSC'
-
-    try:
-    WSCleanRobust
-    except NameError:
-    WSCleanRobust=-0.25 # default preserves old value
-    print 'No WSClean robust set, defaulting to',WSCleanRobust
-
-    try:
-    BlankField
-    except NameError:
-    BlankField=False
-    print 'BlankField not set, defaulting to',BlankField
-
-    print 'StartAtStep is',StartAtStep
-
-    logging.basicConfig(filename='dde.log', 
-                        level=logging.DEBUG, 
-                        format='%(asctime)s -  %(message)s', 
-                        datefmt='%Y-%d-%m %H:%M:%S')
-    logging.info('\n')
-
-    os.system('cp ' + SCRIPTPATH + '/coordinates_mode.py .')
-    os.system('cp ' + SCRIPTPATH + '/blank.py .')
-    os.system('cp ' + SCRIPTPATH + '/ftw.xml .')
-    os.system('cp ' + SCRIPTPATH + '/task_ftw.py .')
-
-    os.system(buildmytasks) # make casapy tasks
+    niter   = numpy.int(2000 * (numpy.sqrt(numpy.float(len(mslist)))))
     
-    
-    
+    depth =  0.7 / (numpy.sqrt(numpy.float(len(mslist))))
+    cleandepth1 = str(depth*1.5) + 'mJy'
+    cleandepth2 = str(depth)    + 'mJy'
+
+    # speed up the imaging if possible by reducing image size within the mask region
+    newsize = find_newsize(inputmask)
+    if newsize < imsize: # ok so we can use a smaller image size then
+        #make a new template
+        os.system('casapy --nogui -c '+ SCRIPTPATH +'/make_empty_image.py '+ str(mslist[0]) + ' ' + inputmask+'2' + ' ' + str(newsize) + ' ' +'1.5arcsec')
+        os.system('casapy --nogui -c '+ SCRIPTPATH +'/regrid_image.py '    + inputmask      + ' ' + inputmask+'2' + ' ' + inputmask+'3')
+        
+        # reset the imsize and the mask
+        imsize    = newsize
+        inputmask = inputmask+'3'
+        
+
     ms = ''
     for m in mslist:
         ms = ms + ' ' + m
 
     imout = 'im'+ callnumber +'_cluster'+cluster+'nm'
 
-    os.system('/home/rvweeren/software/casapy/casapy-42.2.30986-1-64b/casapy --nogui -c ' + SCRIPTPATH + '/casapy_cleanv4.py ' + ms + ' ' + imout + ' ' + 'None' +\
+    os.system('casapy --nogui -c ' + SCRIPTPATH + '/casapy_cleanv4.py ' + ms + ' ' + imout + ' ' + 'None' +\
                 ' ' + cleandepth1 + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + mscale)
 
 
@@ -1021,11 +974,11 @@ if __name__ == "__main__":
     
     if region != 'empty': # in that case we have a extra region file for the clean mask
         niter = niter*3 # increase niter, tune manually if needed
-        os.system('/home/rvweeren/software/casapy/casapy-42.2.30986-1-64b/casapy --nogui -c ' + SCRIPTPATH +'/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask_sources+'field,'+region + \
+        os.system('casapy --nogui -c ' + SCRIPTPATH +'/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask_sources+'field,'+region + \
                     ' ' + cleandepth2 + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + mscale)
     
     else:
-        os.system('/home/rvweeren/software/casapy/casapy-42.2.30986-1-64b/casapy --nogui -c '+ SCRIPTPATH + '/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask_sources+'field' + \
+        os.system('casapy --nogui -c '+ SCRIPTPATH + '/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask_sources+'field' + \
                     ' ' + cleandepth2 + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + mscale)
     
     # convert to FITS
@@ -1036,7 +989,8 @@ if __name__ == "__main__":
     
     return imout, mask_sources+'field', imsize
 
-    def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous_do, imsize, inputmask, mscale, region,cellsize,uvrange,wsclean,WSCleanRobust,BlankField):
+
+def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous_do, imsize, inputmask, mscale, region,cellsize,uvrange,wsclean,WSCleanRobust,BlankField):
 
     if imsize is None:
         imsize = image_size_from_mask(inputmask)
@@ -1052,18 +1006,18 @@ if __name__ == "__main__":
 
     wideband = False
     if len(mslist) > 5: 
-    wideband = True
+        wideband = True
     
     # speed up the imaging if possible by reducing image size within the mask region
     newsize = find_newsize(inputmask)
     if newsize < imsize: # ok so we can use a smaller image size then
-    #make a new template
-    os.system('casapy --nogui -c ' + SCRIPTPATH + '/make_empty_image.py '+ str(mslist[0]) + ' ' + inputmask+'2' + ' ' + str(newsize) + ' ' +'1.5arcsec')
-    os.system('casapy --nogui -c ' + SCRIPTPATH + '/regrid_image.py '    + inputmask      + ' ' + inputmask+'2' + ' ' + inputmask+'3')
+        #make a new template
+        os.system('casapy --nogui -c ' + SCRIPTPATH + '/make_empty_image.py '+ str(mslist[0]) + ' ' + inputmask+'2' + ' ' + str(newsize) + ' ' +'1.5arcsec')
+        os.system('casapy --nogui -c ' + SCRIPTPATH + '/regrid_image.py '    + inputmask      + ' ' + inputmask+'2' + ' ' + inputmask+'3')
     
-    # reset the imsize and the mask
-    imsize    = newsize
-    inputmask = inputmask+'3'
+        # reset the imsize and the mask
+        imsize    = newsize
+        inputmask = inputmask+'3'
     
     
     ms = ''
@@ -1081,9 +1035,10 @@ if __name__ == "__main__":
     msinstr = ""
     
     for ms_id, ms in enumerate(mslist):
-    msinstr = msinstr + "'" + ms + "'"
-    if ms_id < len(mslist)-1:
-        msinstr = msinstr + ", "
+        msinstr = msinstr + "'" + ms + "'"
+        if ms_id < len(mslist)-1:
+            msinstr = msinstr + ", "
+    
     os.system('rm -rf ' + parsetname)
     f=open(parsetname, 'w')
     f.write('msin = [%s]\n' % msinstr) 
@@ -1097,16 +1052,16 @@ if __name__ == "__main__":
     os.system('NDPPP ' + parsetname)
 
     if wideband:
-    channelsout =  1 # there is a factor of 5 averaging
-    cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
-    cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + '-cleanborder 0 -threshold '+ cleandepth1 + ' '
-    cmd3 = '-minuv-l '+ str(uvrange) \
-            +' -mgain 0.75 -fitbeam -datacolumn DATA -no-update-model-required -joinchannels -channelsout ' +\
-        str(channelsout) + ' '  + outms
+        channelsout =  1 # there is a factor of 5 averaging
+        cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
+        cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + '-cleanborder 0 -threshold '+ cleandepth1 + ' '
+        cmd3 = '-minuv-l '+ str(uvrange) \
+                +' -mgain 0.75 -fitbeam -datacolumn DATA -no-update-model-required -joinchannels -channelsout ' +\
+            str(channelsout) + ' '  + outms
     else:  
-    cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
-    cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' -cleanborder 0 -threshold '+ cleandepth1 + ' '
-    cmd3 = '-minuv-l '+ str(uvrange) +' -mgain 0.75 -fitbeam -datacolumn DATA -no-update-model-required ' + outms
+        cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
+        cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' -cleanborder 0 -threshold '+ cleandepth1 + ' '
+        cmd3 = '-minuv-l '+ str(uvrange) +' -mgain 0.75 -fitbeam -datacolumn DATA -no-update-model-required ' + outms
 
     print cmd1+cmd2+cmd3
     os.system(cmd1+cmd2+cmd3)
@@ -1129,10 +1084,10 @@ if __name__ == "__main__":
 
     # Convert to casapy format and includ region file
     if region != 'empty':
-    os.system('casapy --nogui -c ' + SCRIPTPATH+'/fitsandregion2image.py '\
+        os.system('casapy --nogui -c ' + SCRIPTPATH+'/fitsandregion2image.py '\
                 + mask_name + ' ' + casa_mask + ' ' + region)
     else:
-    os.system('casapy --nogui -c ' + SCRIPTPATH+'/fitsandregion2image.py '\
+        os.system('casapy --nogui -c ' + SCRIPTPATH+'/fitsandregion2image.py '\
                 + mask_name + ' ' + casa_mask + ' ' + 'None')
 
     mask_sources = imout+'.casamask'
@@ -1159,15 +1114,15 @@ if __name__ == "__main__":
     niter = niter*5 # increase niter, tune manually if needed, try to reach threshold
 
     if wideband:
-    cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
-    cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' -cleanborder 0 -threshold '+ cleandepth2 + ' '
-    cmd3 = '-minuv-l '+ str(uvrange) +' -mgain 0.6 -fitbeam -datacolumn DATA -no-update-model-required -casamask ' + \
-            mask_sources+'field' + ' -joinchannels -channelsout ' + str(channelsout) + ' ' + outms
+        cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
+        cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' -cleanborder 0 -threshold '+ cleandepth2 + ' '
+        cmd3 = '-minuv-l '+ str(uvrange) +' -mgain 0.6 -fitbeam -datacolumn DATA -no-update-model-required -casamask ' + \
+                mask_sources+'field' + ' -joinchannels -channelsout ' + str(channelsout) + ' ' + outms
     else:
-    cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
-    cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' -cleanborder 0 -threshold '+ cleandepth2 + ' '
-    cmd3 = '-minuv-l '+ str(uvrange) +' -mgain 0.6 -fitbeam -datacolumn DATA -no-update-model-required -casamask ' + \
-            mask_sources+'field' + ' '+ outms
+        cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
+        cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' -cleanborder 0 -threshold '+ cleandepth2 + ' '
+        cmd3 = '-minuv-l '+ str(uvrange) +' -mgain 0.6 -fitbeam -datacolumn DATA -no-update-model-required -casamask ' + \
+                mask_sources+'field' + ' '+ outms
     
     print cmd1+cmd2+cmd3
     os.system(cmd1+cmd2+cmd3)
@@ -1181,7 +1136,7 @@ if __name__ == "__main__":
     return imout, mask_sources+'field', imsize
 
 
-    def do_fieldFFT(ms,image,imsize,cellsize,wsclean,mslist,WSCleanRobust):
+def do_fieldFFT(ms,image,imsize,cellsize,wsclean,mslist,WSCleanRobust):
     niter   = 1
     cellsizeim = str(cellsize)+ 'arcsec'
 
@@ -1190,40 +1145,86 @@ if __name__ == "__main__":
     
     wideband = False
     if len(mslist) > 5: 
-    wideband = True
+        wideband = True
     if wideband:
-    channelsout =  5 # DO NOT CHANGE !! (in make_image_wsclean_wideband there is averaging)
-    cmd1 = wsclean + ' -predict -name ' + image + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
-    cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' '
-    cmd3 = '-cleanborder 0 -mgain 0.85 -fitbeam -datacolumn DATA '+ '-joinchannels -channelsout ' + str(channelsout) + ' ' + ms
+        channelsout =  5 # DO NOT CHANGE !! (in make_image_wsclean_wideband there is averaging)
+        cmd1 = wsclean + ' -predict -name ' + image + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
+        cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' '
+        cmd3 = '-cleanborder 0 -mgain 0.85 -fitbeam -datacolumn DATA '+ '-joinchannels -channelsout ' + str(channelsout) + ' ' + ms
     else:
-    cmd1 = wsclean + ' -predict -name ' + image + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
-    cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' '
-    cmd3 = '-cleanborder 0 -mgain 0.85 -fitbeam -datacolumn DATA '+ ' ' + ms
+        cmd1 = wsclean + ' -predict -name ' + image + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
+        cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' '
+        cmd3 = '-cleanborder 0 -mgain 0.85 -fitbeam -datacolumn DATA '+ ' ' + ms
     
     print cmd1+cmd2+cmd3
     os.system(cmd1+cmd2+cmd3)
     return
 
-    def image_size_from_mask(mask):
-        im = pyrap.images.image(mask)
-        sh = im.shape()
-        if sh[-1] != sh[-2]:
-            print "image is not square!"
-            print sh[-1], sh[-2]
-        npix = sh[-1]
-        return npix
+
+def image_size_from_mask(mask):
+    im = pyrap.images.image(mask)
+    sh = im.shape()
+    if sh[-1] != sh[-2]:
+        print "image is not square!"
+        print sh[-1], sh[-2]
+    npix = sh[-1]
+    return npix
 
 
     ### END of FUNCTION DEFS, MAIN SCRIPT STARTS HERE# 
 
+ 
+########################
+########################
+
+if __name__ == "__main__":
+
+    if len(sys.argv)<2:
+        raise Exception('Give the path to the setup code for the facet')
+
+    print 'Using',sys.argv[1],'as the setup code'
+    execfile(sys.argv[1])
+    print 'script path is',SCRIPTPATH
+
+    try:
+        StartAtStep
+    except NameError:
+        print 'No starting step specified, begin at the beginning'
+        StartAtStep='preSC'
+
+    try:
+        WSCleanRobust
+    except NameError:
+        WSCleanRobust=-0.25 # default preserves old value
+        print 'No WSClean robust set, defaulting to',WSCleanRobust
+
+    try:
+        BlankField
+    except NameError:
+        BlankField=False
+        print 'BlankField not set, defaulting to',BlankField
+
+    print 'StartAtStep is',StartAtStep
+
+    logging.basicConfig(filename='dde.log', 
+                        level=logging.DEBUG, 
+                        format='%(asctime)s -  %(message)s', 
+                        datefmt='%Y-%d-%m %H:%M:%S')
+    logging.info('\n')
+
+    os.system('cp ' + SCRIPTPATH + '/coordinates_mode.py .')
+    os.system('cp ' + SCRIPTPATH + '/blank.py .')
+    os.system('cp ' + SCRIPTPATH + '/ftw.xml .')
+    os.system('cp ' + SCRIPTPATH + '/task_ftw.py .')
+
+    os.system(buildmytasks) # make casapy tasks
 
     source_info_rec = numpy.genfromtxt(peelsourceinfo,
-                                    dtype="S50,S25,S5,S5,i8,i8,i8,i8,S2,S255,S255,S255,S5",
-                                    names=["sourcelist","directions","atrous_do","mscale_field","imsizes",
-                                            "cellsizetime_p","cellsizetime_a","fieldsize","dynamicrange",
-                                            "regionselfc","regionfield","peelskymodel","outliersource"],
-                                    comments='#')
+        dtype="S50,S25,S5,S5,i8,i8,i8,i8,S2,S255,S255,S255,S5",
+        names=["sourcelist","directions","atrous_do","mscale_field","imsizes",
+               "cellsizetime_p","cellsizetime_a","fieldsize","dynamicrange",
+               "regionselfc","regionfield","peelskymodel","outliersource"],
+        comments='#')
 
     sourcelist = source_info_rec["sourcelist"]
     directions = source_info_rec["directions"] 
@@ -1284,9 +1285,7 @@ if __name__ == "__main__":
 
     msliststr = ''
     for ms in mslist:
-    msliststr = msliststr + ' ' + ms
-
-
+        msliststr = msliststr + ' ' + ms
 
     tt = pt.table(mslist[0] + '/FIELD')
     pointingcenter = tt.getcol('REFERENCE_DIR')[0][0]
