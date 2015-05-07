@@ -941,37 +941,12 @@ if FFT:
 ### CREATED MERGED PARMDB SCALARPHASE+AMPS ###
 ### INCLUDES SPLINE INTERPOLARION OF AMPS ###
 if merge_parmdb:
-
-    if phasors:
-        dummyparset = SCRIPTPATH+'/scalarphase+amp.parset'
-    else:
-        if TEC:
-            dummyparset = SCRIPTPATH+'/scalarphase+ap+TEC.parset'
-        else:
-            dummyparset = SCRIPTPATH+'/scalarphase+ap.parset'
-
-    if TEC:
-        if clock:
-            dummyparmdb = 'instrument_template_TECclock'
-        else:
-            dummyparmdb = 'instrument_template_Gain_TEC_CSphase'
-
-    #if not os.path.isdir(dummyparmdb):
-        #runbbs([mslist[0]], skymodel,dummyparset, dummyparmdb, True, False)
-    # TO SPEED THINGS UP, hard coded for BOOTES - i.e. the above has already been run
     for ms in mslist:
-        os.system('rm -rf ' + ms +'/' + dummyparmdb)
-        os.system('cp -r ' + dummyparmdb + ' ' +  ms + '/instrument_template')
-
-    if smooth:
-        parmdb_a    = 'instrument_amps1_smoothed'  # last/best ampplitude(+phase) parmdb
-    else:
-        parmdb_a    = 'instrument_amps1'  # last/best ampplitude(+phase) parmdb
-    parmdb_p    = 'instrument_phase1'          # last/best CommonScalarPhase parmdb
-    parmdbout   = 'instrument_merged'
-
-    #reset in case of instrument_template_TECclock
-    dummyparmdb = 'instrument_template'
-
-    for ms in mslist:
-        create_merged_parmdb(ms, ms+'/'+parmdb_a, ms+'/'+parmdb_p, ms+'/'+dummyparmdb,ms+'/'+parmdbout,cellsizetime_a,cellsizetime_p)
+        command = "python ~/elais-n1/new_pipeline/jsmpipeline/merge_parmdb.py -t {t} {ms}".format(t="instrument_template_Gain_TEC_CSphase", ms=ms)
+        print command
+        os.system(command)
+        # Copy the instrument_template_Gain_TEC_CSphase
+        os.system("rm -rf {ms}/instrument_template".format(ms=ms))
+        os.system("cp -r instrument_template_Gain_TEC_CSphase {ms}/instrument_template".format(ms=ms))
+        print "Template copied"
+        
