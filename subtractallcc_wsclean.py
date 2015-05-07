@@ -7,9 +7,18 @@ from subprocess import Popen, PIPE
 import time
 
 username = pwd.getpwuid(os.getuid())[0]
-mslist = sorted(glob.glob('A2256_SB3?0-3?9.2ch10s.ms'))
 
-print mslist
+if len(sys.argv)<2:
+   raise Exception('Give the path to the setup code for the facet')
+
+# setup code must set SCRIPTPATH, wsclean, mslist, casaregion, and may
+# do anything else needed
+
+print 'Using',sys.argv[1],'as the setup code'
+execfile(sys.argv[1])
+print 'script path is',SCRIPTPATH
+
+print 'working on MS list',mslist
 
 niterh = 40000
 niterl = 20000
@@ -19,17 +28,9 @@ imsizel= 4800
 cellh  = '7.5arcsec'
 celll  = '25arcsec'
 
-#wsclean =  '/home/rvweeren/software/WSClean/wsclean-1.6+MORESANE+MASKS4/build/wsclean'
-wsclean = '/home/rvweeren/software/WSClean/wsclean-1.7/build/wsclean'
-casaregion = 'a2256.rgn' # use '' if there is no region
-
-
-
 threshisl = 2.5
 threshpix = 5
 atrous_do = "True"
-os.system('cp /home/rvweeren/scripts/a2256_hba/a2256.rgn .')
-
 
 def create_ndppp_parset(msin, msout):
   ndppp_parset = msin.split('.')[0] +'ndppp_lowresavg.parset' 
@@ -79,7 +80,7 @@ for ms in mslist:
 
  # create the mask
  
- os.system('python /home/rvweeren/scripts/rx42_hba/makecleanmask_10sb_wsclean.py --threshpix '+str(threshpix)+\
+ os.system('python '+SCRIPTPATH+'/makecleanmask_10sb_wsclean.py --threshpix '+str(threshpix)+\
              ' --threshisl '+str(threshisl) +' --atrous_do '+ str(atrous_do) + \
  	     ' --casaregion  '+ casaregion +' '  + imhigh + '-image.fits')
  
@@ -88,10 +89,10 @@ for ms in mslist:
  
  # convert to casapy format and includ region file
  if casaregion != '':
-   os.system('casapy --nologger -c  /home/rvweeren/scripts/a2256_hba/fitsandregion2image.py '\
+   os.system('casapy --nologger -c '+SCRIPTPATH+'/fitsandregion2image.py '\
              + mask_name + ' ' + casa_mask + ' ' + casaregion)
  else:
-   os.system('casapy --nologger -c  /home/rvweeren/scripts/a2256_hba/fitsandregion2image.py '\
+   os.system('casapy --nologger -c '+SCRIPTPATH+'/fitsandregion2image.py '\
              + mask_name + ' ' + casa_mask + ' ' + 'None')
  
  imhigh = imhigh + 'withmask'
@@ -117,14 +118,14 @@ for ms in mslist:
  # convert model fits image to casa .model format
  print 'Converting model to casapy format', fits_model, ' ==> ', casa_model
  
- os.system('casapy --nologger -c  /home/rvweeren/scripts/a2256_hba/fits2image.py '\
+ os.system('casapy --nologger -c '+SCRIPTPATH+'/fits2image.py '\
              + fits_model + ' ' + casa_model)
 
  # ---------------------
  # make the skymodel
  skymodel = imhigh  + '.skymodel'
  os.system('rm -f ' + '.skymodel')
- os.system('/home/rvweeren/scripts/rx42_hba/casapy2bbs_one_patch_per_cc.py '  + casa_model + ' ' +  skymodel)
+ os.system(SCRIPTPATH+'/casapy2bbs_one_patch_per_cc.py '  + casa_model + ' ' +  skymodel)
    
  # ---------------------
  # subtract the cc
@@ -168,7 +169,7 @@ for ms in mslist:
 
  # ---------------------
  # create the lowres mask
- os.system('python /home/rvweeren/scripts/rx42_hba/makecleanmask_10sb_wsclean.py --threshpix '+str(5.0)+\
+ os.system('python '+SCRIPTPATH+'/makecleanmask_10sb_wsclean.py --threshpix '+str(5.0)+\
             ' --threshisl '+str(4.0) +' --atrous_do '+ str(atrous_do) + \
             ' --casaregion  '+ casaregion +' '  + imlow + '-image.fits')
 
@@ -178,10 +179,10 @@ for ms in mslist:
  
  # convert to casapy format and includ region file
  if casaregion != '':
-   os.system('casapy --nologger -c  /home/rvweeren/scripts/a2256_hba/fitsandregion2image.py '\
+   os.system('casapy --nologger -c '+SCRIPTPATH+'/fitsandregion2image.py '\
              + mask_name + ' ' + casa_mask + ' ' + casaregion)
  else:
-   os.system('casapy --nologger -c  /home/rvweeren/scripts/a2256_hba/fitsandregion2image.py '\
+   os.system('casapy --nologger -c '+SCRIPTPATH+'/fitsandregion2image.py '\
              + mask_name + ' ' + casa_mask + ' ' + 'None')
 
  imlow = imlow + 'withmask'
@@ -209,7 +210,7 @@ for ms in mslist:
  # convert model fits image to casa .model format
  print 'Converting model to casapy format', fits_model, ' ==> ', casa_model
  
- os.system('casapy --nologger -c  /home/rvweeren/scripts/a2256_hba/fits2image.py '\
+ os.system('casapy --nologger -c '+SCRIPTPATH+'/fits2image.py '\
              + fits_model + ' ' + casa_model)
  # ---------------------
  # create the low-res skymodel
