@@ -67,9 +67,13 @@ for ms in mslist:
  
  
  ######### check that no wsclean is running
+ warned=False
  cmd = "ps -f -u " + username + " | grep wsclean | grep -v _wsclean.py | grep -v wsclean.parset |grep -v grep |wc -l"
  output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])  
  while output > 0 : # "grep -v grep" to prevent counting the grep command
+   if not(warned):
+     print 'A wsclean is already running, waiting for it to finish'
+     warned=True
    time.sleep(2)
    output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
  #########
@@ -89,7 +93,10 @@ for ms in mslist:
  mask_name  = imhigh + '.fitsmask'
  casa_mask  = imhigh + '.casamask'
  
- # convert to casapy format and includ region file
+ maskim=pyrap.images.image(mask_name)
+ maskim.saveas(casa_mask)
+
+ # include region file
  if casaregion != '':
    os.system('casapy --nologger -c '+SCRIPTPATH+'/fitsandregion2image.py '\
              + mask_name + ' ' + casa_mask + ' ' + casaregion)
@@ -131,7 +138,7 @@ for ms in mslist:
    
  # ---------------------
  # subtract the cc
- parset = '/home/rvweeren/scripts/a2256_hba/subtractall_highres_wsclean.parset'
+ parset = SCRIPTPATH+'/subtractall_highres_wsclean.parset'
  cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name instrument '
  cmd = cmd + ms + ' ' + parset + ' ' + skymodel + ' >' + ms + '.highressubbbslog' 
  print cmd
@@ -179,7 +186,10 @@ for ms in mslist:
  mask_name  = imlow + '.fitsmask'
  casa_mask  = imlow + '.casamask'
  
- # convert to casapy format and includ region file
+ maskim=pyrap.images.image(mask_name)
+ maskim.saveas(casa_mask)
+
+# convert to casapy format and includ region file
  if casaregion != '':
    os.system('casapy --nologger -c '+SCRIPTPATH+'/fitsandregion2image.py '\
              + mask_name + ' ' + casa_mask + ' ' + casaregion)
@@ -219,12 +229,12 @@ for ms in mslist:
  
  skymodel = imlow  + '.skymodel'
  os.system('rm -f ' + '.skymodel')
- os.system('/home/rvweeren/scripts/rx42_hba/casapy2bbs_one_patch_per_cc.py '  + casa_model  + ' ' +  skymodel)
+ os.system(SCRIPTPATH+'/casapy2bbs_one_patch_per_cc.py '  + casa_model  + ' ' +  skymodel)
   
  
  # ---------------------
  # subtract thelowres cc
- parset = '/home/rvweeren/scripts/rx42_hba/subtractall_lowres_wsclean.parset'
+ parset = SCRIPTPATH+'/subtractall_lowres_wsclean.parset'
  cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name instrument '
  cmd = cmd + ms + ' ' + parset + ' ' + skymodel + ' >' + ms + '.lowressubbbslog' 
  print cmd
