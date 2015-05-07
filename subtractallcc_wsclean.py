@@ -75,14 +75,16 @@ for ms in mslist:
  #########
  
  
- os.system(cmd1+cmd2+cmd3)
+ #os.system(cmd1+cmd2+cmd3)
 
 
  # create the mask
  
- os.system('python '+SCRIPTPATH+'/makecleanmask_10sb_wsclean.py --threshpix '+str(threshpix)+\
+ cmd='python '+SCRIPTPATH+'/makecleanmask_10sb_wsclean.py --threshpix '+str(threshpix)+\
              ' --threshisl '+str(threshisl) +' --atrous_do '+ str(atrous_do) + \
- 	     ' --casaregion  '+ casaregion +' '  + imhigh + '-image.fits')
+ 	     ' --casaregion  '+ casaregion +' '  + imhigh + '-image.fits'
+ print cmd
+ os.system(cmd)
  
  mask_name  = imhigh + '.fitsmask'
  casa_mask  = imhigh + '.casamask'
