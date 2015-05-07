@@ -30,7 +30,7 @@ def create_ndppp_parset(msin, msout):
 def wsclean_wait():
    warned=False
      ######### check that no wsclean is running
-   cmd = "ps -f -u " + username + " | grep wsclean | grep -v _wsclean.py | grep -v wsclean.parset |grep -v grep |wc -l"
+   cmd = "ps -f -u " + username + " | grep wsclean | grep -v _wsclean_v2.py | grep -v wsclean.parset |grep -v grep |wc -l"
    while True: # "grep -v grep" to prevent counting the grep command
       output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])  
       if output==0:
