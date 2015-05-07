@@ -57,14 +57,6 @@ except NameError:
 if StefCal:
    TEC = "False" # cannot fit for TEC in StefCal
 
-if len(mslist) > WScleanWBgroup: 
-   nterms = 2
-   print 'Forcing nterms=2 since wideband clean was requested'
-else:
-  if WScleanWBgroup < 1000:
-  print "WScleanWBgroup > len(mslist), wrong user input, exiting"
-  raise Exception('WScleanWBgroup must be lowered')
-
 
 print 'StartAtStep is',StartAtStep
 
@@ -1398,6 +1390,14 @@ freq_tab.close()
 #### HARCODED, CLOCK FITTING IS ALWAYS DISABLED ####
 clock = "False"
 
+if len(mslist) > WScleanWBgroup: 
+   nterms = 2
+   print 'Forcing nterms=2 since wideband clean was requested'
+else:
+   if WScleanWBgroup < 1000:
+     print "WScleanWBgroup > len(mslist), wrong user input, exiting"
+     raise Exception('WScleanWBgroup must be lowered')
+
 
 
 numpy.save('directions.npy', directions)
@@ -1672,7 +1672,7 @@ for source in do_sources:
 
 # if we are restarting, it's possible that 'allbands.concat.shifted_'+source+'.ms' may have been deleted earlier. So re-create it if it doesn't exist
 
-         if not(os.path.isdir('allbands.concat.shifted_'+source+'.ms''allbands.concat.shifted_'+source+'.ms')):
+         if not(os.path.isdir('allbands.concat.shifted_'+source+'.ms')):
             print 'allbands.concat.shifted_'+source+'.ms ' + 'does not exist, re-creating'
             parset = create_phaseshift_parset_full('allbands.concat.ms', 'allbands.concat.shifted_'+source+'.ms', directions[source_id],'DATA')
             os.system('NDPPP ' + parset)
