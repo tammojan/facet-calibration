@@ -977,7 +977,7 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
 
  imout = 'im'+ callnumber +'_cluster'+cluster+'nm'
 
- os.system('/home/rvweeren/software/casapy/casapy-42.2.30986-1-64b/casapy --nologger -c ' + SCRIPTPATH + '/casapy_cleanv4.py ' + ms + ' ' + imout + ' ' + 'None' +\
+ os.system('casapy --nologger -c ' + SCRIPTPATH + '/casapy_cleanv4.py ' + ms + ' ' + imout + ' ' + 'None' +\
             ' ' + cleandepth1 + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + mscale)
 
 
@@ -1013,11 +1013,11 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
  
  if region != 'empty': # in that case we have a extra region file for the clean mask
    niter = niter*3 # increase niter, tune manually if needed
-   os.system('/home/rvweeren/software/casapy/casapy-42.2.30986-1-64b/casapy --nologger -c ' + SCRIPTPATH +'/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask_sources+'field,'+region + \
+   os.system('casapy --nologger -c ' + SCRIPTPATH +'/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask_sources+'field,'+region + \
              ' ' + cleandepth2 + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + mscale)
    
  else:
-   os.system('/home/rvweeren/software/casapy/casapy-42.2.30986-1-64b/casapy --nologger -c '+ SCRIPTPATH + '/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask_sources+'field' + \
+   os.system('casapy --nologger -c '+ SCRIPTPATH + '/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask_sources+'field' + \
               ' ' + cleandepth2 + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + mscale)
  
  # convert to FITS
