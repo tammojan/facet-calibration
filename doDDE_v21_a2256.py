@@ -94,7 +94,7 @@ def runbbs(mslist, skymodel, parset, parmdb, replacesource):
      output=Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
      if 'INFO' in output:     
         done = done + 1
-	print ms, 'is done'
+        print ms, 'is done'
    time.sleep(5)
  return
 
@@ -123,7 +123,7 @@ def runbbs16(mslist, skymodel, parset, parmdb, replacesource):
      output=Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
      if 'INFO' in output:     
         done = done + 1
-	print ms, 'is done'
+        print ms, 'is done'
    time.sleep(5)
    
    
@@ -146,7 +146,7 @@ def runbbs16(mslist, skymodel, parset, parmdb, replacesource):
      output=Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
      if 'INFO' in output:     
         done = done + 1
-	print ms, 'is done'
+        print ms, 'is done'
    time.sleep(5) 
  return
 
@@ -200,7 +200,7 @@ def runbbs_diffskymodel_addback(mslist, parmdb, replacesource, direction, imsize
 
    print 'Adding back for calibration:', callist
  
-   if len(callist) != 0: # otherwise do not have to add	   
+   if len(callist) != 0: # otherwise do not have to add
       parset = create_add_parset_ms(callist, ms, do_ap)
       if replacesource:
         cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
@@ -223,7 +223,7 @@ def runbbs_diffskymodel_addback(mslist, parmdb, replacesource, direction, imsize
      output=Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
      if 'INFO' in output:     
         done = done + 1
-	print ms, 'is done'
+        print ms, 'is done'
    time.sleep(5)
  return
 
@@ -246,7 +246,7 @@ def runbbs_diffskymodel_addback16(mslist, parmdb, replacesource, direction, imsi
    callist = output.strip()
    callistarraysources = callist.split(',')
 
-   if len(callist) != 0: # otherwise do not have to add	      
+   if len(callist) != 0: # otherwise do not have to add   
       print 'Adding back for calibration:', callist
       parset = create_add_parset_ms(callist, ms, do_ap)
       
@@ -270,7 +270,7 @@ def runbbs_diffskymodel_addback16(mslist, parmdb, replacesource, direction, imsi
      output=Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
      if 'INFO' in output:     
         done = done + 1
-	print ms, 'is done'
+        print ms, 'is done'
    time.sleep(5)
 
  #part2
@@ -289,7 +289,7 @@ def runbbs_diffskymodel_addback16(mslist, parmdb, replacesource, direction, imsi
    
    print 'Adding back for calibration:', callist
    
-   if len(callist) != 0: # otherwise do not have to add	  
+   if len(callist) != 0: # otherwise do not have to add
       parset = create_add_parset_ms(callist, ms, do_ap)
       if replacesource:
         cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
@@ -311,7 +311,7 @@ def runbbs_diffskymodel_addback16(mslist, parmdb, replacesource, direction, imsi
      output=Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
      if 'INFO' in output:     
         done = done + 1
-	print ms, 'is done'
+        print ms, 'is done'
    time.sleep(5) 
  return
 
@@ -370,7 +370,7 @@ def runbbs_diffskymodel_addbackfield(mslist, parmdb, replacesource, direction, i
      output=Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
      if 'INFO' in output:     
         done = done + 1
-	print ms, 'is done'
+        print ms, 'is done'
    time.sleep(5)
  return
  
@@ -391,7 +391,7 @@ def runbbs_2(mslist, msparmdb, skymodel, parset, parmdb):
      output=Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
      if 'INFO' in output:     
         done = done + 1
-	print ms, 'is done'
+        print ms, 'is done'
    time.sleep(5)
  return
 
@@ -452,12 +452,12 @@ def create_phaseshift_parset(msin, msout, source, direction, imsize, dynamicrang
   if dynamicrange == 'LD':
     if StefCal:
       if imsize <= 800:
-	f.write('avg1.freqstep = 20\n')
+            f.write('avg1.freqstep = 20\n')
       else:
-	if imsize <= 1200:
-	  f.write('avg1.freqstep = 10\n')
-	else:
-	    f.write('avg1.freqstep = 5\n')  # we have a large image  2048 is more or less max expected
+            if imsize <= 1200:
+                f.write('avg1.freqstep = 10\n')
+            else:
+                f.write('avg1.freqstep = 5\n')  # we have a large image  2048 is more or less max expected
   else:
     if dynamicrange != 'HD':
       print 'dynamicrange ', dynamicrange
@@ -1029,7 +1029,7 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
 
 def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous_do, imsize, inputmask, \
                        mscale, region,cellsize,uvrange,wsclean,WSCleanRobust,BlankField, WScleanWBgroup, \
-		       freqavg_fullfacet, numchanperms):
+                       freqavg_fullfacet, numchanperms):
 
  if imsize is None:
     imsize = image_size_from_mask(inputmask)
@@ -1097,7 +1097,7 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms
    cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' -cleanborder 0 -threshold '+ cleandepth1 + ' '
    cmd3 = '-minuv-l '+ str(uvrange) \
           +' -mgain 0.7 -fitbeam -datacolumn DATA -no-update-model-required -joinchannels -channelsout ' +\
-	  str(channelsout) + ' '  + outms
+          str(channelsout) + ' '  + outms
  else:  
    cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
    cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' -cleanborder 0 -threshold '+ cleandepth1 + ' '
@@ -1124,7 +1124,7 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms
  # create the mask
  os.system('python ' + SCRIPTPATH + '/makecleanmask_field_wsclean.py --threshpix '+str(threshpix)+\
            ' --threshisl '+str(threshisl) +' --atrous_do '+ str(atrous_do) + \
- 	   ' --casaregion  '+ region + ' '  + mask_image)
+           ' --casaregion  '+ region + ' '  + mask_image)
 
  mask_name  = mask_image + '.fitsmask'
  casa_mask  = imout + '.casamask'
@@ -1317,8 +1317,8 @@ if __name__ == "__main__":
     source_info_rec = numpy.genfromtxt(peelsourceinfo, \
                                        dtype="S50,S25,S5,S5,i8,i8,i8,i8,S2,S255,S255,S255,S5", \
                                        names=["sourcelist","directions","atrous_do","mscale_field","imsizes",\
-    				   "cellsizetime_p","cellsizetime_a","fieldsize","dynamicrange",\
-    				   "regionselfc","regionfield","peelskymodel","outliersource"],comments='#')
+                                              "cellsizetime_p","cellsizetime_a","fieldsize","dynamicrange",\
+                                              "regionselfc","regionfield","peelskymodel","outliersource"],comments='#')
     
     sourcelist = source_info_rec["sourcelist"]
     directions = source_info_rec["directions"] 
@@ -1489,7 +1489,7 @@ if __name__ == "__main__":
     
        logging.info("Selfcal direction: "+selfcaldir)
        logging.info("facetmask: "+str(facetsize))
-    	   
+ 
     
        ## STEP 1: prep for SC ##
        if StartAtStep in ['preSC']:
@@ -1502,7 +1502,7 @@ if __name__ == "__main__":
           ## average and phaseshift with NDPPP
           for ms_id, ms in enumerate(mslist):
              parset = create_phaseshift_parset(ms, msavglist[ms_id], source, directions[source_id],\
-    	                                   imsizes[source_id], dynamicrange[source_id], StefCal)
+                                               imsizes[source_id], dynamicrange[source_id], StefCal)
              os.system('rm -rf ' + msavglist[ms_id])
              os.system('NDPPP ' + parset)
     
@@ -1557,10 +1557,10 @@ if __name__ == "__main__":
              this_parmdb_master_out  = ms+"/"+"instrument_master_" + source
              parmdb_template    = msavglist[ms_id]+"/"+"instrument_template"
              if StefCal:
-    	   join_parmdb_stefcal(ms, parmdb_selfcal,parmdb_template, this_parmdb_master_out)
-    	 else:  
+                 join_parmdb_stefcal(ms, parmdb_selfcal,parmdb_template, this_parmdb_master_out)
+          else:  
                join_parmdb(ms, parmdb_selfcal,parmdb_nondde, parmdb_template, this_parmdb_master_out, \
-    	               TEC, clock)
+                           TEC, clock)
              print 'joined SC and DDE parmdbs for {ms}'.format(ms=ms)
              parmdb_master_out  = "instrument_master_" + source   # reset because runbbs uses basename of ms
     
@@ -1634,7 +1634,7 @@ if __name__ == "__main__":
                  output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
                  pid = (Popen('pidof NDPPP', shell=True, stdout=PIPE).communicate()[0])    
                  pid_list = pid.split(' ')
-               # START NDPPP BECAUSE LESS/EQ 2 PROCESSES ARE RUNNING	
+               # START NDPPP BECAUSE LESS/EQ 2 PROCESSES ARE RUNNING
                os.system('rm -rf ' + msavglist[ms_id])
                os.system('NDPPP ' + parset + '&')
     
@@ -1657,10 +1657,10 @@ if __name__ == "__main__":
                 msavglist.append(ms.split('.')[0] + '.' + source + '.ms.avgfield')      
     
              imout,mask_out, imsizef = make_image_wsclean(msavglist, source, 'field0', 5, 3, nterms, 'True',\
-    	                                              None, output_template_im +'.masktmp', \
-    					              mscale_field[source_id],regionfield[source_id],\
-    					              cellsize, uvrange,wsclean,WSCleanRobust,BlankField,\
-    						      WScleanWBgroup, freqavg_fullfacet, numchanperms)
+                                                      None, output_template_im +'.masktmp', \
+                                                      mscale_field[source_id],regionfield[source_id],\
+                                                      cellsize, uvrange,wsclean,WSCleanRobust,BlankField,\
+                                                      WScleanWBgroup, freqavg_fullfacet, numchanperms)
              logging.info('Imaged full DDE facet: ' + source)
              if len(mslist) > WScleanWBgroup:
                 logging.info('WSCLEAN Wideband CLEAN algorithm was used')
@@ -1691,7 +1691,7 @@ if __name__ == "__main__":
                  time.sleep(10)
                  output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
     
-               # START taql BECAUSE LESS/EQ 2 PROCESSES ARE RUNNING	
+               # START taql BECAUSE LESS/EQ 2 PROCESSES ARE RUNNING
                os.system("taql 'update " + ms + " set CORRECTED_DATA=SUBTRACTED_DATA_ALL' &")
     
              # Check if all taql processes are finished
@@ -1705,13 +1705,13 @@ if __name__ == "__main__":
     
              # DO THE FFT
              do_fieldFFT('allbands.concat.shifted_'+source+'.ms',imout, imsizef, cellsize, wsclean, \
-    	              msavglist, WSCleanRobust, WScleanWBgroup, numchanperms)
+                         msavglist, WSCleanRobust, WScleanWBgroup, numchanperms)
              logging.info('FFTed model of DDE facet: ' + source)
     
              # SHIFT PHASE CENTER BACK TO ORIGINAL
              logging.info('Shift model back to pointing centre')
              parset = create_phaseshift_parset_full('allbands.concat.shifted_'+source+'.ms',\
-    	                                        'allbands.concat.shiftedback_'+source+'.ms',\
+                                                    'allbands.concat.shiftedback_'+source+'.ms',\
                                                      pointingcenter,'MODEL_DATA')
     
              os.system('NDPPP ' + parset) 
