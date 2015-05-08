@@ -11,71 +11,8 @@ import pyrap.tables as pt
 import pyrap.images
 import pwd
 import logging
-pi       = numpy.pi
+from numpy import pi
 import sys
-
-
-if len(sys.argv)<2:
-   raise Exception('Give the path to the setup code for the facet')
-
-print 'Using',sys.argv[1],'as the setup code'
-execfile(sys.argv[1])
-print 'script path is',SCRIPTPATH
-
-try:
-   StartAtStep
-except NameError:
-   print 'No starting step specified, begin at the beginning'
-   StartAtStep='preSC'
-
-try:
-   WSCleanRobust
-except NameError:
-   WSCleanRobust=-0.25 # default preserves old value
-   print 'No WSClean robust set, defaulting to',WSCleanRobust
-
-try:
-   BlankField
-except NameError:
-   BlankField=False
-   print 'BlankField not set, defaulting to',BlankField
-
-try:
-   StefCal
-except NameError:
-   StefCal=False
-   print 'StefCal not set, defaulting to', StefCal
-   print 'Overwriting TEC user input, TEC will be when using StefCal'
-
-try:
-   WScleanWBgroup
-except NameError:
-   print 'WScleanWBgroup is not set, not using wideband clean algorithm'
-   # only print message here, because wideband is not used when len(mslist) <= WScleanWBgroup:
-   WScleanWBgroup = 1000 # large number so wideband is never used
-
-if StefCal:
-   TEC = "False" # cannot fit for TEC in StefCal
-
-
-print 'StartAtStep is',StartAtStep
-
-logging.basicConfig(filename='dde.log',level=logging.DEBUG, format='%(asctime)s -  %(message)s', datefmt='%Y-%d-%m %H:%M:%S')
-logging.info('\n')
-
-os.system('cp ' + SCRIPTPATH + '/coordinates_mode.py .')
-os.system('cp ' + SCRIPTPATH + '/blank.py .')
-os.system('cp ' + SCRIPTPATH + '/ftw.xml .')
-os.system('cp ' + SCRIPTPATH + '/task_ftw.py .')
-
-os.system(buildmytasks) # make casapy tasks
-
-
-freqavg_fullfacet = 5 # hardcoded for now  
-# it has to be set to a multiple of the number of channels per block, 
-# so it is dangerous to let a user set this without being aware of this
-
-
 from coordinates_mode import *
 import blank
 
@@ -157,7 +94,7 @@ def runbbs(mslist, skymodel, parset, parmdb, replacesource):
      output=Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
      if 'INFO' in output:     
         done = done + 1
-	print ms, 'is done'
+        print ms, 'is done'
    time.sleep(5)
  return
 
@@ -186,7 +123,7 @@ def runbbs16(mslist, skymodel, parset, parmdb, replacesource):
      output=Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
      if 'INFO' in output:     
         done = done + 1
-	print ms, 'is done'
+        print ms, 'is done'
    time.sleep(5)
    
    
@@ -209,7 +146,7 @@ def runbbs16(mslist, skymodel, parset, parmdb, replacesource):
      output=Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
      if 'INFO' in output:     
         done = done + 1
-	print ms, 'is done'
+        print ms, 'is done'
    time.sleep(5) 
  return
 
@@ -263,7 +200,7 @@ def runbbs_diffskymodel_addback(mslist, parmdb, replacesource, direction, imsize
 
    print 'Adding back for calibration:', callist
  
-   if len(callist) != 0: # otherwise do not have to add	   
+   if len(callist) != 0: # otherwise do not have to add
       parset = create_add_parset_ms(callist, ms, do_ap)
       if replacesource:
         cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
@@ -286,7 +223,7 @@ def runbbs_diffskymodel_addback(mslist, parmdb, replacesource, direction, imsize
      output=Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
      if 'INFO' in output:     
         done = done + 1
-	print ms, 'is done'
+        print ms, 'is done'
    time.sleep(5)
  return
 
@@ -309,7 +246,7 @@ def runbbs_diffskymodel_addback16(mslist, parmdb, replacesource, direction, imsi
    callist = output.strip()
    callistarraysources = callist.split(',')
 
-   if len(callist) != 0: # otherwise do not have to add	      
+   if len(callist) != 0: # otherwise do not have to add   
       print 'Adding back for calibration:', callist
       parset = create_add_parset_ms(callist, ms, do_ap)
       
@@ -333,7 +270,7 @@ def runbbs_diffskymodel_addback16(mslist, parmdb, replacesource, direction, imsi
      output=Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
      if 'INFO' in output:     
         done = done + 1
-	print ms, 'is done'
+        print ms, 'is done'
    time.sleep(5)
 
  #part2
@@ -352,7 +289,7 @@ def runbbs_diffskymodel_addback16(mslist, parmdb, replacesource, direction, imsi
    
    print 'Adding back for calibration:', callist
    
-   if len(callist) != 0: # otherwise do not have to add	  
+   if len(callist) != 0: # otherwise do not have to add
       parset = create_add_parset_ms(callist, ms, do_ap)
       if replacesource:
         cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
@@ -374,7 +311,7 @@ def runbbs_diffskymodel_addback16(mslist, parmdb, replacesource, direction, imsi
      output=Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
      if 'INFO' in output:     
         done = done + 1
-	print ms, 'is done'
+        print ms, 'is done'
    time.sleep(5) 
  return
 
@@ -433,7 +370,7 @@ def runbbs_diffskymodel_addbackfield(mslist, parmdb, replacesource, direction, i
      output=Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
      if 'INFO' in output:     
         done = done + 1
-	print ms, 'is done'
+        print ms, 'is done'
    time.sleep(5)
  return
  
@@ -454,7 +391,7 @@ def runbbs_2(mslist, msparmdb, skymodel, parset, parmdb):
      output=Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
      if 'INFO' in output:     
         done = done + 1
-	print ms, 'is done'
+        print ms, 'is done'
    time.sleep(5)
  return
 
@@ -515,12 +452,12 @@ def create_phaseshift_parset(msin, msout, source, direction, imsize, dynamicrang
   if dynamicrange == 'LD':
     if StefCal:
       if imsize <= 800:
-	f.write('avg1.freqstep = 20\n')
+            f.write('avg1.freqstep = 20\n')
       else:
-	if imsize <= 1200:
-	  f.write('avg1.freqstep = 10\n')
-	else:
-	    f.write('avg1.freqstep = 5\n')  # we have a large image  2048 is more or less max expected
+            if imsize <= 1200:
+                f.write('avg1.freqstep = 10\n')
+            else:
+                f.write('avg1.freqstep = 5\n')  # we have a large image  2048 is more or less max expected
   else:
     if dynamicrange != 'HD':
       print 'dynamicrange ', dynamicrange
@@ -896,8 +833,10 @@ def return_slist(imagename, skymodel, ref_source):
    coor = [0,1,declist[patch_id],ralist[patch_id]]
    pix  = img.topixel(coor)[2:4]
  
-   if (pix[0] >= 0) and (pix[0] <= (sh[0]-1)) and \
-      (pix[1] >= 0) and (pix[1] <= (sh[1]-1)):
+   if ((pix[0] >= 0) and 
+       (pix[0] <= (sh[0]-1)) and
+       (pix[1] >= 0) and 
+       (pix[1] <= (sh[1]-1))):
      if pixels[0,0,pix[0],pix[1]] != 0.0:  # only include if withtin the clean mask (==1)
        plist.append(patches[patch_id]) 
 
@@ -913,24 +852,23 @@ def return_slist(imagename, skymodel, ref_source):
 
 def angsep(ra1deg, dec1deg, ra2deg, dec2deg):
     """Returns angular separation between two coordinates (all in degrees)"""
-    import math
 
-    ra1rad=ra1deg*math.pi/180.0
-    dec1rad=dec1deg*math.pi/180.0
-    ra2rad=ra2deg*math.pi/180.0
-    dec2rad=dec2deg*math.pi/180.0
+    ra1rad=ra1deg*numpy.pi/180.0
+    dec1rad=dec1deg*numpy.pi/180.0
+    ra2rad=ra2deg*numpy.pi/180.0
+    dec2rad=dec2deg*numpy.pi/180.0
 
     # calculate scalar product for determination
     # of angular separation
-    x=math.cos(ra1rad)*math.cos(dec1rad)*math.cos(ra2rad)*math.cos(dec2rad)
-    y=math.sin(ra1rad)*math.cos(dec1rad)*math.sin(ra2rad)*math.cos(dec2rad)
-    z=math.sin(dec1rad)*math.sin(dec2rad)
+    x=numpy.cos(ra1rad)*numpy.cos(dec1rad)*numpy.cos(ra2rad)*numpy.cos(dec2rad)
+    y=numpy.sin(ra1rad)*numpy.cos(dec1rad)*numpy.sin(ra2rad)*numpy.cos(dec2rad)
+    z=numpy.sin(dec1rad)*numpy.sin(dec2rad)
 
     if x+y+z >= 1: rad = 0
-    else: rad=math.acos(x+y+z)
+    else: rad=numpy.acos(x+y+z)
 
     # Angular separation
-    deg=rad*180/math.pi
+    deg=rad*180/numpy.pi
     return deg
     
 
@@ -995,8 +933,10 @@ def cal_return_slist(imagename,skymodel, direction, imsize):
  
    if dis < cut: # ok sources is within image
      # check if the sources is within the mask region (because mask can be smaller than image)
-     if (pix[0] >= 0) and (pix[0] <= (sh[0]-1)) and \
-        (pix[1] >= 0) and (pix[1] <= (sh[1]-1)):
+     if ((pix[0] >= 0) and 
+         (pix[0] <= (sh[0]-1)) and 
+         (pix[1] >= 0) and 
+         (pix[1] <= (sh[1]-1))):
        if pixels[0,0,pix[0],pix[1]] != 0.0:  # only include if withtin the clean mask (==1)
           plist.append(patches[patch_id]) 
 
@@ -1025,8 +965,8 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
  newsize = find_newsize(inputmask)
  if newsize < imsize: # ok so we can use a smaller image size then
    #make a new template
-   os.system('casapy --nologger -c '+ SCRIPTPATH +'/make_empty_image.py '+ str(mslist[0]) + ' ' + inputmask+'2' + ' ' + str(newsize) + ' ' +'1.5arcsec')
-   os.system('casapy --nologger -c '+ SCRIPTPATH +'/regrid_image.py '    + inputmask      + ' ' + inputmask+'2' + ' ' + inputmask+'3')
+   os.system('casapy --nogui -c '+ SCRIPTPATH +'/make_empty_image.py '+ str(mslist[0]) + ' ' + inputmask+'2' + ' ' + str(newsize) + ' ' +'1.5arcsec')
+   os.system('casapy --nogui -c '+ SCRIPTPATH +'/regrid_image.py '    + inputmask      + ' ' + inputmask+'2' + ' ' + inputmask+'3')
  
    # reset the imsize and the mask
    imsize    = newsize
@@ -1039,16 +979,16 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
 
  imout = 'im'+ callnumber +'_cluster'+cluster+'nm'
 
- os.system('/home/rvweeren/software/casapy/casapy-42.2.30986-1-64b/casapy --nologger -c ' + SCRIPTPATH + '/casapy_cleanv4.py ' + ms + ' ' + imout + ' ' + 'None' +\
+ os.system('casapy --nogui -c ' + SCRIPTPATH + '/casapy_cleanv4.py ' + ms + ' ' + imout + ' ' + 'None' +
             ' ' + cleandepth1 + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + mscale)
 
 
  # make mask
  if nterms > 1:
-   os.system('python ' + SCRIPTPATH +'/makecleanmask_field.py --threshpix '+str(threshpix)+\
+   os.system('python ' + SCRIPTPATH +'/makecleanmask_field.py --threshpix '+str(threshpix)+
                ' --threshisl '+str(threshisl) +' --atrous_do '+ str(atrous_do) +' '   +imout +'.image.tt0')
  else:
-   os.system('python ' + SCRIPTPATH +'/makecleanmask_field.py --threshpix '+str(threshpix)+\
+   os.system('python ' + SCRIPTPATH +'/makecleanmask_field.py --threshpix '+str(threshpix)+
              ' --threshisl '+str(threshisl) +' --atrous_do '+ str(atrous_do) + ' '  + imout +'.image')
 
  mask_sources = imout+'.cleanmask'
@@ -1075,11 +1015,11 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
  
  if region != 'empty': # in that case we have a extra region file for the clean mask
    niter = niter*3 # increase niter, tune manually if needed
-   os.system('/home/rvweeren/software/casapy/casapy-42.2.30986-1-64b/casapy --nologger -c ' + SCRIPTPATH +'/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask_sources+'field,'+region + \
+   os.system('casapy --nogui -c ' + SCRIPTPATH +'/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask_sources+'field,'+region +
              ' ' + cleandepth2 + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + mscale)
    
  else:
-   os.system('/home/rvweeren/software/casapy/casapy-42.2.30986-1-64b/casapy --nologger -c '+ SCRIPTPATH + '/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask_sources+'field' + \
+   os.system('casapy --nogui -c '+ SCRIPTPATH + '/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask_sources+'field' +
               ' ' + cleandepth2 + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + mscale)
  
  # convert to FITS
@@ -1090,9 +1030,9 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
   
  return imout, mask_sources+'field', imsize
 
-def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous_do, imsize, inputmask, \
-                       mscale, region,cellsize,uvrange,wsclean,WSCleanRobust,BlankField, WScleanWBgroup, \
-		       freqavg_fullfacet, numchanperms):
+def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous_do, imsize, inputmask,
+                       mscale, region,cellsize,uvrange,wsclean,WSCleanRobust,BlankField, WScleanWBgroup,
+                       freqavg_fullfacet, numchanperms):
 
  if imsize is None:
     imsize = image_size_from_mask(inputmask)
@@ -1114,8 +1054,8 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms
  newsize = find_newsize(inputmask)
  if newsize < imsize: # ok so we can use a smaller image size then
    #make a new template
-   os.system('casapy --nologger -c ' + SCRIPTPATH + '/make_empty_image.py '+ str(mslist[0]) + ' ' + inputmask+'2' + ' ' + str(newsize) + ' ' +'1.5arcsec')
-   os.system('casapy --nologger -c ' + SCRIPTPATH + '/regrid_image.py '    + inputmask      + ' ' + inputmask+'2' + ' ' + inputmask+'3')
+   os.system('casapy --nogui -c ' + SCRIPTPATH + '/make_empty_image.py '+ str(mslist[0]) + ' ' + inputmask+'2' + ' ' + str(newsize) + ' ' +'1.5arcsec')
+   os.system('casapy --nogui -c ' + SCRIPTPATH + '/regrid_image.py '    + inputmask      + ' ' + inputmask+'2' + ' ' + inputmask+'3')
  
    # reset the imsize and the mask
    imsize    = newsize
@@ -1160,7 +1100,7 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms
    cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' -cleanborder 0 -threshold '+ cleandepth1 + ' '
    cmd3 = '-minuv-l '+ str(uvrange) \
           +' -mgain 0.7 -fitbeam -datacolumn DATA -no-update-model-required -joinchannels -channelsout ' +\
-	  str(channelsout) + ' '  + outms
+          str(channelsout) + ' '  + outms
  else:  
    cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
    cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' -cleanborder 0 -threshold '+ cleandepth1 + ' '
@@ -1185,9 +1125,9 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms
       mask_image=imout+'-image.fits'
 
  # create the mask
- os.system('python ' + SCRIPTPATH + '/makecleanmask_field_wsclean.py --threshpix '+str(threshpix)+\
-           ' --threshisl '+str(threshisl) +' --atrous_do '+ str(atrous_do) + \
- 	   ' --casaregion  '+ region + ' '  + mask_image)
+ os.system('python ' + SCRIPTPATH + '/makecleanmask_field_wsclean.py --threshpix '+str(threshpix)+
+           ' --threshisl '+str(threshisl) +' --atrous_do '+ str(atrous_do) + 
+           ' --casaregion  '+ region + ' '  + mask_image)
 
  mask_name  = mask_image + '.fitsmask'
  casa_mask  = imout + '.casamask'
@@ -1197,10 +1137,10 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms
 
  # Convert to casapy format and includ region file
  if region != 'empty':
-   os.system('casapy --nologger -c ' + SCRIPTPATH+'/fitsandregion2image.py '\
+   os.system('casapy --nogui -c ' + SCRIPTPATH+'/fitsandregion2image.py '
              + mask_name + ' ' + casa_mask + ' ' + region)
  else:
-   os.system('casapy --nologger -c ' + SCRIPTPATH+'/fitsandregion2image.py '\
+   os.system('casapy --nogui -c ' + SCRIPTPATH+'/fitsandregion2image.py '
              + mask_name + ' ' + casa_mask + ' ' + 'None')
 
  mask_sources = imout+'.casamask'
@@ -1241,7 +1181,7 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms
  os.system(cmd1+cmd2+cmd3)
 
  # convert from FITS to casapy format
- # os.system('casapy --nologger -c ' + SCRIPTPATH +'/fits2image.py ' + \
+ # os.system('casapy --nogui -c ' + SCRIPTPATH +'/fits2image.py ' + 
  #           imout + '-image.fits' + ' ' + imout +'.image')
 
 
@@ -1314,456 +1254,518 @@ def image_size_from_mask(mask):
 
 ### END of FUNCTION DEFS, MAIN SCRIPT STARTS HERE# 
 
-
-source_info_rec = numpy.genfromtxt(peelsourceinfo, \
-                                   dtype="S50,S25,S5,S5,i8,i8,i8,i8,S2,S255,S255,S255,S5", \
-                                   names=["sourcelist","directions","atrous_do","mscale_field","imsizes",\
-				   "cellsizetime_p","cellsizetime_a","fieldsize","dynamicrange",\
-				   "regionselfc","regionfield","peelskymodel","outliersource"],comments='#')
-
-sourcelist = source_info_rec["sourcelist"]
-directions = source_info_rec["directions"] 
-atrous_do = source_info_rec["atrous_do"] 
-mscale_field = source_info_rec["mscale_field"]
-imsizes = source_info_rec["imsizes"]
-cellsizetime_p = source_info_rec["cellsizetime_p"]
-cellsizetime_a = source_info_rec["cellsizetime_a"]
-fieldsize = source_info_rec["fieldsize"]
-dynamicrange = source_info_rec["dynamicrange"]
-regionselfc = source_info_rec["regionselfc"]
-regionfield = source_info_rec["regionfield"]
-peelskymodel = source_info_rec["peelskymodel"]
-outliersource = source_info_rec["outliersource"]
-
-sourcelist = sourcelist.tolist()
-
-
-
-
-mslistorig = ["{name:s}_SB{b1:03d}-{b2:03d}.{res:s}.ms".format(name=NAME,res=RES,b1=b,b2=b+9) for b in BANDS]
-mslistorigstr = ' '.join(mslistorig)
-
-# filter out datasets that do not exist (takes also care of freq.gaps in field subtract))
-mslist= [ms for ms in mslistorig if  os.path.isdir(ms)]
-msliststr = ' '.join(mslist)
-
-
-#mslistorigstr = ''
-#for ms in mslistorig:
-#  mslistorigstr =  mslistorigstr + ' ' + ms   
-
-#mslist= []
-#for ms in mslistorig: 
-#  if os.path.isdir(ms): # filter out datasets that do not exist (takes also care of freq.gaps in field subtract))
-#    mslist.append(ms)
-
-msliststr = ''
-for ms in mslist:
-  msliststr = msliststr + ' ' + ms
-
-
-
-tt = pt.table(mslist[0] + '/FIELD')
-pointingcenter = tt.getcol('REFERENCE_DIR')[0][0]
-pointingcenter = str(pointingcenter[0]) +'rad,' + str(pointingcenter[1])+'rad'
-#print pointingcenter
-tt.close()
-
-
-freq_tab     = pt.table(mslist[0]  + '/SPECTRAL_WINDOW')
-numchanperms = freq_tab.getcol('NUM_CHAN')[0]
-print 'Number of channels per ms is ', numchanperms
-freq_tab.close()
-
-
-
-#if len(mslist) == 1:
-#  TEC    = "False" # no TEC fitting for one (channel) dataset
-#  nterms = 1
-
-#if len(mslist) > 8:
-#  nterms = 2
-#if len(mslist) > 40:
-#  nterms = 3
-#if len(mslist) < 20:
-
-#### HARCODED, CLOCK FITTING IS ALWAYS DISABLED ####
-clock = "False"
-
-if len(mslist) > WScleanWBgroup: 
-   nterms = 2
-   print 'Forcing nterms=2 since wideband clean was requested'
-else:
-   if WScleanWBgroup < 1000:
-     print "WScleanWBgroup > len(mslist), wrong user input, exiting"
-     raise Exception('WScleanWBgroup must be lowered')
-
-
-
-numpy.save('directions.npy', directions)
-
-
-### MAKE ALL THE MASKS AT ONCE ###
-if makemasks:
-  for source_id,source in enumerate(sourcelist):
-     msavglist = []
-     for ms_id, ms in enumerate(mslist):
-        msavglist.append(ms.split('.')[0] + '.' + source + '.ms')
-  
-     tmpn  = str(msavglist[0]) 
-     parset = create_phaseshift_parset_formasks(mslist[0], tmpn, source, directions[source_id])
-     os.system('NDPPP ' + parset)
-     output_template_im = 'templatemask_' + source
-     print output_template_im
-     os.system('casapy --nologger -c ' + SCRIPTPATH + '/make_empty_image.py '+ tmpn + ' ' + output_template_im + ' ' + str(fieldsize[source_id]) + ' ' +'1.5arcsec')
-     os.system('rm -rf ' + tmpn)
-     # now generate the mask
-     os.system(SCRIPTPATH + '/make_facet_mask.py ' + output_template_im +' ' + 'directions.npy' + ' ' + str(source_id) + ' ' + '1.5arcsec'  +' ' + '&')
-  sys.exit()
-##################################
-
-logging.info('\n')
-logging.info('#######################################################################\n')
-logging.info('Running DDE')
-logging.info('Doing sources: '+','.join(do_sources))
-logging.info('Using MSlist: '+msliststr)
-logging.info('Uvrange: '+ str(uvrange) + ' lambda')
-logging.info('Cellsize: '+str(cellsize)+ ' arcsec')
-
-
-for source in do_sources: 
-
-   source_id = sourcelist.index(source)
-      
-   print 'DOING DDE patch:', source
-   logging.info('')
-   logging.info('DOING DDE patch: '+ source)   
-
-# tidying-up code from Wendy's version
-
-   if StartAtStep in ['preSC']:
-      # remove selfcal images #
-      logging.info("removing any existing sc ms")
-      os.system("rm -rf *."+source+".ms")
-   if StartAtStep in ['preSC', 'doSC']:
-      # remove selfcal images #
-      logging.info("removing any existing selfcal images")
-      os.system("rm -rf im*_cluster"+source+"*")
-      #os.system("rm -rf allbands.concat.shifted_'+source+'.ms")
-   if StartAtStep in ['preSC', 'doSC', 'postSC','preFACET','doFACET']:
-      # remove selfcal images #
-      logging.info("removing any existing facet images")
-      os.system("rm -rf imfield*_cluster"+source+"*")
-   if StartAtStep in ['preSC', 'doSC', 'postSC','preFACET']:
-      logging.info("removing any existing facet imaging average MS")
-      os.system("rm -rf *."+source+".ms.avgfield*")
-
-   #check if allbands.concat.shifted_'+source+'.ms' is present
-   if os.path.isdir('allbands.concat.shifted_'+source+'.ms'):
-     print 'allbands.concat.shifted_'+source+'.ms'
-     if StartAtStep in ['preSC']:
-        #raise Exception('delete measurement set and then restart')
-        os.system('rm -rf allbands.concat.shifted_'+source+'.ms')
-        logging.info('removing')
-     else:
-        logging.info('...but continuing because we are redoing selfcal')
-
-   if not os.path.isdir('allbands.concat.ms'):
-     print 'allbands.concat.ms does not exist'
-     raise Exception('make measurement set and then restart')
-
-   dummyskymodel   = SCRIPTPATH + '/dummy.skymodel' ## update every time again with new source, not used, just a dummy for correct
-
-   msavglist = []
-   for ms_id, ms in enumerate(mslist):
-     msavglist.append(ms.split('.')[0] + '.' + source + '.ms')
-
-   # set image region
-   tmpn  = str(msavglist[0]) 
-
-   output_template_im = 'templatemask_' + source
-   if not os.path.exists(output_template_im+'.masktmp'):
-      raise  Exception('facet mask missing: '+output_template_im+'.masktmp')
-
-   selfcaldir = directions[source_id]
-   facetsize = image_size_from_mask(output_template_im+'.masktmp')
-
-   logging.info("Selfcal direction: "+selfcaldir)
-   logging.info("facetmask: "+str(facetsize))
-	   
-
-   ## STEP 1: prep for SC ##
-   if StartAtStep in ['preSC']:
-## FIXME -- hard-wired CPU limit in what follows
-      if len(mslist) > 22:
-         runbbs_diffskymodel_addback16(mslist, 'instrument_ap_smoothed', True, directions[source_id],imsizes[source_id],output_template_im, do_ap)
-      else:
-         runbbs_diffskymodel_addback(mslist, 'instrument_ap_smoothed', True, directions[source_id],imsizes[source_id],output_template_im, do_ap)
-
-      ## average and phaseshift with NDPPP
-      for ms_id, ms in enumerate(mslist):
-         parset = create_phaseshift_parset(ms, msavglist[ms_id], source, directions[source_id],\
-	                                   imsizes[source_id], dynamicrange[source_id], StefCal)
-         os.system('rm -rf ' + msavglist[ms_id])
-         os.system('NDPPP ' + parset)
-
-
-   ### PHASESHIFT the FULL resolution dataset, for MODEL_DATA FFT subtract
-      if outliersource[source_id] == 'False':
-         parset = create_phaseshift_parset_full('allbands.concat.ms', 'allbands.concat.shifted_'+source+'.ms', directions[source_id],'DATA')
-         os.system('NDPPP ' + parset + '&') # run in background
-
-
-   ## END STEP 1
-   ## STEP 2a: SC ##
-   if StartAtStep in ['preSC', 'doSC']:
-     
-      # correct with amps and phases from selfcal, needs to be done here because CORRECTED_DATA needs to be reset for the selfcal
-      if do_ap:
-        runbbs_2(msavglist, mslist, dummyskymodel ,SCRIPTPATH+'/correct.parset','instrument_ap_smoothed')
-
-      logging.info('selfcal started '+source)
-      # do the selfcal loop
-      # make string ms list for input selfcal 
-      inputmslist = ''
-      for ms in msavglist:
-         inputmslist = inputmslist + ' ' + ms       
-
-      logging.info('Start selfcal DDE patch: '+ source)
-      logging.info('Solint CommonScalarPhase: '+ str(cellsizetime_p[source_id]))
-      logging.info('Solint A&P: '+ str(cellsizetime_a[source_id]))
-      logging.info('Region file: '+ str(regionselfc[source_id]))   
-
-      if StefCal:
-        os.system('python ' + SCRIPTPATH + '/selfcalv20.py ' + inputmslist + ' ' + source + ' ' + atrous_do[source_id] + ' ' + str(imsizes[source_id]) + ' ' + \
-                  str(nterms) + ' ' + str(cellsizetime_a[source_id]) + ' ' + str(cellsizetime_p[source_id]) + ' ' + TEC + ' ' + clock + ' ' + \
-                  str(dynamicrange[source_id]) + ' ' + regionselfc[source_id] + ' ' + str(uvrange) + ' ' + str(peelskymodel[source_id]) + ' ' +\
-                  str(cellsize))
-
-      else:
-         os.system('python '+SCRIPTPATH+'/selfcalv19_ww_cep3.py ' + inputmslist + ' ' + source + ' ' + atrous_do[source_id] + ' ' + str(imsizes[source_id]) + ' ' + \
-                   str(nterms) + ' ' + str(cellsizetime_a[source_id]) + ' ' + str(cellsizetime_p[source_id]) + ' ' + TEC + ' ' + clock + ' ' + \
-                   str(dynamicrange[source_id]) + ' ' + regionselfc[source_id])
-
-     
-      logging.info('Finished selfcal DDE patch: '+ source)
-
-   ## STEP 2b:  SC wrap up ##
-   if StartAtStep in ['preSC', 'doSC', 'postSC']:
-      # combine selfcal solutions with non-DDE phases
-      for ms_id, ms in enumerate(mslist): 
-         parmdb_selfcal     = msavglist[ms_id]+"/"+"instrument_merged"
-                #parmdb_nondde      = ms+"/"+"instrument_ap_smoothed_ampto1" # contains only phase corrections
-         parmdb_nondde      = ms+"/"+"instrument_ap_smoothed" # contains only phase corrections
-         this_parmdb_master_out  = ms+"/"+"instrument_master_" + source
-         parmdb_template    = msavglist[ms_id]+"/"+"instrument_template"
-         if StefCal:
-	   join_parmdb_stefcal(ms, parmdb_selfcal,parmdb_template, this_parmdb_master_out)
-	 else:  
-           join_parmdb(ms, parmdb_selfcal,parmdb_nondde, parmdb_template, this_parmdb_master_out, \
-	               TEC, clock)
-         print 'joined SC and DDE parmdbs for {ms}'.format(ms=ms)
-         parmdb_master_out  = "instrument_master_" + source   # reset because runbbs uses basename of ms
-
-
-      # maybe there are some issues with the frequency boundaries if you solve on averaged data
-      for ms_id, ms in enumerate(mslist): 
-        parmdb_master_outtmp  = ms+"/"+"instrument_master_" + source
-        os.system("taql 'update " + parmdb_master_outtmp + " set ENDX=1.e12'")
-        os.system("taql 'update " + parmdb_master_outtmp + " set STARTX=1.0'")
-
-      if outliersource[source_id] == 'False':
-        # normalize the solutions to 1.0, for outlier sources do not(!) normalize 
-        # this is a global normalization (one --single-- factor for all SB combined)
-        nvalue = normalize_parmdbs(mslist,parmdb_master_out, parmdb_master_out+'_norm')
-        logging.info('Normalized amps to 1.0, found mean amplitude value of ' + str(nvalue))
-
-      # plot the solutions
-      for ms in mslist:
-         parmdb_master_plot  = ms+"/"+"instrument_master_" + source
-         plotim_base         = ms.split('.')[0] + "_instrument_master_" + source
-         if TEC=='True':
-            os.system(SCRIPTPATH + '/plot_solutions_all_stations_v2.py \
-                    -t -a -p --freq 150 ' + parmdb_master_plot + ' ' + plotim_base +'&')
-         else:
-            os.system(SCRIPTPATH + '/plot_solutions_all_stations_v2.py \
-                    -s -a -p --freq 150 ' + parmdb_master_plot + ' ' + plotim_base +'&')
-
-      print 'Updated frequency boundaries parmdb and normalized amps to 1.0'
-      time.sleep(5)
-      # make new mslist for field averaged data
-      msavglist = []
-      for ms_id, ms in enumerate(mslist):
-        msavglist.append(ms.split('.')[0] + '.' + source + '.ms.avgfield')
-
-
-      ######### check if all plot_solutions_all_stations_v2.py processes is finished
-      cmd = "ps -f -u " + username + " | grep plot_solutions_all_stations_v2.py | grep -v grep |wc -l"
-      output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])  
-      while output > 0 : # "grep -v grep" to prevent counting the grep command
-        time.sleep(2)
-        output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
-      #########
-
-
-   parmdb_master_out="instrument_master_" + source
-   if outliersource[source_id] == 'False':
-      if StartAtStep in ['preSC', 'doSC', 'postSC','preFACET']:
-         ## STEP 3: prep for facet ##
-         parmdb_master_out="instrument_master_" + source
-         runbbs_diffskymodel_addbackfield(mslist, 'instrument_ap_smoothed', True,  directions[source_id],imsizes[source_id], output_template_im, do_ap)
-         logging.info('Adding back rest of the field for DDE facet ' + source)
-
-         if TEC=='True':
-            runbbs(mslist, dummyskymodel, SCRIPTPATH + '/correctfield2+TEC.parset',parmdb_master_out+'_norm', False) 
-         else:
-            runbbs(mslist, dummyskymodel, SCRIPTPATH + '/correctfield2.parset',parmdb_master_out+'_norm', False) 
-         ###########################################################################  
-         # NDPPP phase shift, less averaging (NEW: run 2 in parallel)
+if __name__ == "__main__":
+        
+    if len(sys.argv)<2:
+       raise Exception('Give the path to the setup code for the facet')
+    
+    print 'Using',sys.argv[1],'as the setup code'
+    execfile(sys.argv[1])
+    print 'script path is',SCRIPTPATH
+    
+    try:
+       StartAtStep
+    except NameError:
+       print 'No starting step specified, begin at the beginning'
+       StartAtStep='preSC'
+    
+    try:
+       WSCleanRobust
+    except NameError:
+       WSCleanRobust=-0.25 # default preserves old value
+       print 'No WSClean robust set, defaulting to',WSCleanRobust
+    
+    try:
+       BlankField
+    except NameError:
+       BlankField=False
+       print 'BlankField not set, defaulting to',BlankField
+    
+    try:
+       StefCal
+    except NameError:
+       StefCal=False
+       print 'StefCal not set, defaulting to', StefCal
+       print 'Overwriting TEC user input, TEC will be when using StefCal'
+    
+    try:
+       WScleanWBgroup
+    except NameError:
+       print 'WScleanWBgroup is not set, not using wideband clean algorithm'
+       # only print message here, because wideband is not used when len(mslist) <= WScleanWBgroup:
+       WScleanWBgroup = 1000 # large number so wideband is never used
+    
+    if StefCal:
+       TEC = "False" # cannot fit for TEC in StefCal
+    
+    
+    print 'StartAtStep is',StartAtStep
+    
+    logging.basicConfig(filename='dde.log',level=logging.DEBUG, format='%(asctime)s -  %(message)s', datefmt='%Y-%d-%m %H:%M:%S')
+    logging.info('\n')
+    
+    os.system('cp ' + SCRIPTPATH + '/coordinates_mode.py .')
+    os.system('cp ' + SCRIPTPATH + '/blank.py .')
+    os.system('cp ' + SCRIPTPATH + '/ftw.xml .')
+    os.system('cp ' + SCRIPTPATH + '/task_ftw.py .')
+    
+    os.system(buildmytasks) # make casapy tasks
+    
+    
+    freqavg_fullfacet = 5 # hardcoded for now  
+    # it has to be set to a multiple of the number of channels per block, 
+    # so it is dangerous to let a user set this without being aware of this
+    
+    
+    source_info_rec = numpy.genfromtxt(peelsourceinfo,
+                                       dtype="S50,S25,S5,S5,i8,i8,i8,i8,S2,S255,S255,S255,S5", 
+                                       names=["sourcelist","directions","atrous_do","mscale_field","imsizes",
+                                              "cellsizetime_p","cellsizetime_a","fieldsize","dynamicrange",
+                                              "regionselfc","regionfield","peelskymodel","outliersource"],comments='#')
+    
+    sourcelist = source_info_rec["sourcelist"]
+    directions = source_info_rec["directions"] 
+    atrous_do = source_info_rec["atrous_do"] 
+    mscale_field = source_info_rec["mscale_field"]
+    imsizes = source_info_rec["imsizes"]
+    cellsizetime_p = source_info_rec["cellsizetime_p"]
+    cellsizetime_a = source_info_rec["cellsizetime_a"]
+    fieldsize = source_info_rec["fieldsize"]
+    dynamicrange = source_info_rec["dynamicrange"]
+    regionselfc = source_info_rec["regionselfc"]
+    regionfield = source_info_rec["regionfield"]
+    peelskymodel = source_info_rec["peelskymodel"]
+    outliersource = source_info_rec["outliersource"]
+    
+    sourcelist = sourcelist.tolist()
+    
+    
+    
+    
+    mslistorig = ["{name:s}_SB{b1:03d}-{b2:03d}.{res:s}.ms".format(name=NAME,res=RES,b1=b,b2=b+9) for b in BANDS]
+    mslistorigstr = ' '.join(mslistorig)
+    
+    # filter out datasets that do not exist (takes also care of freq.gaps in field subtract))
+    mslist= [ms for ms in mslistorig if  os.path.isdir(ms)]
+    msliststr = ' '.join(mslist)
+    
+    
+    #mslistorigstr = ''
+    #for ms in mslistorig:
+    #  mslistorigstr =  mslistorigstr + ' ' + ms   
+    
+    #mslist= []
+    #for ms in mslistorig: 
+    #  if os.path.isdir(ms): # filter out datasets that do not exist (takes also care of freq.gaps in field subtract))
+    #    mslist.append(ms)
+    
+    msliststr = ''
+    for ms in mslist:
+      msliststr = msliststr + ' ' + ms
+    
+    
+    
+    tt = pt.table(mslist[0] + '/FIELD')
+    pointingcenter = tt.getcol('REFERENCE_DIR')[0][0]
+    pointingcenter = str(pointingcenter[0]) +'rad,' + str(pointingcenter[1])+'rad'
+    #print pointingcenter
+    tt.close()
+    
+    
+    freq_tab     = pt.table(mslist[0]  + '/SPECTRAL_WINDOW')
+    numchanperms = freq_tab.getcol('NUM_CHAN')[0]
+    print 'Number of channels per ms is ', numchanperms
+    freq_tab.close()
+    
+    
+    
+    #if len(mslist) == 1:
+    #  TEC    = "False" # no TEC fitting for one (channel) dataset
+    #  nterms = 1
+    
+    #if len(mslist) > 8:
+    #  nterms = 2
+    #if len(mslist) > 40:
+    #  nterms = 3
+    #if len(mslist) < 20:
+    
+    #### HARCODED, CLOCK FITTING IS ALWAYS DISABLED ####
+    clock = "False"
+    
+    if len(mslist) > WScleanWBgroup: 
+       nterms = 2
+       print 'Forcing nterms=2 since wideband clean was requested'
+    else:
+       if WScleanWBgroup < 1000:
+         print "WScleanWBgroup > len(mslist), wrong user input, exiting"
+         raise Exception('WScleanWBgroup must be lowered')
+    
+    
+    
+    numpy.save('directions.npy', directions)
+    
+    
+    ### MAKE ALL THE MASKS AT ONCE ###
+    if makemasks:
+      for source_id,source in enumerate(sourcelist):
          msavglist = []
-         for ms_id, ms in enumerate(mslistorig): # remake msavglist from mslistorig
-           msavglist.append(ms.split('.')[0] + '.' + source + '.ms.avgfield')      
-
          for ms_id, ms in enumerate(mslist):
-           parset = create_phaseshift_parset_field(ms, msavglist[ms_id], source, directions[source_id], freqavg_fullfacet)
-
-           cmd = "ps -u " + username + " | grep NDPPP | wc -l"
-           output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
-
-           while output > 1 : # max 2 processes (max 2, instead of 3, because we also phaseshift) 
-             time.sleep(10)
-             output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
-             pid = (Popen('pidof NDPPP', shell=True, stdout=PIPE).communicate()[0])    
-             pid_list = pid.split(' ')
-           # START NDPPP BECAUSE LESS/EQ 2 PROCESSES ARE RUNNING	
-           os.system('rm -rf ' + msavglist[ms_id])
-           os.system('NDPPP ' + parset + '&')
-
-         # Check if all NDPPP processes are finished
-         output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0]) 
-         while output > 0 :
-             time.sleep(10)
-             output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
-             pid = (Popen('pidof NDPPP', shell=True, stdout=PIPE).communicate()[0])    
-             pid_list = pid.split(' ')
-         ###########################################################################  
-      ## STEP 4a -- do facet ##
-
-      ###### MAKE FACET IMAGE #####
-
-      # imsize None forces the code to work out the image size from the mask size
-      if StartAtStep in ['preSC', 'doSC', 'postSC','preFACET','doFACET']:
-         msavglist = []
-         for ms_id, ms in enumerate(mslistorig): # remake msavglist from mslistorig
-            msavglist.append(ms.split('.')[0] + '.' + source + '.ms.avgfield')      
-
-         imout,mask_out, imsizef = make_image_wsclean(msavglist, source, 'field0', 5, 3, nterms, 'True',\
-	                                              None, output_template_im +'.masktmp', \
-					              mscale_field[source_id],regionfield[source_id],\
-					              cellsize, uvrange,wsclean,WSCleanRobust,BlankField,\
-						      WScleanWBgroup, freqavg_fullfacet, numchanperms)
-         logging.info('Imaged full DDE facet: ' + source)
-         if len(mslist) > WScleanWBgroup:
-            logging.info('WSCLEAN Wideband CLEAN algorithm was used')
-
-      ## STEP 4b -- post facet ##
-
-      if StartAtStep in ['preSC', 'doSC', 'postSC','preFACET','doFACET','postFACET']:
-
-# if we are restarting, it's possible that 'allbands.concat.shifted_'+source+'.ms' may have been deleted earlier. So re-create it if it doesn't exist
-
-         if not(os.path.isdir('allbands.concat.shifted_'+source+'.ms')):
-            print 'allbands.concat.shifted_'+source+'.ms ' + 'does not exist, re-creating'
-            parset = create_phaseshift_parset_full('allbands.concat.ms', 'allbands.concat.shifted_'+source+'.ms', directions[source_id],'DATA')
-            os.system('NDPPP ' + parset)
-         if StartAtStep=='postFACET':
-            # imout won't be set, so guess it
-            imout='imfield0_cluster'+source
-            imsizef=image_size_from_mask(output_template_im +'.masktmp')
-
-         # BACKUP SUBTRACTED DATA IN CASE OF CRASH
-         ###########################################################################  
-         # (NEW: run in parallel)
-         for ms_id, ms in enumerate(mslist):  
-           cmd = "ps -u " + username + " | grep taql | wc -l"
-           output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
-
-           while output > 3 : # max 4 processes  
-             time.sleep(10)
-             output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
-
-           # START taql BECAUSE LESS/EQ 2 PROCESSES ARE RUNNING	
-           os.system("taql 'update " + ms + " set CORRECTED_DATA=SUBTRACTED_DATA_ALL' &")
-
-         # Check if all taql processes are finished
-         output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0]) 
-         while output > 0 :
-             time.sleep(10)
-             output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
-         logging.info('Backup SUBTRACTED_DATA_ALL: completed')   
-         ###########################################################################  
-
-
-         # DO THE FFT
-         do_fieldFFT('allbands.concat.shifted_'+source+'.ms',imout, imsizef, cellsize, wsclean, \
-	              msavglist, WSCleanRobust, WScleanWBgroup, numchanperms)
-         logging.info('FFTed model of DDE facet: ' + source)
-
-         # SHIFT PHASE CENTER BACK TO ORIGINAL
-         logging.info('Shift model back to pointing centre')
-         parset = create_phaseshift_parset_full('allbands.concat.shifted_'+source+'.ms',\
-	                                        'allbands.concat.shiftedback_'+source+'.ms',\
-                                                 pointingcenter,'MODEL_DATA')
-
-         os.system('NDPPP ' + parset) 
-         os.system('rm -rf ' + 'allbands.concat.shifted_'+source+'.ms') # clean up
-
-         # Add MODEL_DATA (allbands.concat.shiftedback.ms) into ADDED_DATA_SOURCE from mslist
-
-         freq_tab1= pt.table('allbands.concat.ms' + '/SPECTRAL_WINDOW')
-         numchan1    = freq_tab1.getcol('NUM_CHAN')
-         freq_tab2= pt.table(mslist[0] + '/SPECTRAL_WINDOW')
-         numchan2    = freq_tab2.getcol('NUM_CHAN')
-         freq_tab1.close()
-         freq_tab2.close()
-
-         if (numchan1[0]) == (numchan2[0]*len(mslist)):
-           os.system('python ' + SCRIPTPATH + '/copy_over_columns.py '+ msliststr +\
-                     ' ' +'allbands.concat.shiftedback_'+source+'.ms'+' ' + 'ADDED_DATA_SOURCE')
-         else:
-           os.system('python ' + SCRIPTPATH + '/copy_over_columns.py '+ mslistorigstr +\
-                     ' ' +'allbands.concat.shiftedback_'+source+'.ms'+' ' + 'ADDED_DATA_SOURCE')
-
-         os.system('rm -rf ' + 'allbands.concat.shiftedback_'+source+'.ms') # clean up
-
-   #### OUTLIER CASE ####
-   else:  # do this because we are not going to add back field sources
-      logging.info('Do not add field back for outlier source') 
-      for ms in mslist:
-         os.system("taql 'update " + ms + " set MODEL_DATA=ADDED_DATA_SOURCE'")
+            msavglist.append(ms.split('.')[0] + '.' + source + '.ms')
       
-      # BACKUP SUBTRACTED DATA IN CASE OF CRASH
-      for ms in mslist:
-         os.system("taql 'update " + ms + " set CORRECTED_DATA=SUBTRACTED_DATA_ALL'")  
-      logging.info('Backup SUBTRACTED_DATA_ALL for outliersource')
-
-   if StartAtStep in ['preSC', 'doSC', 'postSC','preFACET','doFACET','postFACET']:        
-   #### DO THE SUBTRACT ####
-      if peelskymodel[source_id] != 'empty': # should also cover "outliersource"
-        print 'Subtracting source with a user defined skymodel', peelskymodel[source_id]   
-        parset   = create_subtract_parset_field_outlier('SUBTRACTED_DATA_ALL',TEC)
-        runbbs(mslist, peelskymodel[source_id], parset, parmdb_master_out, True) # NOTE: no 'normalization' and replace sourcedb
-        logging.info('Subtracted outlier source from data for DDE : ' + source)
-      else:
-        parset   = create_subtract_parset_field('SUBTRACTED_DATA_ALL',TEC)
-        runbbs(mslist, ' ', parset, parmdb_master_out+'_norm', False) # replace-sourcedb not needed since we use "@column"
-        logging.info('Subtracted facet model from data for DDE : ' + source)
-
-      # CHECK IF THE SUBTRACT WORKED OK by making dirty low-res images
-      inputmslist = ''
-      for ms in mslist:
-         inputmslist = inputmslist + ' ' + ms  
-      #os.system('python ' + SCRIPTPATH + '/verify_subtract_v3.py ' + inputmslist + ' 0.3 ' + source)
-      os.system('python '+ SCRIPTPATH+'/verify_subtract_v5.py ' + inputmslist + ' 0.1 ' + source)
-
-   logging.info('finished '+source)
+         tmpn  = str(msavglist[0]) 
+         parset = create_phaseshift_parset_formasks(mslist[0], tmpn, source, directions[source_id])
+         os.system('NDPPP ' + parset)
+         output_template_im = 'templatemask_' + source
+         print output_template_im
+         os.system('casapy --nogui -c ' + SCRIPTPATH + '/make_empty_image.py '+ tmpn + ' ' + output_template_im + ' ' + str(fieldsize[source_id]) + ' ' +'1.5arcsec')
+         os.system('rm -rf ' + tmpn)
+         # now generate the mask
+         os.system(SCRIPTPATH + '/make_facet_mask.py ' + output_template_im +' ' + 'directions.npy' + ' ' + str(source_id) + ' ' + '1.5arcsec'  +' ' + '&')
+      sys.exit()
+    ##################################
+    
+    logging.info('\n')
+    logging.info('#######################################################################\n')
+    logging.info('Running DDE')
+    logging.info('Doing sources: '+','.join(do_sources))
+    logging.info('Using MSlist: '+msliststr)
+    logging.info('Uvrange: '+ str(uvrange) + ' lambda')
+    logging.info('Cellsize: '+str(cellsize)+ ' arcsec')
+    
+    
+    for source in do_sources: 
+    
+       source_id = sourcelist.index(source)
+          
+       print 'DOING DDE patch:', source
+       logging.info('')
+       logging.info('DOING DDE patch: '+ source)   
+    
+    # tidying-up code from Wendy's version
+    
+       if StartAtStep in ['preSC']:
+          # remove selfcal images #
+          logging.info("removing any existing sc ms")
+          os.system("rm -rf *."+source+".ms")
+       if StartAtStep in ['preSC', 'doSC']:
+          # remove selfcal images #
+          logging.info("removing any existing selfcal images")
+          os.system("rm -rf im*_cluster"+source+"*")
+          #os.system("rm -rf allbands.concat.shifted_'+source+'.ms")
+       if StartAtStep in ['preSC', 'doSC', 'postSC','preFACET','doFACET']:
+          # remove selfcal images #
+          logging.info("removing any existing facet images")
+          os.system("rm -rf imfield*_cluster"+source+"*")
+       if StartAtStep in ['preSC', 'doSC', 'postSC','preFACET']:
+          logging.info("removing any existing facet imaging average MS")
+          os.system("rm -rf *."+source+".ms.avgfield*")
+    
+       #check if allbands.concat.shifted_'+source+'.ms' is present
+       if os.path.isdir('allbands.concat.shifted_'+source+'.ms'):
+         print 'allbands.concat.shifted_'+source+'.ms'
+         if StartAtStep in ['preSC']:
+            #raise Exception('delete measurement set and then restart')
+            os.system('rm -rf allbands.concat.shifted_'+source+'.ms')
+            logging.info('removing')
+         else:
+            logging.info('...but continuing because we are redoing selfcal')
+    
+       if not os.path.isdir('allbands.concat.ms'):
+         print 'allbands.concat.ms does not exist'
+         raise Exception('make measurement set and then restart')
+    
+       dummyskymodel   = SCRIPTPATH + '/dummy.skymodel' ## update every time again with new source, not used, just a dummy for correct
+    
+       msavglist = []
+       for ms_id, ms in enumerate(mslist):
+         msavglist.append(ms.split('.')[0] + '.' + source + '.ms')
+    
+       # set image region
+       tmpn  = str(msavglist[0]) 
+    
+       output_template_im = 'templatemask_' + source
+       if not os.path.exists(output_template_im+'.masktmp'):
+          raise  Exception('facet mask missing: '+output_template_im+'.masktmp')
+    
+       selfcaldir = directions[source_id]
+       facetsize = image_size_from_mask(output_template_im+'.masktmp')
+    
+       logging.info("Selfcal direction: "+selfcaldir)
+       logging.info("facetmask: "+str(facetsize))
+ 
+    
+       ## STEP 1: prep for SC ##
+       if StartAtStep in ['preSC']:
+    ## FIXME -- hard-wired CPU limit in what follows
+          if len(mslist) > 22:
+             runbbs_diffskymodel_addback16(mslist, 'instrument_ap_smoothed', True, directions[source_id],imsizes[source_id],output_template_im, do_ap)
+          else:
+             runbbs_diffskymodel_addback(mslist, 'instrument_ap_smoothed', True, directions[source_id],imsizes[source_id],output_template_im, do_ap)
+    
+          ## average and phaseshift with NDPPP
+          for ms_id, ms in enumerate(mslist):
+             parset = create_phaseshift_parset(ms, msavglist[ms_id], source, directions[source_id],
+                                               imsizes[source_id], dynamicrange[source_id], StefCal)
+             os.system('rm -rf ' + msavglist[ms_id])
+             os.system('NDPPP ' + parset)
+    
+    
+       ### PHASESHIFT the FULL resolution dataset, for MODEL_DATA FFT subtract
+          if outliersource[source_id] == 'False':
+             parset = create_phaseshift_parset_full('allbands.concat.ms', 'allbands.concat.shifted_'+source+'.ms', directions[source_id],'DATA')
+             os.system('NDPPP ' + parset + '&') # run in background
+    
+    
+       ## END STEP 1
+       ## STEP 2a: SC ##
+       if StartAtStep in ['preSC', 'doSC']:
+         
+          # correct with amps and phases from selfcal, needs to be done here because CORRECTED_DATA needs to be reset for the selfcal
+          if do_ap:
+            runbbs_2(msavglist, mslist, dummyskymodel ,SCRIPTPATH+'/correct.parset','instrument_ap_smoothed')
+    
+          logging.info('selfcal started '+source)
+          # do the selfcal loop
+          # make string ms list for input selfcal 
+          inputmslist = ''
+          for ms in msavglist:
+             inputmslist = inputmslist + ' ' + ms       
+    
+          logging.info('Start selfcal DDE patch: '+ source)
+          logging.info('Solint CommonScalarPhase: '+ str(cellsizetime_p[source_id]))
+          logging.info('Solint A&P: '+ str(cellsizetime_a[source_id]))
+          logging.info('Region file: '+ str(regionselfc[source_id]))   
+    
+          if StefCal:
+            os.system('python ' + SCRIPTPATH + '/selfcalv20.py ' + inputmslist + ' ' + source + ' ' + atrous_do[source_id] + ' ' + str(imsizes[source_id]) + ' ' + 
+                      str(nterms) + ' ' + str(cellsizetime_a[source_id]) + ' ' + str(cellsizetime_p[source_id]) + ' ' + TEC + ' ' + clock + ' ' + 
+                      str(dynamicrange[source_id]) + ' ' + regionselfc[source_id] + ' ' + str(uvrange) + ' ' + str(peelskymodel[source_id]) + ' ' +
+                      str(cellsize))
+    
+          else:
+             os.system('python '+SCRIPTPATH+'/selfcalv19_ww_cep3.py ' + inputmslist + ' ' + source + ' ' + atrous_do[source_id] + ' ' + str(imsizes[source_id]) + ' ' + 
+                       str(nterms) + ' ' + str(cellsizetime_a[source_id]) + ' ' + str(cellsizetime_p[source_id]) + ' ' + TEC + ' ' + clock + ' ' + 
+                       str(dynamicrange[source_id]) + ' ' + regionselfc[source_id])
+    
+         
+          logging.info('Finished selfcal DDE patch: '+ source)
+    
+       ## STEP 2b:  SC wrap up ##
+       if StartAtStep in ['preSC', 'doSC', 'postSC']:
+          # combine selfcal solutions with non-DDE phases
+          for ms_id, ms in enumerate(mslist): 
+             parmdb_selfcal     = msavglist[ms_id]+"/"+"instrument_merged"
+                    #parmdb_nondde      = ms+"/"+"instrument_ap_smoothed_ampto1" # contains only phase corrections
+             parmdb_nondde      = ms+"/"+"instrument_ap_smoothed" # contains only phase corrections
+             this_parmdb_master_out  = ms+"/"+"instrument_master_" + source
+             parmdb_template    = msavglist[ms_id]+"/"+"instrument_template"
+             if StefCal:
+                 join_parmdb_stefcal(ms, parmdb_selfcal,parmdb_template, this_parmdb_master_out)
+          else:  
+               join_parmdb(ms, parmdb_selfcal,parmdb_nondde, parmdb_template, this_parmdb_master_out, 
+                           TEC, clock)
+             print 'joined SC and DDE parmdbs for {ms}'.format(ms=ms)
+             parmdb_master_out  = "instrument_master_" + source   # reset because runbbs uses basename of ms
+    
+    
+          # maybe there are some issues with the frequency boundaries if you solve on averaged data
+          for ms_id, ms in enumerate(mslist): 
+            parmdb_master_outtmp  = ms+"/"+"instrument_master_" + source
+            os.system("taql 'update " + parmdb_master_outtmp + " set ENDX=1.e12'")
+            os.system("taql 'update " + parmdb_master_outtmp + " set STARTX=1.0'")
+    
+          if outliersource[source_id] == 'False':
+            # normalize the solutions to 1.0, for outlier sources do not(!) normalize 
+            # this is a global normalization (one --single-- factor for all SB combined)
+            nvalue = normalize_parmdbs(mslist,parmdb_master_out, parmdb_master_out+'_norm')
+            logging.info('Normalized amps to 1.0, found mean amplitude value of ' + str(nvalue))
+    
+          # plot the solutions
+          for ms in mslist:
+             parmdb_master_plot  = ms+"/"+"instrument_master_" + source
+             plotim_base         = ms.split('.')[0] + "_instrument_master_" + source
+             if TEC=='True':
+                os.system(SCRIPTPATH + '/plot_solutions_all_stations_v2.py \
+                        -t -a -p --freq 150 ' + parmdb_master_plot + ' ' + plotim_base +'&')
+             else:
+                os.system(SCRIPTPATH + '/plot_solutions_all_stations_v2.py \
+                        -s -a -p --freq 150 ' + parmdb_master_plot + ' ' + plotim_base +'&')
+    
+          print 'Updated frequency boundaries parmdb and normalized amps to 1.0'
+          time.sleep(5)
+          # make new mslist for field averaged data
+          msavglist = []
+          for ms_id, ms in enumerate(mslist):
+            msavglist.append(ms.split('.')[0] + '.' + source + '.ms.avgfield')
+    
+    
+          ######### check if all plot_solutions_all_stations_v2.py processes is finished
+          cmd = "ps -f -u " + username + " | grep plot_solutions_all_stations_v2.py | grep -v grep |wc -l"
+          output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])  
+          while output > 0 : # "grep -v grep" to prevent counting the grep command
+            time.sleep(2)
+            output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
+          #########
+    
+    
+       parmdb_master_out="instrument_master_" + source
+       if outliersource[source_id] == 'False':
+          if StartAtStep in ['preSC', 'doSC', 'postSC','preFACET']:
+             ## STEP 3: prep for facet ##
+             parmdb_master_out="instrument_master_" + source
+             runbbs_diffskymodel_addbackfield(mslist, 'instrument_ap_smoothed', True,  directions[source_id],imsizes[source_id], output_template_im, do_ap)
+             logging.info('Adding back rest of the field for DDE facet ' + source)
+    
+             if TEC=='True':
+                runbbs(mslist, dummyskymodel, SCRIPTPATH + '/correctfield2+TEC.parset',parmdb_master_out+'_norm', False) 
+             else:
+                runbbs(mslist, dummyskymodel, SCRIPTPATH + '/correctfield2.parset',parmdb_master_out+'_norm', False) 
+             ###########################################################################  
+             # NDPPP phase shift, less averaging (NEW: run 2 in parallel)
+             msavglist = []
+             for ms_id, ms in enumerate(mslistorig): # remake msavglist from mslistorig
+               msavglist.append(ms.split('.')[0] + '.' + source + '.ms.avgfield')      
+    
+             for ms_id, ms in enumerate(mslist):
+               parset = create_phaseshift_parset_field(ms, msavglist[ms_id], source, directions[source_id], freqavg_fullfacet)
+    
+               cmd = "ps -u " + username + " | grep NDPPP | wc -l"
+               output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
+    
+               while output > 1 : # max 2 processes (max 2, instead of 3, because we also phaseshift) 
+                 time.sleep(10)
+                 output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
+                 pid = (Popen('pidof NDPPP', shell=True, stdout=PIPE).communicate()[0])    
+                 pid_list = pid.split(' ')
+               # START NDPPP BECAUSE LESS/EQ 2 PROCESSES ARE RUNNING
+               os.system('rm -rf ' + msavglist[ms_id])
+               os.system('NDPPP ' + parset + '&')
+    
+             # Check if all NDPPP processes are finished
+             output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0]) 
+             while output > 0 :
+                 time.sleep(10)
+                 output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
+                 pid = (Popen('pidof NDPPP', shell=True, stdout=PIPE).communicate()[0])    
+                 pid_list = pid.split(' ')
+             ###########################################################################  
+          ## STEP 4a -- do facet ##
+    
+          ###### MAKE FACET IMAGE #####
+    
+          # imsize None forces the code to work out the image size from the mask size
+          if StartAtStep in ['preSC', 'doSC', 'postSC','preFACET','doFACET']:
+             msavglist = []
+             for ms_id, ms in enumerate(mslistorig): # remake msavglist from mslistorig
+                msavglist.append(ms.split('.')[0] + '.' + source + '.ms.avgfield')      
+    
+             imout,mask_out, imsizef = make_image_wsclean(msavglist, source, 'field0', 5, 3, nterms, 'True',
+                                                      None, output_template_im +'.masktmp',
+                                                      mscale_field[source_id],regionfield[source_id],
+                                                      cellsize, uvrange,wsclean,WSCleanRobust,BlankField,
+                                                      WScleanWBgroup, freqavg_fullfacet, numchanperms)
+             logging.info('Imaged full DDE facet: ' + source)
+             if len(mslist) > WScleanWBgroup:
+                logging.info('WSCLEAN Wideband CLEAN algorithm was used')
+    
+          ## STEP 4b -- post facet ##
+    
+          if StartAtStep in ['preSC', 'doSC', 'postSC','preFACET','doFACET','postFACET']:
+    
+    # if we are restarting, it's possible that 'allbands.concat.shifted_'+source+'.ms' may have been deleted earlier. So re-create it if it doesn't exist
+    
+             if not(os.path.isdir('allbands.concat.shifted_'+source+'.ms')):
+                print 'allbands.concat.shifted_'+source+'.ms ' + 'does not exist, re-creating'
+                parset = create_phaseshift_parset_full('allbands.concat.ms', 'allbands.concat.shifted_'+source+'.ms', directions[source_id],'DATA')
+                os.system('NDPPP ' + parset)
+             if StartAtStep=='postFACET':
+                # imout won't be set, so guess it
+                imout='imfield0_cluster'+source
+                imsizef=image_size_from_mask(output_template_im +'.masktmp')
+    
+             # BACKUP SUBTRACTED DATA IN CASE OF CRASH
+             ###########################################################################  
+             # (NEW: run in parallel)
+             for ms_id, ms in enumerate(mslist):  
+               cmd = "ps -u " + username + " | grep taql | wc -l"
+               output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
+    
+               while output > 3 : # max 4 processes  
+                 time.sleep(10)
+                 output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
+    
+               # START taql BECAUSE LESS/EQ 2 PROCESSES ARE RUNNING
+               os.system("taql 'update " + ms + " set CORRECTED_DATA=SUBTRACTED_DATA_ALL' &")
+    
+             # Check if all taql processes are finished
+             output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0]) 
+             while output > 0 :
+                 time.sleep(10)
+                 output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
+             logging.info('Backup SUBTRACTED_DATA_ALL: completed')   
+             ###########################################################################  
+    
+    
+             # DO THE FFT
+             do_fieldFFT('allbands.concat.shifted_'+source+'.ms',imout, imsizef, cellsize, wsclean, 
+                         msavglist, WSCleanRobust, WScleanWBgroup, numchanperms)
+             logging.info('FFTed model of DDE facet: ' + source)
+    
+             # SHIFT PHASE CENTER BACK TO ORIGINAL
+             logging.info('Shift model back to pointing centre')
+             parset = create_phaseshift_parset_full('allbands.concat.shifted_'+source+'.ms',
+                                                    'allbands.concat.shiftedback_'+source+'.ms',
+                                                     pointingcenter,'MODEL_DATA')
+    
+             os.system('NDPPP ' + parset) 
+             os.system('rm -rf ' + 'allbands.concat.shifted_'+source+'.ms') # clean up
+    
+             # Add MODEL_DATA (allbands.concat.shiftedback.ms) into ADDED_DATA_SOURCE from mslist
+    
+             freq_tab1= pt.table('allbands.concat.ms' + '/SPECTRAL_WINDOW')
+             numchan1    = freq_tab1.getcol('NUM_CHAN')
+             freq_tab2= pt.table(mslist[0] + '/SPECTRAL_WINDOW')
+             numchan2    = freq_tab2.getcol('NUM_CHAN')
+             freq_tab1.close()
+             freq_tab2.close()
+    
+             if (numchan1[0]) == (numchan2[0]*len(mslist)):
+               os.system('python ' + SCRIPTPATH + '/copy_over_columns.py '+ msliststr +
+                         ' ' +'allbands.concat.shiftedback_'+source+'.ms'+' ' + 'ADDED_DATA_SOURCE')
+             else:
+               os.system('python ' + SCRIPTPATH + '/copy_over_columns.py '+ mslistorigstr +
+                         ' ' +'allbands.concat.shiftedback_'+source+'.ms'+' ' + 'ADDED_DATA_SOURCE')
+    
+             os.system('rm -rf ' + 'allbands.concat.shiftedback_'+source+'.ms') # clean up
+    
+       #### OUTLIER CASE ####
+       else:  # do this because we are not going to add back field sources
+          logging.info('Do not add field back for outlier source') 
+          for ms in mslist:
+             os.system("taql 'update " + ms + " set MODEL_DATA=ADDED_DATA_SOURCE'")
+          
+          # BACKUP SUBTRACTED DATA IN CASE OF CRASH
+          for ms in mslist:
+             os.system("taql 'update " + ms + " set CORRECTED_DATA=SUBTRACTED_DATA_ALL'")  
+          logging.info('Backup SUBTRACTED_DATA_ALL for outliersource')
+    
+       if StartAtStep in ['preSC', 'doSC', 'postSC','preFACET','doFACET','postFACET']:        
+       #### DO THE SUBTRACT ####
+          if peelskymodel[source_id] != 'empty': # should also cover "outliersource"
+            print 'Subtracting source with a user defined skymodel', peelskymodel[source_id]   
+            parset   = create_subtract_parset_field_outlier('SUBTRACTED_DATA_ALL',TEC)
+            runbbs(mslist, peelskymodel[source_id], parset, parmdb_master_out, True) # NOTE: no 'normalization' and replace sourcedb
+            logging.info('Subtracted outlier source from data for DDE : ' + source)
+          else:
+            parset   = create_subtract_parset_field('SUBTRACTED_DATA_ALL',TEC)
+            runbbs(mslist, ' ', parset, parmdb_master_out+'_norm', False) # replace-sourcedb not needed since we use "@column"
+            logging.info('Subtracted facet model from data for DDE : ' + source)
+    
+          # CHECK IF THE SUBTRACT WORKED OK by making dirty low-res images
+          inputmslist = ''
+          for ms in mslist:
+             inputmslist = inputmslist + ' ' + ms  
+          #os.system('python ' + SCRIPTPATH + '/verify_subtract_v3.py ' + inputmslist + ' 0.3 ' + source)
+          os.system('python '+ SCRIPTPATH+'/verify_subtract_v5.py ' + inputmslist + ' 0.1 ' + source)
+    
+       logging.info('finished '+source)
