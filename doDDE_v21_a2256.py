@@ -54,6 +54,11 @@ except NameError:
    # only print message here, because wideband is not used when len(mslist) <= WScleanWBgroup:
    WScleanWBgroup = 1000 # large number so wideband is never used
 
+try:
+   allbandspath
+except NameError:
+   allbandspath = os.getcwd() + '/' 
+  
 if StefCal:
    TEC = "False" # cannot fit for TEC in StefCal
 
@@ -1459,17 +1464,17 @@ for source in do_sources:
       os.system("rm -rf *."+source+".ms.avgfield*")
 
    #check if allbands.concat.shifted_'+source+'.ms' is present
-   if os.path.isdir('allbands.concat.shifted_'+source+'.ms'):
-     print 'allbands.concat.shifted_'+source+'.ms'
+   if os.path.isdir(allbandspath + 'allbands.concat.shifted_'+source+'.ms'):
+     print allbandspath + 'allbands.concat.shifted_'+source+'.ms'
      if StartAtStep in ['preSC']:
         #raise Exception('delete measurement set and then restart')
-        os.system('rm -rf allbands.concat.shifted_'+source+'.ms')
+        os.system('rm -rf ' + allbandspath +'allbands.concat.shifted_'+source+'.ms')
         logging.info('removing')
      else:
         logging.info('...but continuing because we are redoing selfcal')
 
-   if not os.path.isdir('allbands.concat.ms'):
-     print 'allbands.concat.ms does not exist'
+   if not os.path.isdir(allbandspath + 'allbands.concat.ms'):
+     print allbandspath + 'allbands.concat.ms does not exist'
      raise Exception('make measurement set and then restart')
 
    dummyskymodel   = SCRIPTPATH + '/dummy.skymodel' ## update every time again with new source, not used, just a dummy for correct
@@ -1495,7 +1500,7 @@ for source in do_sources:
    ## STEP 1: prep for SC ##
    if StartAtStep in ['preSC']:
 ## FIXME -- hard-wired CPU limit in what follows
-      if len(mslist) > 22:
+      if len(mslist) > 32:
          runbbs_diffskymodel_addback16(mslist, 'instrument_ap_smoothed', True, directions[source_id],imsizes[source_id],output_template_im, do_ap)
       else:
          runbbs_diffskymodel_addback(mslist, 'instrument_ap_smoothed', True, directions[source_id],imsizes[source_id],output_template_im, do_ap)
@@ -1510,7 +1515,9 @@ for source in do_sources:
 
    ### PHASESHIFT the FULL resolution dataset, for MODEL_DATA FFT subtract
       if outliersource[source_id] == 'False':
-         parset = create_phaseshift_parset_full('allbands.concat.ms', 'allbands.concat.shifted_'+source+'.ms', directions[source_id],'DATA')
+         parset = create_phaseshift_parset_full(allbandspath + 'allbands.concat.ms', \
+	                                        allbandspath + 'allbands.concat.shifted_'+source+'.ms',\
+						directions[source_id],'DATA')
          os.system('NDPPP ' + parset + '&') # run in background
 
 
@@ -1672,9 +1679,11 @@ for source in do_sources:
 
 # if we are restarting, it's possible that 'allbands.concat.shifted_'+source+'.ms' may have been deleted earlier. So re-create it if it doesn't exist
 
-         if not(os.path.isdir('allbands.concat.shifted_'+source+'.ms')):
-            print 'allbands.concat.shifted_'+source+'.ms ' + 'does not exist, re-creating'
-            parset = create_phaseshift_parset_full('allbands.concat.ms', 'allbands.concat.shifted_'+source+'.ms', directions[source_id],'DATA')
+         if not(os.path.isdir(allbandspath + 'allbands.concat.shifted_'+source+'.ms')):
+            print allbandspath + 'allbands.concat.shifted_'+source+'.ms ' + 'does not exist, re-creating'
+            parset = create_phaseshift_parset_full(allbandspath + 'allbands.concat.ms', \
+	                                           allbandspath + 'allbands.concat.shifted_'+source+'.ms',\
+						   directions[source_id],'DATA')
             os.system('NDPPP ' + parset)
          if StartAtStep=='postFACET':
             # imout won't be set, so guess it
@@ -1705,22 +1714,22 @@ for source in do_sources:
 
 
          # DO THE FFT
-         do_fieldFFT('allbands.concat.shifted_'+source+'.ms',imout, imsizef, cellsize, wsclean, \
+         do_fieldFFT(allbandspath + 'allbands.concat.shifted_'+source+'.ms',imout, imsizef, cellsize, wsclean, \
 	              msavglist, WSCleanRobust, WScleanWBgroup, numchanperms)
          logging.info('FFTed model of DDE facet: ' + source)
 
          # SHIFT PHASE CENTER BACK TO ORIGINAL
          logging.info('Shift model back to pointing centre')
-         parset = create_phaseshift_parset_full('allbands.concat.shifted_'+source+'.ms',\
-	                                        'allbands.concat.shiftedback_'+source+'.ms',\
-                                                 pointingcenter,'MODEL_DATA')
+         parset = create_phaseshift_parset_full(allbandspath + 'allbands.concat.shifted_'+source+'.ms',\
+	                                        allbandspath + 'allbands.concat.shiftedback_'+source+'.ms',\
+                                                pointingcenter,'MODEL_DATA')
 
          os.system('NDPPP ' + parset) 
-         os.system('rm -rf ' + 'allbands.concat.shifted_'+source+'.ms') # clean up
+         os.system('rm -rf ' + allbandspath + 'allbands.concat.shifted_'+source+'.ms') # clean up
 
          # Add MODEL_DATA (allbands.concat.shiftedback.ms) into ADDED_DATA_SOURCE from mslist
 
-         freq_tab1= pt.table('allbands.concat.ms' + '/SPECTRAL_WINDOW')
+         freq_tab1= pt.table(allbandspath + 'allbands.concat.ms' + '/SPECTRAL_WINDOW')
          numchan1    = freq_tab1.getcol('NUM_CHAN')
          freq_tab2= pt.table(mslist[0] + '/SPECTRAL_WINDOW')
          numchan2    = freq_tab2.getcol('NUM_CHAN')
@@ -1729,12 +1738,12 @@ for source in do_sources:
 
          if (numchan1[0]) == (numchan2[0]*len(mslist)):
            os.system('python ' + SCRIPTPATH + '/copy_over_columns.py '+ msliststr +\
-                     ' ' +'allbands.concat.shiftedback_'+source+'.ms'+' ' + 'ADDED_DATA_SOURCE')
+                     ' ' +allbandspath+'allbands.concat.shiftedback_'+source+'.ms'+' ' + 'ADDED_DATA_SOURCE')
          else:
            os.system('python ' + SCRIPTPATH + '/copy_over_columns.py '+ mslistorigstr +\
-                     ' ' +'allbands.concat.shiftedback_'+source+'.ms'+' ' + 'ADDED_DATA_SOURCE')
+                     ' ' +allbandspath+'allbands.concat.shiftedback_'+source+'.ms'+' ' + 'ADDED_DATA_SOURCE')
 
-         os.system('rm -rf ' + 'allbands.concat.shiftedback_'+source+'.ms') # clean up
+         os.system('rm -rf ' + allbandspath + 'allbands.concat.shiftedback_'+source+'.ms') # clean up
 
    #### OUTLIER CASE ####
    else:  # do this because we are not going to add back field sources
