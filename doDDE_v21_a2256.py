@@ -833,8 +833,10 @@ def return_slist(imagename, skymodel, ref_source):
    coor = [0,1,declist[patch_id],ralist[patch_id]]
    pix  = img.topixel(coor)[2:4]
  
-   if (pix[0] >= 0) and (pix[0] <= (sh[0]-1)) and \
-      (pix[1] >= 0) and (pix[1] <= (sh[1]-1)):
+   if ((pix[0] >= 0) and 
+       (pix[0] <= (sh[0]-1)) and
+       (pix[1] >= 0) and 
+       (pix[1] <= (sh[1]-1))):
      if pixels[0,0,pix[0],pix[1]] != 0.0:  # only include if withtin the clean mask (==1)
        plist.append(patches[patch_id]) 
 
@@ -931,8 +933,10 @@ def cal_return_slist(imagename,skymodel, direction, imsize):
  
    if dis < cut: # ok sources is within image
      # check if the sources is within the mask region (because mask can be smaller than image)
-     if (pix[0] >= 0) and (pix[0] <= (sh[0]-1)) and \
-        (pix[1] >= 0) and (pix[1] <= (sh[1]-1)):
+     if ((pix[0] >= 0) and 
+         (pix[0] <= (sh[0]-1)) and 
+         (pix[1] >= 0) and 
+         (pix[1] <= (sh[1]-1))):
        if pixels[0,0,pix[0],pix[1]] != 0.0:  # only include if withtin the clean mask (==1)
           plist.append(patches[patch_id]) 
 
@@ -975,16 +979,16 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
 
  imout = 'im'+ callnumber +'_cluster'+cluster+'nm'
 
- os.system('casapy --nogui -c ' + SCRIPTPATH + '/casapy_cleanv4.py ' + ms + ' ' + imout + ' ' + 'None' +\
+ os.system('casapy --nogui -c ' + SCRIPTPATH + '/casapy_cleanv4.py ' + ms + ' ' + imout + ' ' + 'None' +
             ' ' + cleandepth1 + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + mscale)
 
 
  # make mask
  if nterms > 1:
-   os.system('python ' + SCRIPTPATH +'/makecleanmask_field.py --threshpix '+str(threshpix)+\
+   os.system('python ' + SCRIPTPATH +'/makecleanmask_field.py --threshpix '+str(threshpix)+
                ' --threshisl '+str(threshisl) +' --atrous_do '+ str(atrous_do) +' '   +imout +'.image.tt0')
  else:
-   os.system('python ' + SCRIPTPATH +'/makecleanmask_field.py --threshpix '+str(threshpix)+\
+   os.system('python ' + SCRIPTPATH +'/makecleanmask_field.py --threshpix '+str(threshpix)+
              ' --threshisl '+str(threshisl) +' --atrous_do '+ str(atrous_do) + ' '  + imout +'.image')
 
  mask_sources = imout+'.cleanmask'
@@ -1011,11 +1015,11 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
  
  if region != 'empty': # in that case we have a extra region file for the clean mask
    niter = niter*3 # increase niter, tune manually if needed
-   os.system('casapy --nogui -c ' + SCRIPTPATH +'/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask_sources+'field,'+region + \
+   os.system('casapy --nogui -c ' + SCRIPTPATH +'/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask_sources+'field,'+region +
              ' ' + cleandepth2 + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + mscale)
    
  else:
-   os.system('casapy --nogui -c '+ SCRIPTPATH + '/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask_sources+'field' + \
+   os.system('casapy --nogui -c '+ SCRIPTPATH + '/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask_sources+'field' +
               ' ' + cleandepth2 + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + mscale)
  
  # convert to FITS
@@ -1026,8 +1030,8 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
   
  return imout, mask_sources+'field', imsize
 
-def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous_do, imsize, inputmask, \
-                       mscale, region,cellsize,uvrange,wsclean,WSCleanRobust,BlankField, WScleanWBgroup, \
+def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous_do, imsize, inputmask,
+                       mscale, region,cellsize,uvrange,wsclean,WSCleanRobust,BlankField, WScleanWBgroup,
                        freqavg_fullfacet, numchanperms):
 
  if imsize is None:
@@ -1121,8 +1125,8 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms
       mask_image=imout+'-image.fits'
 
  # create the mask
- os.system('python ' + SCRIPTPATH + '/makecleanmask_field_wsclean.py --threshpix '+str(threshpix)+\
-           ' --threshisl '+str(threshisl) +' --atrous_do '+ str(atrous_do) + \
+ os.system('python ' + SCRIPTPATH + '/makecleanmask_field_wsclean.py --threshpix '+str(threshpix)+
+           ' --threshisl '+str(threshisl) +' --atrous_do '+ str(atrous_do) + 
            ' --casaregion  '+ region + ' '  + mask_image)
 
  mask_name  = mask_image + '.fitsmask'
@@ -1133,10 +1137,10 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms
 
  # Convert to casapy format and includ region file
  if region != 'empty':
-   os.system('casapy --nogui -c ' + SCRIPTPATH+'/fitsandregion2image.py '\
+   os.system('casapy --nogui -c ' + SCRIPTPATH+'/fitsandregion2image.py '
              + mask_name + ' ' + casa_mask + ' ' + region)
  else:
-   os.system('casapy --nogui -c ' + SCRIPTPATH+'/fitsandregion2image.py '\
+   os.system('casapy --nogui -c ' + SCRIPTPATH+'/fitsandregion2image.py '
              + mask_name + ' ' + casa_mask + ' ' + 'None')
 
  mask_sources = imout+'.casamask'
@@ -1177,7 +1181,7 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms
  os.system(cmd1+cmd2+cmd3)
 
  # convert from FITS to casapy format
- # os.system('casapy --nogui -c ' + SCRIPTPATH +'/fits2image.py ' + \
+ # os.system('casapy --nogui -c ' + SCRIPTPATH +'/fits2image.py ' + 
  #           imout + '-image.fits' + ' ' + imout +'.image')
 
 
@@ -1313,10 +1317,10 @@ if __name__ == "__main__":
     # so it is dangerous to let a user set this without being aware of this
     
     
-    source_info_rec = numpy.genfromtxt(peelsourceinfo, \
-                                       dtype="S50,S25,S5,S5,i8,i8,i8,i8,S2,S255,S255,S255,S5", \
-                                       names=["sourcelist","directions","atrous_do","mscale_field","imsizes",\
-                                              "cellsizetime_p","cellsizetime_a","fieldsize","dynamicrange",\
+    source_info_rec = numpy.genfromtxt(peelsourceinfo,
+                                       dtype="S50,S25,S5,S5,i8,i8,i8,i8,S2,S255,S255,S255,S5", 
+                                       names=["sourcelist","directions","atrous_do","mscale_field","imsizes",
+                                              "cellsizetime_p","cellsizetime_a","fieldsize","dynamicrange",
                                               "regionselfc","regionfield","peelskymodel","outliersource"],comments='#')
     
     sourcelist = source_info_rec["sourcelist"]
@@ -1500,7 +1504,7 @@ if __name__ == "__main__":
     
           ## average and phaseshift with NDPPP
           for ms_id, ms in enumerate(mslist):
-             parset = create_phaseshift_parset(ms, msavglist[ms_id], source, directions[source_id],\
+             parset = create_phaseshift_parset(ms, msavglist[ms_id], source, directions[source_id],
                                                imsizes[source_id], dynamicrange[source_id], StefCal)
              os.system('rm -rf ' + msavglist[ms_id])
              os.system('NDPPP ' + parset)
@@ -1533,14 +1537,14 @@ if __name__ == "__main__":
           logging.info('Region file: '+ str(regionselfc[source_id]))   
     
           if StefCal:
-            os.system('python ' + SCRIPTPATH + '/selfcalv20.py ' + inputmslist + ' ' + source + ' ' + atrous_do[source_id] + ' ' + str(imsizes[source_id]) + ' ' + \
-                      str(nterms) + ' ' + str(cellsizetime_a[source_id]) + ' ' + str(cellsizetime_p[source_id]) + ' ' + TEC + ' ' + clock + ' ' + \
-                      str(dynamicrange[source_id]) + ' ' + regionselfc[source_id] + ' ' + str(uvrange) + ' ' + str(peelskymodel[source_id]) + ' ' +\
+            os.system('python ' + SCRIPTPATH + '/selfcalv20.py ' + inputmslist + ' ' + source + ' ' + atrous_do[source_id] + ' ' + str(imsizes[source_id]) + ' ' + 
+                      str(nterms) + ' ' + str(cellsizetime_a[source_id]) + ' ' + str(cellsizetime_p[source_id]) + ' ' + TEC + ' ' + clock + ' ' + 
+                      str(dynamicrange[source_id]) + ' ' + regionselfc[source_id] + ' ' + str(uvrange) + ' ' + str(peelskymodel[source_id]) + ' ' +
                       str(cellsize))
     
           else:
-             os.system('python '+SCRIPTPATH+'/selfcalv19_ww_cep3.py ' + inputmslist + ' ' + source + ' ' + atrous_do[source_id] + ' ' + str(imsizes[source_id]) + ' ' + \
-                       str(nterms) + ' ' + str(cellsizetime_a[source_id]) + ' ' + str(cellsizetime_p[source_id]) + ' ' + TEC + ' ' + clock + ' ' + \
+             os.system('python '+SCRIPTPATH+'/selfcalv19_ww_cep3.py ' + inputmslist + ' ' + source + ' ' + atrous_do[source_id] + ' ' + str(imsizes[source_id]) + ' ' + 
+                       str(nterms) + ' ' + str(cellsizetime_a[source_id]) + ' ' + str(cellsizetime_p[source_id]) + ' ' + TEC + ' ' + clock + ' ' + 
                        str(dynamicrange[source_id]) + ' ' + regionselfc[source_id])
     
          
@@ -1558,7 +1562,7 @@ if __name__ == "__main__":
              if StefCal:
                  join_parmdb_stefcal(ms, parmdb_selfcal,parmdb_template, this_parmdb_master_out)
           else:  
-               join_parmdb(ms, parmdb_selfcal,parmdb_nondde, parmdb_template, this_parmdb_master_out, \
+               join_parmdb(ms, parmdb_selfcal,parmdb_nondde, parmdb_template, this_parmdb_master_out, 
                            TEC, clock)
              print 'joined SC and DDE parmdbs for {ms}'.format(ms=ms)
              parmdb_master_out  = "instrument_master_" + source   # reset because runbbs uses basename of ms
@@ -1655,10 +1659,10 @@ if __name__ == "__main__":
              for ms_id, ms in enumerate(mslistorig): # remake msavglist from mslistorig
                 msavglist.append(ms.split('.')[0] + '.' + source + '.ms.avgfield')      
     
-             imout,mask_out, imsizef = make_image_wsclean(msavglist, source, 'field0', 5, 3, nterms, 'True',\
-                                                      None, output_template_im +'.masktmp', \
-                                                      mscale_field[source_id],regionfield[source_id],\
-                                                      cellsize, uvrange,wsclean,WSCleanRobust,BlankField,\
+             imout,mask_out, imsizef = make_image_wsclean(msavglist, source, 'field0', 5, 3, nterms, 'True',
+                                                      None, output_template_im +'.masktmp',
+                                                      mscale_field[source_id],regionfield[source_id],
+                                                      cellsize, uvrange,wsclean,WSCleanRobust,BlankField,
                                                       WScleanWBgroup, freqavg_fullfacet, numchanperms)
              logging.info('Imaged full DDE facet: ' + source)
              if len(mslist) > WScleanWBgroup:
@@ -1703,14 +1707,14 @@ if __name__ == "__main__":
     
     
              # DO THE FFT
-             do_fieldFFT('allbands.concat.shifted_'+source+'.ms',imout, imsizef, cellsize, wsclean, \
+             do_fieldFFT('allbands.concat.shifted_'+source+'.ms',imout, imsizef, cellsize, wsclean, 
                          msavglist, WSCleanRobust, WScleanWBgroup, numchanperms)
              logging.info('FFTed model of DDE facet: ' + source)
     
              # SHIFT PHASE CENTER BACK TO ORIGINAL
              logging.info('Shift model back to pointing centre')
-             parset = create_phaseshift_parset_full('allbands.concat.shifted_'+source+'.ms',\
-                                                    'allbands.concat.shiftedback_'+source+'.ms',\
+             parset = create_phaseshift_parset_full('allbands.concat.shifted_'+source+'.ms',
+                                                    'allbands.concat.shiftedback_'+source+'.ms',
                                                      pointingcenter,'MODEL_DATA')
     
              os.system('NDPPP ' + parset) 
@@ -1726,10 +1730,10 @@ if __name__ == "__main__":
              freq_tab2.close()
     
              if (numchan1[0]) == (numchan2[0]*len(mslist)):
-               os.system('python ' + SCRIPTPATH + '/copy_over_columns.py '+ msliststr +\
+               os.system('python ' + SCRIPTPATH + '/copy_over_columns.py '+ msliststr +
                          ' ' +'allbands.concat.shiftedback_'+source+'.ms'+' ' + 'ADDED_DATA_SOURCE')
              else:
-               os.system('python ' + SCRIPTPATH + '/copy_over_columns.py '+ mslistorigstr +\
+               os.system('python ' + SCRIPTPATH + '/copy_over_columns.py '+ mslistorigstr +
                          ' ' +'allbands.concat.shiftedback_'+source+'.ms'+' ' + 'ADDED_DATA_SOURCE')
     
              os.system('rm -rf ' + 'allbands.concat.shiftedback_'+source+'.ms') # clean up
