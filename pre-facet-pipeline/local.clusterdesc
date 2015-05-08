@@ -1,0 +1,8 @@
+# Clusterdesc file to do parallel processing on a local machine.
+
+ClusterName = Local
+NNodes = 1
+Node0.NodeName = localhost
+Node0.NodeFileSys = localhost 
+Node0.NodeMountPoints = /
+
