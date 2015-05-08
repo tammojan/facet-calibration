@@ -850,24 +850,23 @@ def return_slist(imagename, skymodel, ref_source):
 
 def angsep(ra1deg, dec1deg, ra2deg, dec2deg):
     """Returns angular separation between two coordinates (all in degrees)"""
-    import math
 
-    ra1rad=ra1deg*math.pi/180.0
-    dec1rad=dec1deg*math.pi/180.0
-    ra2rad=ra2deg*math.pi/180.0
-    dec2rad=dec2deg*math.pi/180.0
+    ra1rad=ra1deg*numpy.pi/180.0
+    dec1rad=dec1deg*numpy.pi/180.0
+    ra2rad=ra2deg*numpy.pi/180.0
+    dec2rad=dec2deg*numpy.pi/180.0
 
     # calculate scalar product for determination
     # of angular separation
-    x=math.cos(ra1rad)*math.cos(dec1rad)*math.cos(ra2rad)*math.cos(dec2rad)
-    y=math.sin(ra1rad)*math.cos(dec1rad)*math.sin(ra2rad)*math.cos(dec2rad)
-    z=math.sin(dec1rad)*math.sin(dec2rad)
+    x=numpy.cos(ra1rad)*numpy.cos(dec1rad)*numpy.cos(ra2rad)*numpy.cos(dec2rad)
+    y=numpy.sin(ra1rad)*numpy.cos(dec1rad)*numpy.sin(ra2rad)*numpy.cos(dec2rad)
+    z=numpy.sin(dec1rad)*numpy.sin(dec2rad)
 
     if x+y+z >= 1: rad = 0
-    else: rad=math.acos(x+y+z)
+    else: rad=numpy.acos(x+y+z)
 
     # Angular separation
-    deg=rad*180/math.pi
+    deg=rad*180/numpy.pi
     return deg
     
 
