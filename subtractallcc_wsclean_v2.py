@@ -119,11 +119,11 @@ for ms in mslist:
      maskim.saveas(casa_mask)
 
  # include region file
-  if casaregion != '':
-     os.system('casapy --nologger -c '+SCRIPTPATH+'/fitsandregion2image.py '\
+     if casaregion != '':
+        os.system('casapy --nologger -c '+SCRIPTPATH+'/fitsandregion2image.py '\
              + mask_name + ' ' + casa_mask + ' ' + casaregion)
-  else:
-     os.system('casapy --nologger -c '+SCRIPTPATH+'/fitsandregion2image.py '\
+     else:
+        os.system('casapy --nologger -c '+SCRIPTPATH+'/fitsandregion2image.py '\
              + mask_name + ' ' + casa_mask + ' ' + 'None')
  
   imhigh = imhigh + 'withmask'
@@ -169,7 +169,7 @@ for ms in mslist:
  # ---------------------
  # subtract the cc
     parset = SCRIPTPATH+'/subtractall_highres_wsclean.parset'
-    cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name instrument '
+    cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name instrument_ap_smoothed '
     cmd = cmd + ms + ' ' + parset + ' ' + skymodel + ' >' + bbslog 
     print cmd
 
@@ -223,11 +223,11 @@ for ms in mslist:
      maskim.saveas(casa_mask)
 
  # include region file
-  if casaregion != '':
-     os.system('casapy --nologger -c '+SCRIPTPATH+'/fitsandregion2image.py '\
+     if casaregion != '':
+        os.system('casapy --nologger -c '+SCRIPTPATH+'/fitsandregion2image.py '\
              + mask_name + ' ' + casa_mask + ' ' + casaregion)
-  else:
-     os.system('casapy --nologger -c '+SCRIPTPATH+'/fitsandregion2image.py '\
+     else:
+        os.system('casapy --nologger -c '+SCRIPTPATH+'/fitsandregion2image.py '\
              + mask_name + ' ' + casa_mask + ' ' + 'None')
 
   imlow = imlow + 'withmask'
@@ -278,7 +278,7 @@ for ms in mslist:
      print 'BBS log exists, NOT doing low-res subtract (CAREFUL!)'
   else:
      parset = SCRIPTPATH+'/subtractall_lowres_wsclean.parset'
-     cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name instrument '
+     cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name instrument_ap_smoothed '
      cmd = cmd + ms + ' ' + parset + ' ' + skymodel + ' >' + bbslog 
      print cmd
      os.system(cmd)
