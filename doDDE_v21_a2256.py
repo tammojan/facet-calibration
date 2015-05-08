@@ -11,7 +11,7 @@ import pyrap.tables as pt
 import pyrap.images
 import pwd
 import logging
-pi       = numpy.pi
+from numpy import pi
 import sys
 from coordinates_mode import *
 import blank
