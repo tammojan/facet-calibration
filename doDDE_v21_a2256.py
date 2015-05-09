@@ -1544,7 +1544,7 @@ if __name__ == "__main__":
              this_parmdb_master_out  = ms+"/"+"instrument_master_" + source
              parmdb_template    = msavglist[ms_id]+"/"+"instrument_template"
              if StefCal:
-    	   join_parmdb_stefcal(ms, parmdb_selfcal,parmdb_template, this_parmdb_master_out)
+    	         join_parmdb_stefcal(ms, parmdb_selfcal,parmdb_template, this_parmdb_master_out)
     	 else:  
                join_parmdb(ms, parmdb_selfcal,parmdb_nondde, parmdb_template, this_parmdb_master_out, \
     	               TEC, clock)
