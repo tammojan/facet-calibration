@@ -1076,7 +1076,7 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms
             ' --threshisl '+str(threshisl) +' --atrous_do '+ str(atrous_do) + \
         ' --casaregion  '+ region + ' '  + mask_image)
 
-    mask_name  = mask_image + '.fitsmask'
+    mask_name  = imout + '.fitsmask'
     casa_mask  = imout + '.casamask'
     
     print "JSM DEBUG - mask_name", mask_name
