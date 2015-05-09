@@ -1079,6 +1079,7 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms
     mask_name  = mask_image + '.fitsmask'
     casa_mask  = imout + '.casamask'
     
+    print "JSM DEBUG - mask_name", mask_name
     maskim=pyrap.images.image(mask_name)
     maskim.saveas(casa_mask)
 
@@ -1569,7 +1570,13 @@ if __name__ == "__main__":
                 msavglist = []
                 for ms_id, ms in enumerate(mslistorig): # remake msavglist from mslistorig
                     msavglist.append(ms.split('.')[0] + '.' + source + '.ms.avgfield')      
-
+                
+                print "JSM DEBUG INFO: ", (msavglist, source, 
+                  'field0', 5, 3, nterms, 'True', None, 
+                  output_template_im +'.masktmp', mscale_field[source_id],
+                  regionfield[source_id], cellsize, uvrange, wsclean,
+                  WSCleanRobust, BlankField)
+                
                 imout,mask_out, imsizef = make_image_wsclean(msavglist, source, 
                   'field0', 5, 3, nterms, 'True', None, 
                   output_template_im +'.masktmp', mscale_field[source_id],
