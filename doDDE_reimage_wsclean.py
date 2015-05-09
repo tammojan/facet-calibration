@@ -1105,95 +1105,95 @@ def image_centre_from_mask(mask):
 
 def make_image_wsclean_nomask(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous_do, imsize, inputmask, mscale, region,cellsize,uvrange,wsclean,WSCleanRobust):
 
-   if imsize is None:
-      imsize = image_size_from_mask(inputmask)
+    if imsize is None:
+        imsize = image_size_from_mask(inputmask)
 
-   niter   = numpy.int(20000 * (numpy.sqrt(numpy.float(len(mslist)))))
-   cellsizeim = str(cellsize) +'arcsec'
- 
-   depth =  1e-3*0.7 / (numpy.sqrt(numpy.float(len(mslist))))
-   print 'Cleaning to a noise level of',depth,'Jy: niter is',niter
+    niter   = numpy.int(20000 * (numpy.sqrt(numpy.float(len(mslist)))))
+    cellsizeim = str(cellsize) +'arcsec'
 
-   cleandepth2 = str(depth)     #+ 'mJy'
-   
-   wideband = False
-   if len(mslist) > 5: 
-      wideband = True
+    depth =  1e-3*0.7 / (numpy.sqrt(numpy.float(len(mslist))))
+    print 'Cleaning to a noise level of',depth,'Jy: niter is',niter
 
-   ms = ''
-   for m in mslist:
-      ms = ms + ' ' + m
+    cleandepth2 = str(depth)     #+ 'mJy'
 
-   imout = 'im'+ callnumber +'_cluster'+cluster
+    wideband = False
+    if len(mslist) > 5:
+        wideband = True
 
-   os.system('rm -rf ' + imout + '-*') 
+    ms = ''
+    for m in mslist:
+        ms = ms + ' ' + m
+
+    imout = 'im'+ callnumber +'_cluster'+cluster
+
+    os.system('rm -rf ' + imout + '-*')
 
 
-   outms      = 'field-'+cluster+'.ms'
-   parsetname = 'concatforwsclean-'+cluster+'.parset'
- 
-   msinstr = ""
- 
-   for ms_id, ms in enumerate(mslist):
-      msinstr = msinstr + "'" + ms + "'"
-      if ms_id < len(mslist)-1:
-         msinstr = msinstr + ", "
-   os.system('rm -rf ' + parsetname)
-   f=open(parsetname, 'w')
-   f.write('msin = [%s]\n' % msinstr) 
-   f.write('msin.datacolumn = DATA\n')
-   f.write('msin.missingdata=True\n')
-   f.write('msin.orderms=False\n')
-   f.write('msout=%s\n' % outms)
-   f.write('steps=[]\n')
-   f.close()
-   os.system('rm -rf ' + outms)
-   os.system('NDPPP ' + parsetname)
+    outms      = 'field-'+cluster+'.ms'
+    parsetname = 'concatforwsclean-'+cluster+'.parset'
 
-   if wideband:
-      channelsout =  1 # there is a factor of 5 averaging
-      cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
-      cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + '-cleanborder 0 -threshold '+ cleandepth2 + ' '
-      cmd3 = '-minuv-l '+ str(uvrange) \
-             +' -mgain 0.75 -fitbeam -datacolumn DATA -no-update-model-required -joinchannels -channelsout ' +\
-             str(channelsout) + ' '  + outms
-   else:  
-      cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
-      cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' -cleanborder 0 -threshold '+ cleandepth2 + ' '
-      cmd3 = '-minuv-l '+ str(uvrange) +' -mgain 0.75 -fitbeam -datacolumn DATA -no-update-model-required ' + outms
+    msinstr = ""
 
-   print cmd1+cmd2+cmd3
-   os.system(cmd1+cmd2+cmd3)
+    for ms_id, ms in enumerate(mslist):
+        msinstr = msinstr + "'" + ms + "'"
+        if ms_id < len(mslist)-1:
+            msinstr = msinstr + ", "
+    os.system('rm -rf ' + parsetname)
+    f=open(parsetname, 'w')
+    f.write('msin = [%s]\n' % msinstr)
+    f.write('msin.datacolumn = DATA\n')
+    f.write('msin.missingdata=True\n')
+    f.write('msin.orderms=False\n')
+    f.write('msout=%s\n' % outms)
+    f.write('steps=[]\n')
+    f.close()
+    os.system('rm -rf ' + outms)
+    os.system('NDPPP ' + parsetname)
 
-   finalim=pyrap.images.image(imout+'-image.fits')
-   finalim.saveas(imout +'.image')
+    if wideband:
+        channelsout =  1 # there is a factor of 5 averaging
+        cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
+        cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + '-cleanborder 0 -threshold '+ cleandepth2 + ' '
+        cmd3 = '-minuv-l '+ str(uvrange) \
+               +' -mgain 0.75 -fitbeam -datacolumn DATA -no-update-model-required -joinchannels -channelsout ' +\
+               str(channelsout) + ' '  + outms
+    else:
+        cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
+        cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' -cleanborder 0 -threshold '+ cleandepth2 + ' '
+        cmd3 = '-minuv-l '+ str(uvrange) +' -mgain 0.75 -fitbeam -datacolumn DATA -no-update-model-required ' + outms
 
-   return imout, None, imsize
+    print cmd1+cmd2+cmd3
+    os.system(cmd1+cmd2+cmd3)
+
+    finalim=pyrap.images.image(imout+'-image.fits')
+    finalim.saveas(imout +'.image')
+
+    return imout, None, imsize
 
 
 def do_fieldFFT(ms,image,imsize,cellsize,wsclean,mslist,WSCleanRobust):
-   niter   = 1
-   cellsizeim = str(cellsize)+ 'arcsec'
+    niter   = 1
+    cellsizeim = str(cellsize)+ 'arcsec'
 
-   # note no uvrange here!
-   # also no re-order
- 
-   wideband = False
-   if len(mslist) > 5: 
-      wideband = True
-   if wideband:
-      channelsout =  5 # DO NOT CHANGE !! (in make_image_wsclean_wideband there is averaging)
-      cmd1 = wsclean + ' -predict -name ' + image + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
-      cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' '
-      cmd3 = '-cleanborder 0 -mgain 0.85 -fitbeam -datacolumn DATA '+ '-joinchannels -channelsout ' + str(channelsout) + ' ' + ms
-   else:
-      cmd1 = wsclean + ' -predict -name ' + image + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
-      cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' '
-      cmd3 = '-cleanborder 0 -mgain 0.85 -fitbeam -datacolumn DATA '+ ' ' + ms
- 
-   print cmd1+cmd2+cmd3
-   os.system(cmd1+cmd2+cmd3)
-   return
+    # note no uvrange here!
+    # also no re-order
+
+    wideband = False
+    if len(mslist) > 5:
+        wideband = True
+    if wideband:
+        channelsout =  5 # DO NOT CHANGE !! (in make_image_wsclean_wideband there is averaging)
+        cmd1 = wsclean + ' -predict -name ' + image + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
+        cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' '
+        cmd3 = '-cleanborder 0 -mgain 0.85 -fitbeam -datacolumn DATA '+ '-joinchannels -channelsout ' + str(channelsout) + ' ' + ms
+    else:
+        cmd1 = wsclean + ' -predict -name ' + image + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
+        cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' '
+        cmd3 = '-cleanborder 0 -mgain 0.85 -fitbeam -datacolumn DATA '+ ' ' + ms
+
+    print cmd1+cmd2+cmd3
+    os.system(cmd1+cmd2+cmd3)
+    return
 
 def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous_do, imsize, inputmask, mscale, region,cellsize,uvrange,wsclean,WSCleanRobust,BlankField):
 
@@ -1202,48 +1202,48 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms
 
     niter   = numpy.int(5000 * (numpy.sqrt(numpy.float(len(mslist)))))
     cellsizeim = str(cellsize) +'arcsec'
- 
+
     depth =  1e-3*0.7 / (numpy.sqrt(numpy.float(len(mslist))))
     cleandepth1 = str(depth*1.5) #+ 'mJy'
     cleandepth2 = str(depth)     #+ 'mJy'
 
     wideband = False
-    if len(mslist) > 5: 
+    if len(mslist) > 5:
         wideband = True
-   
+
     # speed up the imaging if possible by reducing image size within the mask region
     newsize = find_newsize(inputmask)
     if newsize < imsize: # ok so we can use a smaller image size then
-   #make a new template
+    #make a new template
         os.system('casapy --nologger -c ' + SCRIPTPATH + '/make_empty_image.py '+ str(mslist[0]) + ' ' + inputmask+'2' + ' ' + str(newsize) + ' ' +'1.5arcsec')
         os.system('casapy --nologger -c ' + SCRIPTPATH + '/regrid_image.py '    + inputmask      + ' ' + inputmask+'2' + ' ' + inputmask+'3')
- 
-   # reset the imsize and the mask
+
+    # reset the imsize and the mask
         imsize    = newsize
         inputmask = inputmask+'3'
- 
- 
+
+
     ms = ''
     for m in mslist:
         ms = ms + ' ' + m
 
     imout = 'im'+ callnumber +'_cluster'+cluster+'nm'
 
-    os.system('rm -rf ' + imout + '-*') 
+    os.system('rm -rf ' + imout + '-*')
 
  # NDPPP concat
     outms      = 'field.ms'
     parsetname = 'concatforwsclean.parset'
- 
+
     msinstr = ""
- 
+
     for ms_id, ms in enumerate(mslist):
         msinstr = msinstr + "'" + ms + "'"
         if ms_id < len(mslist)-1:
             msinstr = msinstr + ", "
     os.system('rm -rf ' + parsetname)
     f=open(parsetname, 'w')
-    f.write('msin = [%s]\n' % msinstr) 
+    f.write('msin = [%s]\n' % msinstr)
     f.write('msin.datacolumn = DATA\n')
     f.write('msin.missingdata=True\n')
     f.write('msin.orderms=False\n')
@@ -1259,8 +1259,8 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms
         cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + '-cleanborder 0 -threshold '+ cleandepth1 + ' '
         cmd3 = '-minuv-l '+ str(uvrange) \
           +' -mgain 0.75 -fitbeam -datacolumn DATA -no-update-model-required -joinchannels -channelsout ' +\
-	  str(channelsout) + ' '  + outms
-    else:  
+          str(channelsout) + ' '  + outms
+    else:
         cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
         cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' -cleanborder 0 -threshold '+ cleandepth1 + ' '
         cmd3 = '-minuv-l '+ str(uvrange) +' -mgain 0.75 -fitbeam -datacolumn DATA -no-update-model-required ' + outms
@@ -1276,11 +1276,11 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms
  # create the mask
     os.system('python ' + SCRIPTPATH + '/makecleanmask_field_wsclean.py --threshpix '+str(threshpix)+\
            ' --threshisl '+str(threshisl) +' --atrous_do '+ str(atrous_do) + \
- 	   ' --casaregion  '+ region + ' '  + mask_image)
+           ' --casaregion  '+ region + ' '  + mask_image)
 
     mask_name  = mask_image + '.fitsmask'
     casa_mask  = imout + '.casamask'
- 
+
     maskim=pyrap.images.image(mask_name)
     maskim.saveas(casa_mask)
 
@@ -1299,18 +1299,18 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms
     # Merge the two masks and blank outside template field
     img    = pyrap.images.image(mask_sources+'field')
     pixels = numpy.copy(img.getdata())
- 
+
     img2    = pyrap.images.image(inputmask)
     pixels2 = numpy.copy(img2.getdata())
- 
+
     idx = numpy.where(pixels2 == 0.0)
     pixels[idx] = 0.0
     img.putdata(pixels)
     img.unlock()
     del img
     del img2
- 
- 
+
+
     imout = 'im'+ callnumber +'_cluster'+cluster
     os.system('rm -rf ' + imout + '-*')
     niter = niter*5 # increase niter, tune manually if needed, try to reach threshold
@@ -1325,7 +1325,7 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms
         cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' -cleanborder 0 -threshold '+ cleandepth2 + ' '
         cmd3 = '-minuv-l '+ str(uvrange) +' -mgain 0.6 -fitbeam -datacolumn DATA -no-update-model-required -casamask ' + \
           mask_sources+'field' + ' '+ outms
- 
+
     print cmd1+cmd2+cmd3
     os.system(cmd1+cmd2+cmd3)
 
@@ -1343,253 +1343,253 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms
 
 if __name__=='__main__':
 
-   logging.basicConfig(filename='dde_reimage.log',level=logging.DEBUG, format='%(asctime)s -  %(message)s', datefmt='%Y-%d-%m %H:%M:%S')
-
-   if len(sys.argv)<2:
-      raise Exception('Give the path to the setup code for the facet')
+    logging.basicConfig(filename='dde_reimage.log',level=logging.DEBUG, format='%(asctime)s -  %(message)s', datefmt='%Y-%d-%m %H:%M:%S')
+
+    if len(sys.argv)<2:
+        raise Exception('Give the path to the setup code for the facet')
 
-   username = pwd.getpwuid(os.getuid())[0]
-   print 'Using',sys.argv[1],'as the setup code'
-   execfile(sys.argv[1])
-   print 'script path is',SCRIPTPATH
-   try:
-       WSCleanRobust
-   except NameError:
-       WSCleanRobust=-0.25 # default preserves old value
-       print 'No WSClean robust set, defaulting to',WSCleanRobust
+    username = pwd.getpwuid(os.getuid())[0]
+    print 'Using',sys.argv[1],'as the setup code'
+    execfile(sys.argv[1])
+    print 'script path is',SCRIPTPATH
+    try:
+        WSCleanRobust
+    except NameError:
+        WSCleanRobust=-0.25 # default preserves old value
+        print 'No WSClean robust set, defaulting to',WSCleanRobust
 
-   try:
-       BlankField
-   except NameError:
-       BlankField=False
-       print 'BlankField not set, defaulting to',BlankField
+    try:
+        BlankField
+    except NameError:
+        BlankField=False
+        print 'BlankField not set, defaulting to',BlankField
 
-   try:
-       NoMask
-   except NameError:
-       NoMask=False
-       print 'NoMask not set, defaulting to',NoMask
+    try:
+        NoMask
+    except NameError:
+        NoMask=False
+        print 'NoMask not set, defaulting to',NoMask
 
-   source_info_rec = numpy.genfromtxt(peelsourceinfo, dtype="S10,S25,S5,S5,i8,i8,i8,i8,S2,S10,S10", names=["sourcelist","directions","atrous_do","mscale_field","imsizes","cellsizetime_p","cellsizetime_a","fieldsize","dynamicrange","regionselfc","regionfield"])
+    source_info_rec = numpy.genfromtxt(peelsourceinfo, dtype="S10,S25,S5,S5,i8,i8,i8,i8,S2,S10,S10", names=["sourcelist","directions","atrous_do","mscale_field","imsizes","cellsizetime_p","cellsizetime_a","fieldsize","dynamicrange","regionselfc","regionfield"])
 
-   sourcelist = source_info_rec["sourcelist"]
-   directions = source_info_rec["directions"]
-   atrous_do = source_info_rec["atrous_do"]
-   mscale_field = source_info_rec["mscale_field"]
-   imsizes = source_info_rec["imsizes"]
-   cellsizetime_p = source_info_rec["cellsizetime_p"]
-   cellsizetime_a = source_info_rec["cellsizetime_a"]
-   fieldsize = source_info_rec["fieldsize"]
-   dynamicrange = source_info_rec["dynamicrange"]
-   regionselfc = source_info_rec["regionselfc"]
-   regionfield = source_info_rec["regionfield"]
+    sourcelist = source_info_rec["sourcelist"]
+    directions = source_info_rec["directions"]
+    atrous_do = source_info_rec["atrous_do"]
+    mscale_field = source_info_rec["mscale_field"]
+    imsizes = source_info_rec["imsizes"]
+    cellsizetime_p = source_info_rec["cellsizetime_p"]
+    cellsizetime_a = source_info_rec["cellsizetime_a"]
+    fieldsize = source_info_rec["fieldsize"]
+    dynamicrange = source_info_rec["dynamicrange"]
+    regionselfc = source_info_rec["regionselfc"]
+    regionfield = source_info_rec["regionfield"]
 
-   sourcelist = sourcelist.tolist()
+    sourcelist = sourcelist.tolist()
 
 
 
-   mslistorig = ["{name:s}_SB{b1:03d}-{b2:03d}.{res:s}.ms".format(name=NAME,res=RES,b1=b,b2=b+9) for b in BANDS]
-   mslistorigstr = ' '.join(mslistorig)
+    mslistorig = ["{name:s}_SB{b1:03d}-{b2:03d}.{res:s}.ms".format(name=NAME,res=RES,b1=b,b2=b+9) for b in BANDS]
+    mslistorigstr = ' '.join(mslistorig)
 
-   mslist= [ms for ms in mslistorig if  os.path.isdir(ms)]  # filter out datasets that do not exist (takes also care of freq.gaps in field subtract))
+    mslist= [ms for ms in mslistorig if  os.path.isdir(ms)]  # filter out datasets that do not exist (takes also care of freq.gaps in field subtract))
 
-   msliststr = ' '.join(mslist)
+    msliststr = ' '.join(mslist)
 
 
 
-   tt = pt.table(mslist[0] + '/FIELD')
-   pointingcenter = tt.getcol('REFERENCE_DIR')[0][0]
-   pointingcenter = str(pointingcenter[0]) +'rad,' + str(pointingcenter[1])+'rad'
-   print pointingcenter
-   tt.close()
+    tt = pt.table(mslist[0] + '/FIELD')
+    pointingcenter = tt.getcol('REFERENCE_DIR')[0][0]
+    pointingcenter = str(pointingcenter[0]) +'rad,' + str(pointingcenter[1])+'rad'
+    print pointingcenter
+    tt.close()
 
-   if len(mslist) == 1:
-       TEC    = "False" # no TEC fitting for one (channel) dataset
-       nterms = 1
-   if len(mslist) > 16:
-       nterms = 2
-   if len(mslist) > 40:
-       nterms = 3
-   if len(mslist) < 20:
-       clock = "False"
+    if len(mslist) == 1:
+        TEC    = "False" # no TEC fitting for one (channel) dataset
+        nterms = 1
+    if len(mslist) > 16:
+        nterms = 2
+    if len(mslist) > 40:
+        nterms = 3
+    if len(mslist) < 20:
+        clock = "False"
 
 
-   ##################################
+    ##################################
 
-   logging.info('\n')
-   logging.info('#######################################################################\n')
-   logging.info('Running DDE-reimage')
-   logging.info('Doing sources: '+','.join(do_sources))
-   logging.info('Using MSlist: '+msliststr)
+    logging.info('\n')
+    logging.info('#######################################################################\n')
+    logging.info('Running DDE-reimage')
+    logging.info('Doing sources: '+','.join(do_sources))
+    logging.info('Using MSlist: '+msliststr)
 
-   for source in do_sources:
-       ## I1
+    for source in do_sources:
+        ## I1
 
-       source_id = sourcelist.index(source)
+        source_id = sourcelist.index(source)
 
-       print 'Re-imaging facet:', source
-       logging.info('')
-       logging.info('Re-imaging facet: '+ source )
+        print 'Re-imaging facet:', source
+        logging.info('')
+        logging.info('Re-imaging facet: '+ source )
 
-       logging.info("removing any existing facet field1 images")
-       os.system("rm -rf imfield1*_cluster"+source+"*")
-       logging.info("removing any existing facet field1 imaging average MS")
-       os.system("rm -rf *."+source+".ms.avgfield1*")
+        logging.info("removing any existing facet field1 images")
+        os.system("rm -rf imfield1*_cluster"+source+"*")
+        logging.info("removing any existing facet field1 imaging average MS")
+        os.system("rm -rf *."+source+".ms.avgfield1*")
 
-       #check if allbands.concat.shifted_'+source+'.ms is present
-       if os.path.isdir('allbands.concat.shifted_'+source+'.ms'):
-           logging.info('allbands.concat.shifted_'+source+'.ms already exists')
-           logging.info('...but continuing because we are re-imaging')
+        #check if allbands.concat.shifted_'+source+'.ms is present
+        if os.path.isdir('allbands.concat.shifted_'+source+'.ms'):
+            logging.info('allbands.concat.shifted_'+source+'.ms already exists')
+            logging.info('...but continuing because we are re-imaging')
 
-       if not os.path.isdir('allbands.concat.ms'):
-           print 'allbands.concat.ms does not exist'
-           raise Exception('make measurement set and then restart')
+        if not os.path.isdir('allbands.concat.ms'):
+            print 'allbands.concat.ms does not exist'
+            raise Exception('make measurement set and then restart')
 
 
-       dummyskymodel   = SCRIPTPATH+'/dummy.skymodel' ## update every time again with new source, not used, just a dummy for correct
+        dummyskymodel   = SCRIPTPATH+'/dummy.skymodel' ## update every time again with new source, not used, just a dummy for correct
 
-       msfieldavgfacetlist1 = []
-       for ms_id, ms in enumerate(mslist):
-           msfieldavgfacetlist1.append(ms.split('.')[0] + '.' + source + '.ms.avgfield1.facetdir')
+        msfieldavgfacetlist1 = []
+        for ms_id, ms in enumerate(mslist):
+            msfieldavgfacetlist1.append(ms.split('.')[0] + '.' + source + '.ms.avgfield1.facetdir')
 
-       # combined SC and DDE solutions (basename - for use in runbbs - uses ms/basename)
-       parmdb_master_out  = "instrument_master_" + source   # reset because runbbs uses basename of ms
+        # combined SC and DDE solutions (basename - for use in runbbs - uses ms/basename)
+        parmdb_master_out  = "instrument_master_" + source   # reset because runbbs uses basename of ms
 
-       # set image mask region
-       output_template_im = 'templatemask_' + source +'.masktmp'
-       if not os.path.exists(output_template_im):
-           raise  Exception('facet mask missing: '+output_template_im)
+        # set image mask region
+        output_template_im = 'templatemask_' + source +'.masktmp'
+        if not os.path.exists(output_template_im):
+            raise  Exception('facet mask missing: '+output_template_im)
 
-       # set directions #
-       #selfcaldir = directions[source_id]
-       facetdir = image_centre_from_mask(output_template_im)
-       facetsize = image_size_from_mask(output_template_im)
+        # set directions #
+        #selfcaldir = directions[source_id]
+        facetdir = image_centre_from_mask(output_template_im)
+        facetsize = image_size_from_mask(output_template_im)
 
-       #logging.info("Selfcal direction: "+selfcaldir)
-       logging.info("Facet direction: "+facetdir)
-       logging.info("facetmask: "+str(facetsize))
+        #logging.info("Selfcal direction: "+selfcaldir)
+        logging.info("Facet direction: "+facetdir)
+        logging.info("facetmask: "+str(facetsize))
 
-       #continue
+        #continue
 
-       ## NOTE: addback now needs to be done as subtract in reverse... with FT and allbands concat
+        ## NOTE: addback now needs to be done as subtract in reverse... with FT and allbands concat
 
 
-       ## STEP 1: check  ##
-       # if we didn't keep the allbands.concat.shifted
-       if not os.path.exists('allbands.concat.shifted_'+source+'.ms'):
-           parset = create_phaseshift_parset_full('allbands.concat.ms', 'allbands.concat.shifted_'+source+'.ms', facetdir,'DATA')
+        ## STEP 1: check  ##
+        # if we didn't keep the allbands.concat.shifted
+        if not os.path.exists('allbands.concat.shifted_'+source+'.ms'):
+            parset = create_phaseshift_parset_full('allbands.concat.ms', 'allbands.concat.shifted_'+source+'.ms', facetdir,'DATA')
 
-           ndppplog = parset.replace('.parset','.log')
-           #ndpppcmd = 'NDPPP ' + parset + ' > '+ ndppplog + ' 2>&1'
-           #ndppprc = os.system(ndpppcmd)
-           ndpppcmd = 'NDPPP ' + parset + ' > '+ ndppplog + ' 2>&1'
-           print ndpppcmd
-           with open(ndppplog,'w') as f:
-               ndppp_proc = Popen(ndpppcmd.split(), stdout=f, stderr=STDOUT ).wait()   # DONT run in background
-           if ndppp_proc != 0:
-               raise Exception("NDPPP failed: "+ndpppcmd+' > '+ndppplog)
+            ndppplog = parset.replace('.parset','.log')
+            #ndpppcmd = 'NDPPP ' + parset + ' > '+ ndppplog + ' 2>&1'
+            #ndppprc = os.system(ndpppcmd)
+            ndpppcmd = 'NDPPP ' + parset + ' > '+ ndppplog + ' 2>&1'
+            print ndpppcmd
+            with open(ndppplog,'w') as f:
+                ndppp_proc = Popen(ndpppcmd.split(), stdout=f, stderr=STDOUT ).wait()   # DONT run in background
+            if ndppp_proc != 0:
+                raise Exception("NDPPP failed: "+ndpppcmd+' > '+ndppplog)
 
 
-       ### STEP 3: prep for facet ##
+        ### STEP 3: prep for facet ##
 
-       # image model to add back
-       imsizef = image_size_from_mask(output_template_im)
-       imout = 'im'+ 'field0' +'_cluster'+source
+        # image model to add back
+        imsizef = image_size_from_mask(output_template_im)
+        imout = 'im'+ 'field0' +'_cluster'+source
 
-       if not os.path.exists(imout+'-model.fits'):
-           raise Exception(imout+'-model.fits is missing')
+        if not os.path.exists(imout+'-model.fits'):
+            raise Exception(imout+'-model.fits is missing')
 
 
-       logging.info('running ft: '+imout)
+        logging.info('running ft: '+imout)
 
 
-       # DO THE FFT
-       do_fieldFFT('allbands.concat.shifted_'+source+'.ms',imout, imsizef, cellsize, wsclean, mslist, WSCleanRobust)
-       logging.info('FFTed model of DDE facet: ' + source)
+        # DO THE FFT
+        do_fieldFFT('allbands.concat.shifted_'+source+'.ms',imout, imsizef, cellsize, wsclean, mslist, WSCleanRobust)
+        logging.info('FFTed model of DDE facet: ' + source)
 
-       # SHIFT PHASE CENTER BACK TO ORIGINAL
-       parset = create_phaseshift_parset_full('allbands.concat.shifted_'+source+'.ms', 'allbands.concat.shiftedback_'+source+'.ms',\
-                                   pointingcenter,'MODEL_DATA')
+        # SHIFT PHASE CENTER BACK TO ORIGINAL
+        parset = create_phaseshift_parset_full('allbands.concat.shifted_'+source+'.ms', 'allbands.concat.shiftedback_'+source+'.ms',\
+                                    pointingcenter,'MODEL_DATA')
 
-       ndppplog = parset.replace('.parset','.log')
-       ndpppcmd = 'NDPPP ' + parset  + ' > '+ ndppplog + ' 2>&1 '
-       print ndpppcmd
-       os.system(ndpppcmd)
-       os.system('rm -rf allbands.concat.shifted_'+source+'.ms') # clean up
+        ndppplog = parset.replace('.parset','.log')
+        ndpppcmd = 'NDPPP ' + parset  + ' > '+ ndppplog + ' 2>&1 '
+        print ndpppcmd
+        os.system(ndpppcmd)
+        os.system('rm -rf allbands.concat.shifted_'+source+'.ms') # clean up
 
-       # Add MODEL_DATA (allbands.concat.shiftedback_'+source+'.ms) into ADDED_DATA_SOURCE from mslist
+        # Add MODEL_DATA (allbands.concat.shiftedback_'+source+'.ms) into ADDED_DATA_SOURCE from mslist
 
-       freq_tab1= pt.table('allbands.concat.ms' + '/SPECTRAL_WINDOW')
-       numchan1    = freq_tab1.getcol('NUM_CHAN')
-       freq_tab2= pt.table(mslist[0] + '/SPECTRAL_WINDOW')
-       numchan2    = freq_tab2.getcol('NUM_CHAN')
-       freq_tab1.close()
-       freq_tab2.close()
+        freq_tab1= pt.table('allbands.concat.ms' + '/SPECTRAL_WINDOW')
+        numchan1    = freq_tab1.getcol('NUM_CHAN')
+        freq_tab2= pt.table(mslist[0] + '/SPECTRAL_WINDOW')
+        numchan2    = freq_tab2.getcol('NUM_CHAN')
+        freq_tab1.close()
+        freq_tab2.close()
 
-       if (numchan1[0]) == (numchan2[0]*len(mslist)):
-           os.system('python '+SCRIPTPATH+'/copy_over_columns.py '+ msliststr +\
-                   ' ' +'allbands.concat.shiftedback_'+source+'.ms'+' ' + 'ADDED_DATA_SOURCE')
-       else:
-           os.system('python '+SCRIPTPATH+'/copy_over_columns.py '+ mslistorigstr +\
-                   ' ' +'allbands.concat.shiftedback_'+source+'.ms'+' ' + 'ADDED_DATA_SOURCE')
+        if (numchan1[0]) == (numchan2[0]*len(mslist)):
+            os.system('python '+SCRIPTPATH+'/copy_over_columns.py '+ msliststr +\
+                    ' ' +'allbands.concat.shiftedback_'+source+'.ms'+' ' + 'ADDED_DATA_SOURCE')
+        else:
+            os.system('python '+SCRIPTPATH+'/copy_over_columns.py '+ mslistorigstr +\
+                    ' ' +'allbands.concat.shiftedback_'+source+'.ms'+' ' + 'ADDED_DATA_SOURCE')
 
 
-       os.system('rm -rf allbands.concat.shiftedback_'+source+'.ms') # clean up
+        os.system('rm -rf allbands.concat.shiftedback_'+source+'.ms') # clean up
 
-       addfieldparset   = create_add_parset_field('MODEL_DATA', TEC, clock) # SUBTRACTED_DATA_ALL + ADDED_DATA_SOURCE = MODEL_DATA
+        addfieldparset   = create_add_parset_field('MODEL_DATA', TEC, clock) # SUBTRACTED_DATA_ALL + ADDED_DATA_SOURCE = MODEL_DATA
 
 
-       logging.info('adding sources with solutions')
-       runbbs(mslist, dummyskymodel, addfieldparset, parmdb_master_out+'_norm', False) # replace-sourcedb not needed since we use "@column"
+        logging.info('adding sources with solutions')
+        runbbs(mslist, dummyskymodel, addfieldparset, parmdb_master_out+'_norm', False) # replace-sourcedb not needed since we use "@column"
 
 
 
-       logging.info('correcting with solutions')
-       ### STEP 3: prep for facet ##
-       # apply master solutions, put in CORRECTED_DATA
-       if TEC == "True":
-           if clock == "True":
-               runbbs(mslist, dummyskymodel, SCRIPTPATH+'/correctfield2+TEC+clock.parset',parmdb_master_out+'_norm', False)
-           else:
-               runbbs(mslist, dummyskymodel, SCRIPTPATH+'/correctfield2+TEC.parset',parmdb_master_out+'_norm', False)
-       else:
-           runbbs(mslist, dummyskymodel, SCRIPTPATH+'/correctfield2.parset',parmdb_master_out+'_norm', False)
+        logging.info('correcting with solutions')
+        ### STEP 3: prep for facet ##
+        # apply master solutions, put in CORRECTED_DATA
+        if TEC == "True":
+            if clock == "True":
+                runbbs(mslist, dummyskymodel, SCRIPTPATH+'/correctfield2+TEC+clock.parset',parmdb_master_out+'_norm', False)
+            else:
+                runbbs(mslist, dummyskymodel, SCRIPTPATH+'/correctfield2+TEC.parset',parmdb_master_out+'_norm', False)
+        else:
+            runbbs(mslist, dummyskymodel, SCRIPTPATH+'/correctfield2.parset',parmdb_master_out+'_norm', False)
 
 
-       ###########################################################################
-       # NDPPP phase shift, less averaging (NEW: run 2 in parallel)
-       # CHANGE (v7) phaseshift to sc dir and avg
-       # then phase shift to facetdir
-       for ms_id, ms in enumerate(mslist):
-           phaseshiftfieldparset = create_phaseshift_parset_field_avg(ms, msfieldavgfacetlist1[ms_id], source, facetdir)
+        ###########################################################################
+        # NDPPP phase shift, less averaging (NEW: run 2 in parallel)
+        # CHANGE (v7) phaseshift to sc dir and avg
+        # then phase shift to facetdir
+        for ms_id, ms in enumerate(mslist):
+            phaseshiftfieldparset = create_phaseshift_parset_field_avg(ms, msfieldavgfacetlist1[ms_id], source, facetdir)
 
-           cmd = "ps -u " + username + " | grep NDPPP | wc -l"
-           output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
+            cmd = "ps -u " + username + " | grep NDPPP | wc -l"
+            output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
 
-           while output > 1 : # max 2 processes (max 2, instead of 3, because we also phaseshift)
-               time.sleep(10)
-               output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
-               #pid = (Popen('pidof NDPPP', shell=True, stdout=PIPE).communicate()[0])
-               #pid_list = pid.split(' ')
-           # START NDPPP BECAUSE LESS/EQ 2 PROCESSES ARE RUNNING
-           ndppplog = phaseshiftfieldparset.replace('.parset','.log')
-           ndpppcmd = 'NDPPP ' + phaseshiftfieldparset + ' > '+ ndppplog + ' 2>&1 &'
-           print ndpppcmd
-           os.system(ndpppcmd)
+            while output > 1 : # max 2 processes (max 2, instead of 3, because we also phaseshift)
+                time.sleep(10)
+                output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
+                #pid = (Popen('pidof NDPPP', shell=True, stdout=PIPE).communicate()[0])
+                #pid_list = pid.split(' ')
+            # START NDPPP BECAUSE LESS/EQ 2 PROCESSES ARE RUNNING
+            ndppplog = phaseshiftfieldparset.replace('.parset','.log')
+            ndpppcmd = 'NDPPP ' + phaseshiftfieldparset + ' > '+ ndppplog + ' 2>&1 &'
+            print ndpppcmd
+            os.system(ndpppcmd)
 
-       # Check if all NDPPP processes are finished
-       output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
-       while output > 0 :
-           time.sleep(10)
-           output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
-           #pid = (Popen('pidof NDPPP', shell=True, stdout=PIPE).communicate()[0])
-           #pid_list = pid.split(' ')
+        # Check if all NDPPP processes are finished
+        output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
+        while output > 0 :
+            time.sleep(10)
+            output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
+            #pid = (Popen('pidof NDPPP', shell=True, stdout=PIPE).communicate()[0])
+            #pid_list = pid.split(' ')
 
 
-       logging.info('making image')
-       ### STEP 4a: do facet ##
-       # make large field image
-       if NoMask:
-           make_image_wsclean_nomask(msfieldavgfacetlist1, source, 'field1', 5, 3, nterms, 'True', None, output_template_im, mscale_field[source_id],regionfield[source_id],cellsize, uvrange,wsclean,WSCleanRobust)
-       else:
-           make_image_wsclean(msfieldavgfacetlist1, source, 'field1', 5, 3, nterms, 'True', None, output_template_im, mscale_field[source_id],regionfield[source_id],cellsize, uvrange,wsclean,WSCleanRobust,BlankField)
+        logging.info('making image')
+        ### STEP 4a: do facet ##
+        # make large field image
+        if NoMask:
+            make_image_wsclean_nomask(msfieldavgfacetlist1, source, 'field1', 5, 3, nterms, 'True', None, output_template_im, mscale_field[source_id],regionfield[source_id],cellsize, uvrange,wsclean,WSCleanRobust)
+        else:
+            make_image_wsclean(msfieldavgfacetlist1, source, 'field1', 5, 3, nterms, 'True', None, output_template_im, mscale_field[source_id],regionfield[source_id],cellsize, uvrange,wsclean,WSCleanRobust,BlankField)

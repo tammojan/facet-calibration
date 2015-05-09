@@ -13,8 +13,8 @@ from subprocess import Popen, PIPE, STDOUT
 import pwd
 #import logging
 #logging.basicConfig(filename='dde.log',level=logging.DEBUG, format='%(asctime)s -  %(message)s', datefmt='%Y-%d-%m %H:%M:%S')
-    
-    
+
+
 
 pi       = numpy.pi
 username = pwd.getpwuid(os.getuid())[0]
@@ -36,21 +36,21 @@ fk5
     with open(regfile,'w') as f:
         f.write(s)
         for i in range(len(source_info_rec)):
-            
+
             ddir = source_info_rec['directions'][i].split(',')
             size = source_info_rec['imsizes'][i]
             name = source_info_rec['sourcelist'][i]
-            
+
             sra = ddir[0].replace('h',':').replace('m',':')
             sdec = ddir[1].replace('d',':').replace('m',':')
-            
-            
+
+
             ssize = size*1.5   ## boxsize in arcsec
             ssize2 = 0.8*ssize   ## boxsize in arcsec
-            
-            
+
+
             #box(14:26:29.673,+35:46:03.02,1200",600",0.00143176)
-            
+
             s = 'box({ra},{dec},{s}",{s}",0)'.format(ra=sra, dec=sdec, s=ssize)
             s += r'# text={'
             s+= '{name}'.format(name=name)
@@ -73,8 +73,7 @@ region_file_name = '/data2/rvweeren/a2256_hba/SB050-359/peel_facets_boxes.reg'
 source_info_rec = numpy.genfromtxt(peel_source_info_file, \
                                    dtype="S50,S25,S5,S5,i8,i8,i8,i8,S2,S255,S255,S255,S5", \
                                    names=["sourcelist","directions","atrous_do","mscale_field","imsizes",\
-				   "cellsizetime_p","cellsizetime_a","fieldsize","dynamicrange",\
-				   "regionselfc","regionfield","peelskymodel","outliersource"],comments='#')
+                                   "cellsizetime_p","cellsizetime_a","fieldsize","dynamicrange",\
+                                   "regionselfc","regionfield","peelskymodel","outliersource"],comments='#')
 write_ds9_allregions(region_file_name, source_info_rec)
 #write_ds9_allregions(SCRIPTPATH+"/dde_weeren/bootes_hba/facet_descrip/peel_source_info_v4_disp.reg", source_info_rec,col='black')
-

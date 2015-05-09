@@ -17,15 +17,15 @@ print 'region', region
 # conversion is done in calling code instead
 #importfits(fitsimage=inputim,imagename=imageout,whichrep=0,\
 #           whichhdu=-1,zeroblanks=True,overwrite=True,defaultaxes=False,\
-#	   defaultaxesvalues=[],beam=[])
+#          defaultaxesvalues=[],beam=[])
 
 
 if region != 'None':
- print 'We have a region file', region
- ia.open(imageout)
- myRGN = rg.fromtextfile(filename=region, shape=ia.shape(), csys=ia.coordsys().torecord())
- im.regiontoimagemask(mask=imageout, region=myRGN)
- ia.close()
+    print 'We have a region file', region
+    ia.open(imageout)
+    myRGN = rg.fromtextfile(filename=region, shape=ia.shape(), csys=ia.coordsys().torecord())
+    im.regiontoimagemask(mask=imageout, region=myRGN)
+    ia.close()
 
 # avoid cleaning the edges of the image
 edge = 25

@@ -65,7 +65,7 @@ def mjds2lst(mjds, lon=core_lon):
 
 def old_mjds2lst(MJDs,lon=6.8689):
     """DEPRECATED
-    Return the local sidereal time in degrees.  Starts with mean julian 
+    Return the local sidereal time in degrees.  Starts with mean julian
     date in seconds, as is the time column from a measurement set.  Default
     logitude is that of LOFAR core."""
 
@@ -108,7 +108,7 @@ def altaz(mjds, ra, dec, lat=core_lat):
     #compute altitude in radians
     sin_alt = math.sin(dec)*math.sin(lat) + math.cos(dec)*math.cos(lat)*math.cos(ha)
     alt = math.asin(sin_alt)
-    
+
     #compute azimuth in radians
     #divide by zero error at poles or if alt = 90 deg
     cos_az = (math.sin(dec) - math.sin(alt)*math.sin(lat))/(math.cos(alt)*math.cos(lat))
@@ -149,7 +149,7 @@ def dectodms(decdegs):
     dec -- list of 3 values, [degrees,minutes,seconds]
 
     """
-    
+
     if abs(decdegs) > 90:
         raise ValueError
     decd = int(decdegs)
@@ -193,7 +193,7 @@ def dmstodec(decd,decm,decs, sign='+'):
     if isinstance(decd, str):
         if '-' in decd:
             sign = '-'
-    
+
     # automatically check floats/ints for any negatives
     if isinstance(decd, float) or isinstance(decd, int):
         if decd < 0:
@@ -205,21 +205,21 @@ def dmstodec(decd,decm,decs, sign='+'):
         elif decs < 0:
             if sign == '+':
                 sign = '-'
-            
-        
+
+
     if sign =='+':
         decdegs = float(decd)+(float(decm)/60.0)+(float(decs)/3600.0)
     elif sign == '-':
         decdegs = -abs(float(decd))-abs((float(decm)/60.0))-abs((float(decs)/3600.0))
     else:
         raise ValueError('Invalid sign in dmstodec'+str(sign))
-        
-    
+
+
     if abs(decdegs) > 90:
         raise ValueError
 
     return decdegs
-# Converts a dms format Dec to decimal degrees  
+# Converts a dms format Dec to decimal degrees
 
 def angsep(ra1,dec1,ra2,dec2):
     """Find the angular separation of two sources, in arcseconds,
@@ -347,16 +347,16 @@ def lm_to_radec(ra0,dec0,l,m):
     sind=math.sqrt(abs(sind0*sind0-d0))
     cosd=math.sqrt(abs(cosd0*cosd0+d0))
     if (sind0>0):
-     sind=abs(sind)
+        sind=abs(sind)
     else:
-     sind=-abs(sind)
+        sind=-abs(sind)
 
     dec=math.atan2(sind,cosd)
 
     if l!=0:
-     ra=math.atan2(-dl,(cosd0-dm*sind0))+ra0
+        ra=math.atan2(-dl,(cosd0-dm*sind0))+ra0
     else:
-     ra=math.atan2((1e-10),(cosd0-dm*sind0))+ra0
+        ra=math.atan2((1e-10),(cosd0-dm*sind0))+ra0
 
 # Calculate RA,Dec from l,m and phase center.
 # Note: As done in Meqtrees, which seems to differ from l, m functions above.
@@ -370,9 +370,9 @@ def radec_to_lmn(ra0,dec0,ra,dec):
     sind0=math.sin(dec0)
     if sind0 != 0:
 #     m=-(math.cos(ra-ra0)*math.cos(dec)-math.cos(dec0))/math.sin(dec0)   # from sarod -- wrong for L4086 simulations!
-     m=math.sin(dec) * math.cos(dec0) - math.cos(dec) * math.sin(dec0) * math.cos(ra - ra0)  # from pandey;  gives same results for casa and cyga
+        m=math.sin(dec) * math.cos(dec0) - math.cos(dec) * math.sin(dec0) * math.cos(ra - ra0)  # from pandey;  gives same results for casa and cyga
     else:
-     m=0
+        m=0
     n = math.sqrt(1-l**2-m**2)
     return (l,m,n)
 
@@ -394,9 +394,9 @@ def eq_to_gal(ra,dec):
     R = [[-0.054875539726,-0.873437108010,-0.483834985808],[0.494109453312,-0.444829589425,+0.746982251810],[-0.867666135858,-0.198076386122,+0.455983795705]]
 
     s = [math.cos(math.radians(ra))*math.cos(math.radians(dec)),math.sin(math.radians(ra))*math.cos(math.radians(dec)),math.sin(math.radians(dec))]
-    
+
     sg = []
-    
+
     sg.append(s[0]*R[0][0]+s[1]*R[0][1]+s[2]*R[0][2])
     sg.append(s[0]*R[1][0]+s[1]*R[1][1]+s[2]*R[1][2])
     sg.append(s[0]*R[2][0]+s[1]*R[2][1]+s[2]*R[2][2])
@@ -426,9 +426,9 @@ def gal_to_eq(l,b):
     Rinv = [[-0.054875539692115144, 0.49410945328828509, -0.86766613584223429], [-0.87343710799750596, -0.44482958942460415, -0.19807638609701342], [-0.4838349858324969, 0.74698225182667777, 0.45598379574707293]]
 
     sg = [math.cos(math.radians(l))*math.cos(math.radians(b)),math.sin(math.radians(l))*math.cos(math.radians(b)),math.sin(math.radians(b))]
-    
+
     s = []
-    
+
     s.append(sg[0]*Rinv[0][0]+sg[1]*Rinv[0][1]+sg[2]*Rinv[0][2])
     s.append(sg[0]*Rinv[1][0]+sg[1]*Rinv[1][1]+sg[2]*Rinv[1][2])
     s.append(sg[0]*Rinv[2][0]+sg[1]*Rinv[2][1]+sg[2]*Rinv[2][2])
@@ -484,4 +484,3 @@ def convert_coordsystem(ra, dec, insys, outsys):
             wcstools.fk524(p_ra, p_dec)
 
     return c_ra.value, c_dec.value
-

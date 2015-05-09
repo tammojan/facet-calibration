@@ -10,19 +10,19 @@ the wsclean facet code.
 
 HISTORY
 =======
-v0.1	 G. Heald	       Created script
-v0.2	 R. Breton	     Fixed avgpb behavior and weighting implementation
-v0.3	 G. Heald	       Add weights, fix image naming, output sensitivity map
+v0.1     G. Heald              Created script
+v0.2     R. Breton           Fixed avgpb behavior and weighting implementation
+v0.3     G. Heald              Add weights, fix image naming, output sensitivity map
 v0.4   S. van Velzen   Add beam & frequency info to header
 v0.5   S. van Velzen   Use pyrap to save fits files
 v0.6   J. Swinbank     Select a single Stokes parameter from input maps
-v0.7	 G. Heald	       Fix RA behavior, add NCP option, pyfits tweak
-v0.8	 G. Heald	       Fix behavior near RA=0
+v0.7     G. Heald              Fix RA behavior, add NCP option, pyfits tweak
+v0.8     G. Heald              Fix behavior near RA=0
 v0.9   G. Heald        Fix pyfits behavior (updating beam info)
 v0.91  R. Breton       Can read the input image list as a file. Functional NCP flag (hardcoded to 20-degree angular size).
-v0.92   G. Heald	Attempt to fix high dec overly-wide mosaics with a hardcoded adjustment
-v0.93	G. Heald	Only load pylab if plotting is enabled
-v0.94   G. Heald	Allow forcing maximum mosaic width (for high dec)
+v0.92   G. Heald        Attempt to fix high dec overly-wide mosaics with a hardcoded adjustment
+v0.93   G. Heald        Only load pylab if plotting is enabled
+v0.94   G. Heald        Allow forcing maximum mosaic width (for high dec)
 
 TO DO
 =====
