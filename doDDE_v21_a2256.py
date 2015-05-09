@@ -76,7 +76,7 @@ os.system('cp ' + SCRIPTPATH + '/task_ftw.py .')
 os.system(buildmytasks) # make casapy tasks
 
 
-freqavg_fullfacet = 5 # hardcoded for now  
+# freqavg_fullfacet = 5 # hardcoded for now  
 # it has to be set to a multiple of the number of channels per block, 
 # so it is dangerous to let a user set this without being aware of this
 
@@ -480,28 +480,9 @@ def create_phaseshift_parset_full(msin, msout, direction, column):
   return ndppp_parset
 
 
-def create_phaseshift_parset_old(msin, msout, source, direction, imsize, dynamicrange):
-  ndppp_parset = (msin.split('.')[0]) +'_ndppp_avgphaseshift.parset' 
-  os.system('rm -f ' + ndppp_parset)
-
-  f=open(ndppp_parset, 'w')
-  f.write('msin ="%s"\n' % msin) 
-  f.write('msin.datacolumn = ADDED_DATA_SOURCE\n')
-  f.write('msin.autoweight = false\n')
-  f.write('msout ="%s"\n' % msout)
-  f.write('msout.writefullresflag=False\n') 
-  f.write('steps = [shift,avg1]\n')
-  f.write('shift.type        = phaseshift\n')
-  f.write('shift.phasecenter = [%s]\n' % direction)
-  f.write('avg1.type = squash\n')    
-  f.write('avg1.freqstep = 20\n')
-  f.write('avg1.timestep = 1\n')      
-  f.close()
-  return ndppp_parset
- 
  
 
-def create_phaseshift_parset(msin, msout, source, direction, imsize, dynamicrange, StefCal):
+def create_phaseshift_parset(msin, msout, source, direction, imsize, dynamicrange, StefCal, numchanperms):
   ndppp_parset = (msin.split('.')[0]) +'_ndppp_avgphaseshift.parset' 
   os.system('rm -f ' + ndppp_parset)
 
@@ -520,24 +501,25 @@ def create_phaseshift_parset(msin, msout, source, direction, imsize, dynamicrang
   if dynamicrange == 'LD':
     if StefCal:
       if imsize <= 800:
-	f.write('avg1.freqstep = 20\n')
+        f.write('avg1.freqstep = %s\n' % str(numchanperms))
       else:
-	if imsize <= 1200:
-	  f.write('avg1.freqstep = 10\n')
-	else:
-	    f.write('avg1.freqstep = 5\n')  # we have a large image  2048 is more or less max expected
+        if imsize <= 1600:
+          f.write('avg1.freqstep = %s\n' % str(numchanperms/2))
+        else:
+          f.write('avg1.freqstep = %s\n' % str(numchanperms/5))  
+          # we have a large image  2048 is more or less max expected
+          # divide by 5 because that allows datasets with 3 channels per SB (i.e., 30 channels per ms)
   else:
     if dynamicrange != 'HD':
       print 'dynamicrange ', dynamicrange
       raise Exception('Wrong dynamicrange code, use "LD" or "HD"')
     print 'High dynamic range DDE cycle, eveything with be slow...'
-    f.write('avg1.freqstep = 2\n') # one channel per SB
-
-
+    f.write('avg1.freqstep = %s\n' % str(numchanperms/10)) # one channel per SB
 
   f.write('avg1.timestep = 1\n')      
   f.close()
   return ndppp_parset 
+
  
 def create_phaseshift_parset_formasks(msin, msout, source, direction):
   ndppp_parset = (msin.split('.')[0]) +'_ndppp_avgphaseshift.parset' 
@@ -560,11 +542,11 @@ def create_phaseshift_parset_formasks(msin, msout, source, direction):
   return ndppp_parset 
  
 
-def create_phaseshift_parset_field(msin, msout, source, direction, freqavg):
+def create_phaseshift_parset_field(msin, msout, source, direction, numchanperms):
   ndppp_parset = msin.split('.')[0] +'ndppp_avgphaseshift_field.parset' 
   os.system('rm -f ' + ndppp_parset)
 
-  #freqavg = 5
+  freqavg = numpy.int(numchanperms/5)
 
   f=open(ndppp_parset, 'w')
   f.write('msin ="%s"\n' % msin) 
@@ -576,7 +558,7 @@ def create_phaseshift_parset_field(msin, msout, source, direction, freqavg):
   f.write('shift.type        = phaseshift\n')
   f.write('shift.phasecenter = [%s]\n' % direction)
   f.write('avg1.type = squash\n')
-  f.write('avg1.freqstep = %s\n'% str(numpy.int(freqavg)))
+  f.write('avg1.freqstep = %s\n'% str(freqavg))
   f.write('avg1.timestep = 3\n')    
   f.close()
   return ndppp_parset
@@ -1096,8 +1078,7 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
  return imout, mask_sources+'field', imsize
 
 def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous_do, imsize, inputmask, \
-                       mscale, region,cellsize,uvrange,wsclean,WSCleanRobust,BlankField, WScleanWBgroup, \
-		       freqavg_fullfacet, numchanperms):
+                       mscale, region,cellsize,uvrange,wsclean,WSCleanRobust,BlankField, WScleanWBgroup, numchanperms):
 
  if imsize is None:
     imsize = image_size_from_mask(inputmask)
@@ -1508,7 +1489,7 @@ for source in do_sources:
       ## average and phaseshift with NDPPP
       for ms_id, ms in enumerate(mslist):
          parset = create_phaseshift_parset(ms, msavglist[ms_id], source, directions[source_id],\
-	                                   imsizes[source_id], dynamicrange[source_id], StefCal)
+	                                   imsizes[source_id], dynamicrange[source_id], StefCal, numchanperms)
          os.system('rm -rf ' + msavglist[ms_id])
          os.system('NDPPP ' + parset)
 
@@ -1632,7 +1613,8 @@ for source in do_sources:
            msavglist.append(ms.split('.')[0] + '.' + source + '.ms.avgfield')      
 
          for ms_id, ms in enumerate(mslist):
-           parset = create_phaseshift_parset_field(ms, msavglist[ms_id], source, directions[source_id], freqavg_fullfacet)
+           parset = create_phaseshift_parset_field(ms, msavglist[ms_id], source, \
+	                                           directions[source_id], numchanperms)
 
            cmd = "ps -u " + username + " | grep NDPPP | wc -l"
            output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
@@ -1668,7 +1650,7 @@ for source in do_sources:
 	                                              None, output_template_im +'.masktmp', \
 					              mscale_field[source_id],regionfield[source_id],\
 					              cellsize, uvrange,wsclean,WSCleanRobust,BlankField,\
-						      WScleanWBgroup, freqavg_fullfacet, numchanperms)
+						      WScleanWBgroup, numchanperms)
          logging.info('Imaged full DDE facet: ' + source)
          if len(mslist) > WScleanWBgroup:
             logging.info('WSCLEAN Wideband CLEAN algorithm was used')
