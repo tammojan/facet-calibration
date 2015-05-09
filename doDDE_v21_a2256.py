@@ -38,6 +38,9 @@ import blank
 
 
 def find_newsize(mask):
+    """
+    FIXME
+    """
 
     img    = pyrap.images.image(mask)
     pixels = numpy.copy(img.getdata())
@@ -73,8 +76,17 @@ def find_newsize(mask):
     return newsize
 
 
-
 def runbbs(mslist, skymodel, parset, parmdb, replacesource):
+    """
+    Run BBS on a list of MS.
+    Input:
+      * mslist - list of MS.
+      * skymodel
+      * parset
+      * parmdb
+      * replacesource - flag (True or False) to indicate if the parmdb has 
+          to be replaced or not
+    """
     #NOTE WORK FROM MODEL_DATA (contains correct phase data from 10SB calibration)
     for ms in mslist:
         log      =  ms + '.bbslog'
@@ -98,7 +110,18 @@ def runbbs(mslist, skymodel, parset, parmdb, replacesource):
         time.sleep(5)
     return
 
+
 def runbbs16(mslist, skymodel, parset, parmdb, replacesource):
+    """
+    Run BBS on a list of MS in blocks of 16. FIXME
+    Input:
+      * mslist - list of MS.
+      * skymodel
+      * parset
+      * parmdb
+      * replacesource - flag (True or False) to indicate if the parmdb has 
+          to be replaced or not
+    """
     #NOTE WORK FROM MODEL_DATA (contains correct phase data from 10SB calibration)
 
     mslist1 = mslist[0:15]
@@ -150,7 +173,18 @@ def runbbs16(mslist, skymodel, parset, parmdb, replacesource):
         time.sleep(5)
     return
 
-def create_subtract_parset_field_outlier(outputcolumn,TEC):
+
+def create_subtract_parset_field_outlier(outputcolumn, TEC):
+    """
+    Create a parset for the subtraction of outliers.
+    The name of the output parset is 'sub.parset'.
+    Input:
+      * outputcolumn - Output column.
+      * TEC - "True" or other, indicates if the TEC is enabled
+    Output:
+      * The name of the output parset
+    The chunksize is hardcoded to 200.
+    """
     bbs_parset = 'sub.parset'
     os.system('rm -f ' + bbs_parset)
     f=open(bbs_parset, 'w')
@@ -181,9 +215,10 @@ def create_subtract_parset_field_outlier(outputcolumn,TEC):
     return bbs_parset
 
 
-
 def runbbs_diffskymodel_addback(mslist, parmdb, replacesource, direction, imsize, output_template_im, do_ap):
-
+    """
+    FIXME
+    """
     for ms in mslist:
         log      =  ms + '.bbslog'
 
@@ -227,7 +262,11 @@ def runbbs_diffskymodel_addback(mslist, parmdb, replacesource, direction, imsize
         time.sleep(5)
     return
 
+
 def runbbs_diffskymodel_addback16(mslist, parmdb, replacesource, direction, imsize, output_template_im, do_ap):
+    """
+    FIXME
+    """
     mslist1 = mslist[0:16]
     mslist2 = mslist[16:len(mslist)]
     #part1
@@ -317,7 +356,9 @@ def runbbs_diffskymodel_addback16(mslist, parmdb, replacesource, direction, imsi
 
 
 def runbbs_diffskymodel_addbackfield(mslist, parmdb, replacesource, direction, imsize, output_template_im, do_ap):
-
+    """
+    FIXME
+    """
     for ms in mslist:
         log      =  ms + '.bbslog'
 
@@ -376,6 +417,15 @@ def runbbs_diffskymodel_addbackfield(mslist, parmdb, replacesource, direction, i
 
 
 def runbbs_2(mslist, msparmdb, skymodel, parset, parmdb):
+    """
+    Second version of run BBS on a list of MS.
+    Input:
+      * mslist - list of MS.
+      * msparmdb - list of parmdbs.
+      * skymodel
+      * parset
+      * parmdb
+    """
     for ms_id, ms in enumerate(mslist):
         log      =  ms + '.bbslog'
         cmd = 'calibrate-stand-alone --parmdb ' + msparmdb[ms_id]+'/'+parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
@@ -397,6 +447,17 @@ def runbbs_2(mslist, msparmdb, skymodel, parset, parmdb):
 
 
 def create_phaseshift_parset_full(msin, msout, direction, column):
+    """
+    Create a parset for the phase shift (for the combined MS? FIXME).
+    The name of the output parset is 'ndppp_phaseshiftfull.parset'.
+    Input:
+      * msin - Input MS
+      * msout - Output MS
+      * direction - Direction of the new phase center
+      * column - Output column.
+    Output:
+      * The name of the output parset
+    """
     ndppp_parset = 'ndppp_phaseshiftfull.parset'
     os.system('rm -f ' + ndppp_parset)
     f=open(ndppp_parset, 'w')
@@ -415,6 +476,23 @@ def create_phaseshift_parset_full(msin, msout, direction, column):
 
 
 def create_phaseshift_parset(msin, msout, source, direction, imsize, dynamicrange, StefCal, numchanperms):
+    """
+    Create a parset for the phase shift (for the individual MS? FIXME).
+    The name of the output parset depends on the input MS name and has 
+      a suffix of '_ndppp_avgphaseshift.parset'.
+    Input:
+      * msin - Input MS
+      * msout - Output MS
+      * source - NOT USED but required input
+      * direction - Direction of the new phase center
+      * imsize - Size of the image. Used to select the frequency averaging.
+      * dynamicrange - "LD" or "HD". Used to select the frequency averaging.
+      * StefCal - True or False. Used to select the frequency averaging.
+      * numchanperms - Number of channels per ms. Required to compute the 
+          correct averaging.
+    Output:
+      * The name of the output parset
+    """
     ndppp_parset = (msin.split('.')[0]) +'_ndppp_avgphaseshift.parset'
     os.system('rm -f ' + ndppp_parset)
 
@@ -454,6 +532,20 @@ def create_phaseshift_parset(msin, msout, source, direction, imsize, dynamicrang
 
 
 def create_phaseshift_parset_formasks(msin, msout, source, direction):
+    """
+    Create a parset for the phase shift (for the individual MS? FIXME).
+      formasks version (FIXME). There is no averaging done and the input
+      column is "DATA".
+    The name of the output parset depends on the input MS name and has 
+      a suffix of '_ndppp_avgphaseshift.parset'.
+    Input:
+      * msin - Input MS
+      * msout - Output MS
+      * source - NOT USED but required input
+      * direction - Direction of the new phase center
+    Output:
+      * The name of the output parset
+    """
     ndppp_parset = (msin.split('.')[0]) +'_ndppp_avgphaseshift.parset'
     os.system('rm -f ' + ndppp_parset)
 
@@ -475,6 +567,21 @@ def create_phaseshift_parset_formasks(msin, msout, source, direction):
 
 
 def create_phaseshift_parset_field(msin, msout, source, direction, numchanperms):
+    """
+    Create a parset for the phase shift (for the individual MS? FIXME).
+      field version (FIXME). The input column is "CORRECTED_DATA".
+    The name of the output parset depends on the input MS name and has 
+      a suffix of '_ndppp_avgphaseshift_field.parset'.
+    Input:
+      * msin - Input MS
+      * msout - Output MS
+      * source - NOT USED but required input
+      * direction - Direction of the new phase center
+      * numchanperms - Number of channels per ms. Required to compute the 
+          correct averaging.
+    Output:
+      * The name of the output parset
+    """
     ndppp_parset = msin.split('.')[0] +'ndppp_avgphaseshift_field.parset'
     os.system('rm -f ' + ndppp_parset)
 
@@ -496,9 +603,20 @@ def create_phaseshift_parset_field(msin, msout, source, direction, numchanperms)
     return ndppp_parset
 
 
-
-
 def create_add_parset_ms(source, ms, do_ap):
+    """
+    Create a parset to add sources to the individual MSs.
+    The name of the output parset depends on the input MS name and has 
+      a suffix of '_add.parset'. The input column is 
+      "SUBTRACTED_DATA_ALL" and the output column is 
+      "ADDED_DATA_SOURCE". The chunksize is hardcoded to 200.
+    Input:
+      * source - Source or sources to add.
+      * ms - Input MS. Used for the name of the parset.
+      * do_ap - True or False changes if the Gain is enabled or not.
+    Output:
+      * The name of the output parset
+    """
     bbs_parset = ms + '_add.parset'
     os.system('rm -f ' + bbs_parset)
     f=open(bbs_parset, 'w')
@@ -526,6 +644,16 @@ def create_add_parset_ms(source, ms, do_ap):
 
 
 def create_add_parset_field(source):
+    """
+    Create a parset to add sources to the concatenated MS.
+    The name of the output parset is 'addfield.parset'. The input 
+      column is "ADDED_DATA_SOURCE" and the output column is 
+      "MODEL_DATA". The chunksize is hardcoded to 200.  
+    Input:
+      * source - Source or sources to add.
+    Output:
+      * The name of the output parset
+    """
     bbs_parset = 'addfield.parset'
     os.system('rm -f ' + bbs_parset)
     f=open(bbs_parset, 'w')
@@ -548,7 +676,22 @@ def create_add_parset_field(source):
     f.close()
     return bbs_parset
 
+
 def create_add_parset_field_ms(source, ms, do_ap):
+    """
+    Create a parset to add sources to the individual MSs ? FIXME. field
+      version FIXME.
+    The name of the output parset depends on the input MS name and has 
+      a suffix of '_add.parset'. The input column is 
+      "ADDED_DATA_SOURCE" and the output column is 
+      "MODEL_DATA". The chunksize is hardcoded to 200.
+    Input:
+      * source - Source or sources to add.
+      * ms - Input MS. Used for the name of the parset.
+      * do_ap - True or False changes if the Gain is enabled or not.
+    Output:
+      * The name of the output parset    
+    """
     bbs_parset = ms + '_addfield.parset'
     os.system('rm -f ' + bbs_parset)
     f=open(bbs_parset, 'w')
@@ -574,7 +717,17 @@ def create_add_parset_field_ms(source, ms, do_ap):
     f.close()
     return bbs_parset
 
+
 def create_subtract_parset(outputcolumn):
+    """
+    Create a parset to subtract sources FIXME.
+    The name of the output parset is 'sub.parset'. The input 
+      column is "ADDED_DATA_SOURCE". The chunksize is hardcoded to 100.  
+    Input:
+      * outputcolumn - Output column.
+    Output:
+      * The name of the output parset
+    """
     bbs_parset = 'sub.parset'
     os.system('rm -f ' + bbs_parset)
     f=open(bbs_parset, 'w')
@@ -597,7 +750,19 @@ def create_subtract_parset(outputcolumn):
     f.close()
     return bbs_parset
 
-def create_subtract_parset_field(outputcolumn,TEC):
+
+def create_subtract_parset_field(outputcolumn, TEC):
+    """
+    Create a parset to subtract sources (previously added to the
+    "ADDED_DATA_SOURCE" column? FIXME). field version FIXME.
+    The name of the output parset is 'sub.parset'. The input 
+      column is "MODEL_DATA". The chunksize is hardcoded to 175.  
+    Input:
+      * outputcolumn - Output column.
+      * TEC - "True" or other. 
+    Output:
+      * The name of the output parset
+    """
     bbs_parset = 'sub.parset'
     os.system('rm -f ' + bbs_parset)
     f=open(bbs_parset, 'w')
@@ -627,7 +792,13 @@ def create_subtract_parset_field(outputcolumn,TEC):
     f.close()
     return bbs_parset
 
-def join_parmdb_stefcal(ms, parmdb_selfcal,parmdb_template, parmdb_out):
+
+def join_parmdb_stefcal(ms, parmdb_selfcal, parmdb_template, parmdb_out):
+    """
+    FIXME 
+    Transfer the parmdb values from the self_calibration using a 
+    template?
+    """
     import lofar.parmdb
     pdb_s = lofar.parmdb.parmdb(parmdb_selfcal)
     pdb_t = lofar.parmdb.parmdb(parmdb_template)
@@ -668,7 +839,13 @@ def join_parmdb_stefcal(ms, parmdb_selfcal,parmdb_template, parmdb_out):
     pdbnew.flush()
     return
 
-def join_parmdb(ms, parmdb_selfcal,parmdb_nondde, parmdb_template, parmdb_out, TEC, clock):
+
+def join_parmdb(ms, parmdb_selfcal, parmdb_nondde, parmdb_template, parmdb_out, TEC, clock):
+    """
+    FIXME
+    Transfer the parmdb values from the self_calibration using a 
+    template?
+    """
     import lofar.parmdb
     pdb_s = lofar.parmdb.parmdb(parmdb_selfcal)
     pdb_p = lofar.parmdb.parmdb(parmdb_nondde)
@@ -722,8 +899,17 @@ def join_parmdb(ms, parmdb_selfcal,parmdb_nondde, parmdb_template, parmdb_out, T
     pdbnew.flush()
     return
 
-def normalize_parmdbs(mslist, parmdbname, parmdboutname):
 
+def normalize_parmdbs(mslist, parmdbname, parmdboutname):
+    """
+    Normalice the gain solutions of a parmdb of a given name in a list
+    of MSs.
+    Input:
+      * mslist - List of MS with the solutons to normalize.
+      * parmdbname - Name of the parmdb used in all the MSs.
+      * parmdboutname - Name of the output parmdb with the normalized 
+          gains.
+    """
     import lofar.parmdb
     amplist = []
 
@@ -775,8 +961,12 @@ def normalize_parmdbs(mslist, parmdbname, parmdboutname):
     return numpy.mean(amplist)
 
 
-
 def return_slist(imagename, skymodel, ref_source):
+    """
+    FIXME
+    Return the list of sources of a skymodel within the boundaries of 
+    an image region??
+    """
 
     fluxweight = False
 
@@ -833,30 +1023,47 @@ def return_slist(imagename, skymodel, ref_source):
 
     return sourcess
 
-def angsep(ra1deg, dec1deg, ra2deg, dec2deg):
-    """Returns angular separation between two coordinates (all in degrees)"""
 
-    ra1rad=ra1deg*numpy.pi/180.0
-    dec1rad=dec1deg*numpy.pi/180.0
-    ra2rad=ra2deg*numpy.pi/180.0
-    dec2rad=dec2deg*numpy.pi/180.0
+def angsep(ra1deg, dec1deg, ra2deg, dec2deg):
+    """
+    Returns angular separation between two coordinates (all in degrees)
+    Input:
+      * ra1deg - RA of the first position
+      * dec1deg - dec of the first position
+      * ra2deg - RA of the second position
+      * dec2deg - dec of the second position
+    Output:
+      * Angular separation in degrees.
+    """
+
+    ra1rad = ra1deg*numpy.pi/180.0
+    dec1rad = dec1deg*numpy.pi/180.0
+    ra2rad = ra2deg*numpy.pi/180.0
+    dec2rad = dec2deg*numpy.pi/180.0
 
     # calculate scalar product for determination
     # of angular separation
-    x=numpy.cos(ra1rad)*numpy.cos(dec1rad)*numpy.cos(ra2rad)*numpy.cos(dec2rad)
-    y=numpy.sin(ra1rad)*numpy.cos(dec1rad)*numpy.sin(ra2rad)*numpy.cos(dec2rad)
-    z=numpy.sin(dec1rad)*numpy.sin(dec2rad)
+    x = numpy.cos(ra1rad)*numpy.cos(dec1rad)*numpy.cos(ra2rad)*numpy.cos(dec2rad)
+    y = numpy.sin(ra1rad)*numpy.cos(dec1rad)*numpy.sin(ra2rad)*numpy.cos(dec2rad)
+    z = numpy.sin(dec1rad)*numpy.sin(dec2rad)
 
-    if x+y+z >= 1: rad = 0
-    else: rad=numpy.acos(x+y+z)
+    if x+y+z >= 1: 
+        rad = 0
+    else: 
+        rad=numpy.acos(x+y+z)
 
     # Angular separation
-    deg=rad*180/numpy.pi
+    deg = rad*180/numpy.pi
     return deg
 
 
-def cal_return_slist(imagename,skymodel, direction, imsize):
-
+def cal_return_slist(imagename, skymodel, direction, imsize):
+    """
+    FIXME
+    Return the list of sources of a skymodel within the boundaries of 
+    an image region??
+    """
+    
     factor = 0.8 # only add back in the center 80%
     cut = 1.5*(imsize/2.)*factor/3600.
 
@@ -938,7 +1145,10 @@ def cal_return_slist(imagename,skymodel, direction, imsize):
 
 
 def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous_do, imsize, inputmask, mscale, region):
-
+    """
+    Make image using CASA for a list of MSs.
+    FIXME
+    """
     niter   = numpy.int(2000 * (numpy.sqrt(numpy.float(len(mslist)))))
 
     depth =  0.7 / (numpy.sqrt(numpy.float(len(mslist))))
@@ -1014,9 +1224,15 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
 
     return imout, mask_sources+'field', imsize
 
-def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous_do, imsize, inputmask, 
-                       mscale, region,cellsize,uvrange,wsclean,WSCleanRobust,BlankField, WScleanWBgroup, numchanperms):
 
+def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, 
+                       nterms, atrous_do, imsize, inputmask, mscale, 
+                       region, cellsize, uvrange, wsclean, WSCleanRobust,
+                       BlankField, WScleanWBgroup, numchanperms):
+    """
+    Make image using WSClean for a list of MSs.
+    FIXME
+    """
     if imsize is None:
         imsize = image_size_from_mask(inputmask)
 
@@ -1183,6 +1399,12 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms
 
 
 def insertbeaminfo_mfs(image, templateim):
+    """
+    Insert the beam info of an image into other image.
+    Input:
+      * image - Image in which the beam info will be enterer
+      * templateim - Image with the beam info to use
+    """
     import pyfits
     hduimtemplate    = pyfits.open(templateim)  # open a FITS file
     hduim            = pyfits.open(image, mode='update')  # open a FITS file
@@ -1201,7 +1423,13 @@ def insertbeaminfo_mfs(image, templateim):
     hduimtemplate.close()
     return
 
-def do_fieldFFT(ms,image,imsize,cellsize,wsclean,mslist,WSCleanRobust,WScleanWBgroup, numchanperms):
+
+def do_fieldFFT(ms, image, imsize, cellsize, wsclean, mslist, 
+                WSCleanRobust, WScleanWBgroup, numchanperms):
+    """
+    FIXME
+    Use WSClean to ???
+    """
     niter   = 1
     cellsizeim = str(cellsize)+ 'arcsec'
 
@@ -1225,7 +1453,16 @@ def do_fieldFFT(ms,image,imsize,cellsize,wsclean,mslist,WSCleanRobust,WScleanWBg
     os.system(cmd1+cmd2+cmd3)
     return
 
+
 def image_size_from_mask(mask):
+    """
+    Extract the size of an image from a mask
+    Input:
+      * mask
+    Output:
+      * Last dimension of the mask
+    TODO: Check this
+    """
     im = pyrap.images.image(mask)
     sh = im.shape()
     if sh[-1] != sh[-2]:
@@ -1429,7 +1666,7 @@ if __name__ == "__main__":
         logging.info('')
         logging.info('DOING DDE patch: '+ source)
 
-    # tidying-up code from Wendy's version
+        # Tidying-up code from Wendy's version
 
         if StartAtStep in ['preSC']:
                     # remove selfcal images #
@@ -1484,7 +1721,7 @@ if __name__ == "__main__":
 
         ## STEP 1: prep for SC ##
         if StartAtStep in ['preSC']:
-    ## FIXME -- hard-wired CPU limit in what follows
+            ## FIXME -- hard-wired CPU limit in what follows
             if len(mslist) > 32:
                 runbbs_diffskymodel_addback16(mslist, 'instrument_ap_smoothed', True, directions[source_id],imsizes[source_id],output_template_im, do_ap)
             else:
@@ -1663,7 +1900,8 @@ if __name__ == "__main__":
 
             if StartAtStep in ['preSC', 'doSC', 'postSC','preFACET','doFACET','postFACET']:
 
-    # if we are restarting, it's possible that 'allbands.concat.shifted_'+source+'.ms' may have been deleted earlier. So re-create it if it doesn't exist
+                # if we are restarting, it's possible that 'allbands.concat.shifted_'+source+'.ms' 
+                #  may have been deleted earlier. So re-create it if it doesn't exist
 
                 if not(os.path.isdir(allbandspath + 'allbands.concat.shifted_'+source+'.ms')):
                     print allbandspath + 'allbands.concat.shifted_'+source+'.ms ' + 'does not exist, re-creating'
