@@ -1545,8 +1545,8 @@ if __name__ == "__main__":
              parmdb_template    = msavglist[ms_id]+"/"+"instrument_template"
              if StefCal:
     	         join_parmdb_stefcal(ms, parmdb_selfcal,parmdb_template, this_parmdb_master_out)
-    	 else:  
-               join_parmdb(ms, parmdb_selfcal,parmdb_nondde, parmdb_template, this_parmdb_master_out, \
+             else:  
+                 join_parmdb(ms, parmdb_selfcal,parmdb_nondde, parmdb_template, this_parmdb_master_out, \
     	               TEC, clock)
              print 'joined SC and DDE parmdbs for {ms}'.format(ms=ms)
              parmdb_master_out  = "instrument_master_" + source   # reset because runbbs uses basename of ms
