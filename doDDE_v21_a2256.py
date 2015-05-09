@@ -943,8 +943,8 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
     newsize = find_newsize(inputmask)
     if newsize < imsize: # ok so we can use a smaller image size then
         #make a new template
-        os.system('casapy --nologger -c '+ SCRIPTPATH +'/make_empty_image.py '+ str(mslist[0]) + ' ' + inputmask+'2' + ' ' + str(newsize) + ' ' +'1.5arcsec')
-        os.system('casapy --nologger -c '+ SCRIPTPATH +'/regrid_image.py '    + inputmask      + ' ' + inputmask+'2' + ' ' + inputmask+'3')
+        os.system('casapy --nogui -c '+ SCRIPTPATH +'/make_empty_image.py '+ str(mslist[0]) + ' ' + inputmask+'2' + ' ' + str(newsize) + ' ' +'1.5arcsec')
+        os.system('casapy --nogui -c '+ SCRIPTPATH +'/regrid_image.py '    + inputmask      + ' ' + inputmask+'2' + ' ' + inputmask+'3')
 
         # reset the imsize and the mask
         imsize    = newsize
@@ -957,7 +957,7 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
 
     imout = 'im'+ callnumber +'_cluster'+cluster+'nm'
 
-    os.system('casapy --nologger -c ' + SCRIPTPATH + '/casapy_cleanv4.py ' + ms + ' ' + imout + ' ' + 'None' +\
+    os.system('casapy --nogui -c ' + SCRIPTPATH + '/casapy_cleanv4.py ' + ms + ' ' + imout + ' ' + 'None' +\
                ' ' + cleandepth1 + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + mscale)
 
 
@@ -993,11 +993,11 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
 
     if region != 'empty': # in that case we have a extra region file for the clean mask
         niter = niter*3 # increase niter, tune manually if needed
-        os.system('casapy --nologger -c ' + SCRIPTPATH +'/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask_sources+'field,'+region + \
+        os.system('casapy --nogui -c ' + SCRIPTPATH +'/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask_sources+'field,'+region + \
                   ' ' + cleandepth2 + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + mscale)
 
     else:
-        os.system('casapy --nologger -c '+ SCRIPTPATH + '/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask_sources+'field' + \
+        os.system('casapy --nogui -c '+ SCRIPTPATH + '/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask_sources+'field' + \
                    ' ' + cleandepth2 + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + mscale)
 
     # convert to FITS
@@ -1031,8 +1031,8 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms
     newsize = find_newsize(inputmask)
     if newsize < imsize: # ok so we can use a smaller image size then
         #make a new template
-        os.system('casapy --nologger -c ' + SCRIPTPATH + '/make_empty_image.py '+ str(mslist[0]) + ' ' + inputmask+'2' + ' ' + str(newsize) + ' ' +'1.5arcsec')
-        os.system('casapy --nologger -c ' + SCRIPTPATH + '/regrid_image.py '    + inputmask      + ' ' + inputmask+'2' + ' ' + inputmask+'3')
+        os.system('casapy --nogui -c ' + SCRIPTPATH + '/make_empty_image.py '+ str(mslist[0]) + ' ' + inputmask+'2' + ' ' + str(newsize) + ' ' +'1.5arcsec')
+        os.system('casapy --nogui -c ' + SCRIPTPATH + '/regrid_image.py '    + inputmask      + ' ' + inputmask+'2' + ' ' + inputmask+'3')
 
         # reset the imsize and the mask
         imsize    = newsize
@@ -1114,10 +1114,10 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms
 
     # Convert to casapy format and includ region file
     if region != 'empty':
-        os.system('casapy --nologger -c ' + SCRIPTPATH+'/fitsandregion2image.py '\
+        os.system('casapy --nogui -c ' + SCRIPTPATH+'/fitsandregion2image.py '\
                   + mask_name + ' ' + casa_mask + ' ' + region)
     else:
-        os.system('casapy --nologger -c ' + SCRIPTPATH+'/fitsandregion2image.py '\
+        os.system('casapy --nogui -c ' + SCRIPTPATH+'/fitsandregion2image.py '\
                   + mask_name + ' ' + casa_mask + ' ' + 'None')
 
     mask_sources = imout+'.casamask'
@@ -1158,7 +1158,7 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms
     os.system(cmd1+cmd2+cmd3)
 
     # convert from FITS to casapy format
-    # os.system('casapy --nologger -c ' + SCRIPTPATH +'/fits2image.py ' + \
+    # os.system('casapy --nogui -c ' + SCRIPTPATH +'/fits2image.py ' + \
     #           imout + '-image.fits' + ' ' + imout +'.image')
 
 
@@ -1398,7 +1398,7 @@ if __name__ == "__main__":
             os.system('NDPPP ' + parset)
             output_template_im = 'templatemask_' + source
             print output_template_im
-            os.system('casapy --nologger -c ' + SCRIPTPATH + '/make_empty_image.py '+ tmpn + ' ' + output_template_im + ' ' + str(fieldsize[source_id]) + ' ' +'1.5arcsec')
+            os.system('casapy --nogui -c ' + SCRIPTPATH + '/make_empty_image.py '+ tmpn + ' ' + output_template_im + ' ' + str(fieldsize[source_id]) + ' ' +'1.5arcsec')
             os.system('rm -rf ' + tmpn)
             # now generate the mask
             os.system(SCRIPTPATH + '/make_facet_mask.py ' + output_template_im +' ' + 'directions.npy' + ' ' + str(source_id) + ' ' + '1.5arcsec'  +' ' + '&')
