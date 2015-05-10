@@ -1298,12 +1298,12 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl,
         cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
         cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' -cleanborder 0 -threshold '+ cleandepth1 + ' '
         cmd3 = '-minuv-l '+ str(uvrange) \
-               +' -mgain 0.7 -fitbeam -datacolumn DATA -no-update-model-required -joinchannels -channelsout ' +\
+               +' -mgain 0.6 -fitbeam -datacolumn DATA -no-update-model-required -joinchannels -channelsout ' +\
                str(channelsout) + ' '  + outms
     else:
         cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
         cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' -cleanborder 0 -threshold '+ cleandepth1 + ' '
-        cmd3 = '-minuv-l '+ str(uvrange) +' -mgain 0.7 -fitbeam -datacolumn DATA -no-update-model-required ' + outms
+        cmd3 = '-minuv-l '+ str(uvrange) +' -mgain 0.6 -fitbeam -datacolumn DATA -no-update-model-required ' + outms
 
     print cmd1+cmd2+cmd3
     os.system(cmd1+cmd2+cmd3)
@@ -1821,9 +1821,9 @@ if __name__ == "__main__":
             print 'Updated frequency boundaries parmdb and normalized amps to 1.0'
             time.sleep(5)
             # make new mslist for field averaged data
-            msavglist = []
-            for ms_id, ms in enumerate(mslist):
-                msavglist.append(ms.split('.')[0] + '.' + source + '.ms.avgfield')
+            #msavglist = []
+            #for ms_id, ms in enumerate(mslist):
+            #    msavglist.append(ms.split('.')[0] + '.' + source + '.ms.avgfield')
 
 
             ######### check if all plot_solutions_all_stations_v2.py processes is finished
@@ -1850,7 +1850,7 @@ if __name__ == "__main__":
                 ###########################################################################
                 # NDPPP phase shift, less averaging (NEW: run 2 in parallel)
                 msavglist = []
-                for ms_id, ms in enumerate(mslistorig): # remake msavglist from mslistorig
+                for ms_id, ms in enumerate(mslist): # make msavglist for avgfield
                     msavglist.append(ms.split('.')[0] + '.' + source + '.ms.avgfield')
 
                 for ms_id, ms in enumerate(mslist):
@@ -1884,7 +1884,7 @@ if __name__ == "__main__":
             # imsize None forces the code to work out the image size from the mask size
             if StartAtStep in ['preSC', 'doSC', 'postSC','preFACET','doFACET']:
                 msavglist = []
-                for ms_id, ms in enumerate(mslistorig): # remake msavglist from mslistorig
+                for ms_id, ms in enumerate(mslistorig): # remake msavglist from mslistorig(!) to capture a missing block
                     msavglist.append(ms.split('.')[0] + '.' + source + '.ms.avgfield')
 
                 imout,mask_out, imsizef = make_image_wsclean(msavglist, source, 'field0', 5, 3, nterms, 'True',
@@ -1999,4 +1999,5 @@ if __name__ == "__main__":
             #os.system('python ' + SCRIPTPATH + '/verify_subtract_v3.py ' + inputmslist + ' 0.3 ' + source)
             os.system('python '+ SCRIPTPATH+'/verify_subtract_v5.py ' + inputmslist + ' 0.1 ' + source)
 
+        os.system('rm -rf *.ms.avgfield') # clean up as these are never used anymore  
         logging.info('finished '+source)
