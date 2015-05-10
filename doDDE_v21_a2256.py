@@ -84,7 +84,7 @@ def runbbs(mslist, skymodel, parset, parmdb, replacesource):
       * skymodel
       * parset
       * parmdb
-      * replacesource - flag (True or False) to indicate if the parmdb has 
+      * replacesource - flag (True or False) to indicate if the parmdb has
           to be replaced or not
     """
     #NOTE WORK FROM MODEL_DATA (contains correct phase data from 10SB calibration)
@@ -119,7 +119,7 @@ def runbbs16(mslist, skymodel, parset, parmdb, replacesource):
       * skymodel
       * parset
       * parmdb
-      * replacesource - flag (True or False) to indicate if the parmdb has 
+      * replacesource - flag (True or False) to indicate if the parmdb has
           to be replaced or not
     """
     #NOTE WORK FROM MODEL_DATA (contains correct phase data from 10SB calibration)
@@ -478,7 +478,7 @@ def create_phaseshift_parset_full(msin, msout, direction, column):
 def create_phaseshift_parset(msin, msout, source, direction, imsize, dynamicrange, StefCal, numchanperms):
     """
     Create a parset for the phase shift (for the individual MS? FIXME).
-    The name of the output parset depends on the input MS name and has 
+    The name of the output parset depends on the input MS name and has
       a suffix of '_ndppp_avgphaseshift.parset'.
     Input:
       * msin - Input MS
@@ -488,7 +488,7 @@ def create_phaseshift_parset(msin, msout, source, direction, imsize, dynamicrang
       * imsize - Size of the image. Used to select the frequency averaging.
       * dynamicrange - "LD" or "HD". Used to select the frequency averaging.
       * StefCal - True or False. Used to select the frequency averaging.
-      * numchanperms - Number of channels per ms. Required to compute the 
+      * numchanperms - Number of channels per ms. Required to compute the
           correct averaging.
     Output:
       * The name of the output parset
@@ -536,7 +536,7 @@ def create_phaseshift_parset_formasks(msin, msout, source, direction):
     Create a parset for the phase shift (for the individual MS? FIXME).
       formasks version (FIXME). There is no averaging done and the input
       column is "DATA".
-    The name of the output parset depends on the input MS name and has 
+    The name of the output parset depends on the input MS name and has
       a suffix of '_ndppp_avgphaseshift.parset'.
     Input:
       * msin - Input MS
@@ -570,14 +570,14 @@ def create_phaseshift_parset_field(msin, msout, source, direction, numchanperms)
     """
     Create a parset for the phase shift (for the individual MS? FIXME).
       field version (FIXME). The input column is "CORRECTED_DATA".
-    The name of the output parset depends on the input MS name and has 
+    The name of the output parset depends on the input MS name and has
       a suffix of '_ndppp_avgphaseshift_field.parset'.
     Input:
       * msin - Input MS
       * msout - Output MS
       * source - NOT USED but required input
       * direction - Direction of the new phase center
-      * numchanperms - Number of channels per ms. Required to compute the 
+      * numchanperms - Number of channels per ms. Required to compute the
           correct averaging.
     Output:
       * The name of the output parset
@@ -606,9 +606,9 @@ def create_phaseshift_parset_field(msin, msout, source, direction, numchanperms)
 def create_add_parset_ms(source, ms, do_ap):
     """
     Create a parset to add sources to the individual MSs.
-    The name of the output parset depends on the input MS name and has 
-      a suffix of '_add.parset'. The input column is 
-      "SUBTRACTED_DATA_ALL" and the output column is 
+    The name of the output parset depends on the input MS name and has
+      a suffix of '_add.parset'. The input column is
+      "SUBTRACTED_DATA_ALL" and the output column is
       "ADDED_DATA_SOURCE". The chunksize is hardcoded to 200.
     Input:
       * source - Source or sources to add.
@@ -646,9 +646,9 @@ def create_add_parset_ms(source, ms, do_ap):
 def create_add_parset_field(source):
     """
     Create a parset to add sources to the concatenated MS.
-    The name of the output parset is 'addfield.parset'. The input 
-      column is "ADDED_DATA_SOURCE" and the output column is 
-      "MODEL_DATA". The chunksize is hardcoded to 200.  
+    The name of the output parset is 'addfield.parset'. The input
+      column is "ADDED_DATA_SOURCE" and the output column is
+      "MODEL_DATA". The chunksize is hardcoded to 200.
     Input:
       * source - Source or sources to add.
     Output:
@@ -681,16 +681,16 @@ def create_add_parset_field_ms(source, ms, do_ap):
     """
     Create a parset to add sources to the individual MSs ? FIXME. field
       version FIXME.
-    The name of the output parset depends on the input MS name and has 
-      a suffix of '_add.parset'. The input column is 
-      "ADDED_DATA_SOURCE" and the output column is 
+    The name of the output parset depends on the input MS name and has
+      a suffix of '_add.parset'. The input column is
+      "ADDED_DATA_SOURCE" and the output column is
       "MODEL_DATA". The chunksize is hardcoded to 200.
     Input:
       * source - Source or sources to add.
       * ms - Input MS. Used for the name of the parset.
       * do_ap - True or False changes if the Gain is enabled or not.
     Output:
-      * The name of the output parset    
+      * The name of the output parset
     """
     bbs_parset = ms + '_addfield.parset'
     os.system('rm -f ' + bbs_parset)
@@ -721,8 +721,8 @@ def create_add_parset_field_ms(source, ms, do_ap):
 def create_subtract_parset(outputcolumn):
     """
     Create a parset to subtract sources FIXME.
-    The name of the output parset is 'sub.parset'. The input 
-      column is "ADDED_DATA_SOURCE". The chunksize is hardcoded to 100.  
+    The name of the output parset is 'sub.parset'. The input
+      column is "ADDED_DATA_SOURCE". The chunksize is hardcoded to 100.
     Input:
       * outputcolumn - Output column.
     Output:
@@ -755,11 +755,11 @@ def create_subtract_parset_field(outputcolumn, TEC):
     """
     Create a parset to subtract sources (previously added to the
     "ADDED_DATA_SOURCE" column? FIXME). field version FIXME.
-    The name of the output parset is 'sub.parset'. The input 
-      column is "MODEL_DATA". The chunksize is hardcoded to 175.  
+    The name of the output parset is 'sub.parset'. The input
+      column is "MODEL_DATA". The chunksize is hardcoded to 175.
     Input:
       * outputcolumn - Output column.
-      * TEC - "True" or other. 
+      * TEC - "True" or other.
     Output:
       * The name of the output parset
     """
@@ -795,8 +795,8 @@ def create_subtract_parset_field(outputcolumn, TEC):
 
 def join_parmdb_stefcal(ms, parmdb_selfcal, parmdb_template, parmdb_out):
     """
-    FIXME 
-    Transfer the parmdb values from the self_calibration using a 
+    FIXME
+    Transfer the parmdb values from the self_calibration using a
     template?
     """
     import lofar.parmdb
@@ -843,7 +843,7 @@ def join_parmdb_stefcal(ms, parmdb_selfcal, parmdb_template, parmdb_out):
 def join_parmdb(ms, parmdb_selfcal, parmdb_nondde, parmdb_template, parmdb_out, TEC, clock):
     """
     FIXME
-    Transfer the parmdb values from the self_calibration using a 
+    Transfer the parmdb values from the self_calibration using a
     template?
     """
     import lofar.parmdb
@@ -907,7 +907,7 @@ def normalize_parmdbs(mslist, parmdbname, parmdboutname):
     Input:
       * mslist - List of MS with the solutons to normalize.
       * parmdbname - Name of the parmdb used in all the MSs.
-      * parmdboutname - Name of the output parmdb with the normalized 
+      * parmdboutname - Name of the output parmdb with the normalized
           gains.
     """
     import lofar.parmdb
@@ -964,7 +964,7 @@ def normalize_parmdbs(mslist, parmdbname, parmdboutname):
 def return_slist(imagename, skymodel, ref_source):
     """
     FIXME
-    Return the list of sources of a skymodel within the boundaries of 
+    Return the list of sources of a skymodel within the boundaries of
     an image region??
     """
 
@@ -1005,11 +1005,11 @@ def return_slist(imagename, skymodel, ref_source):
         coor = [0,1,declist[patch_id],ralist[patch_id]]
         pix  = img.topixel(coor)[2:4]
 
-        if ((pix[0] >= 0) and 
+        if ((pix[0] >= 0) and
             (pix[0] <= (sh[0]-1)) and
-            (pix[1] >= 0) and 
+            (pix[1] >= 0) and
             (pix[1] <= (sh[1]-1))):
-            
+
             if pixels[0,0,pix[0],pix[1]] != 0.0:  # only include if withtin the clean mask (==1)
                 plist.append(patches[patch_id])
 
@@ -1047,9 +1047,9 @@ def angsep(ra1deg, dec1deg, ra2deg, dec2deg):
     y = numpy.sin(ra1rad)*numpy.cos(dec1rad)*numpy.sin(ra2rad)*numpy.cos(dec2rad)
     z = numpy.sin(dec1rad)*numpy.sin(dec2rad)
 
-    if x+y+z >= 1: 
+    if x+y+z >= 1:
         rad = 0
-    else: 
+    else:
         rad=numpy.acos(x+y+z)
 
     # Angular separation
@@ -1060,10 +1060,10 @@ def angsep(ra1deg, dec1deg, ra2deg, dec2deg):
 def cal_return_slist(imagename, skymodel, direction, imsize):
     """
     FIXME
-    Return the list of sources of a skymodel within the boundaries of 
+    Return the list of sources of a skymodel within the boundaries of
     an image region??
     """
-    
+
     factor = 0.8 # only add back in the center 80%
     cut = 1.5*(imsize/2.)*factor/3600.
 
@@ -1123,11 +1123,11 @@ def cal_return_slist(imagename, skymodel, direction, imsize):
 
         if dis < cut: # ok sources is within image
             # check if the sources is within the mask region (because mask can be smaller than image)
-            if ((pix[0] >= 0) and 
-                (pix[0] <= (sh[0]-1)) and 
-                (pix[1] >= 0) and 
+            if ((pix[0] >= 0) and
+                (pix[0] <= (sh[0]-1)) and
+                (pix[1] >= 0) and
                 (pix[1] <= (sh[1]-1))):
-                
+
                 if pixels[0,0,pix[0],pix[1]] != 0.0:  # only include if withtin the clean mask (==1)
                     plist.append(patches[patch_id])
 
@@ -1209,11 +1209,11 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
 
     if region != 'empty': # in that case we have a extra region file for the clean mask
         niter = niter*3 # increase niter, tune manually if needed
-        os.system('casapy --nogui -c ' + SCRIPTPATH +'/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask_sources+'field,'+region + 
+        os.system('casapy --nogui -c ' + SCRIPTPATH +'/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask_sources+'field,'+region +
                   ' ' + cleandepth2 + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + mscale)
 
     else:
-        os.system('casapy --nogui -c '+ SCRIPTPATH + '/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask_sources+'field' + 
+        os.system('casapy --nogui -c '+ SCRIPTPATH + '/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask_sources+'field' +
                    ' ' + cleandepth2 + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + mscale)
 
     # convert to FITS
@@ -1225,8 +1225,8 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
     return imout, mask_sources+'field', imsize
 
 
-def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, 
-                       nterms, atrous_do, imsize, inputmask, mscale, 
+def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl,
+                       nterms, atrous_do, imsize, inputmask, mscale,
                        region, cellsize, uvrange, wsclean, WSCleanRobust,
                        BlankField, WScleanWBgroup, numchanperms):
     """
@@ -1325,7 +1325,7 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl,
 
     # create the mask
     os.system('python ' + SCRIPTPATH + '/makecleanmask_field_wsclean.py --threshpix '+str(threshpix)+
-              ' --threshisl '+str(threshisl) +' --atrous_do '+ str(atrous_do) + 
+              ' --threshisl '+str(threshisl) +' --atrous_do '+ str(atrous_do) +
               ' --casaregion  '+ region + ' '  + mask_image)
 
     mask_name  = mask_image + '.fitsmask'
@@ -1380,7 +1380,7 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl,
     os.system(cmd1+cmd2+cmd3)
 
     # convert from FITS to casapy format
-    # os.system('casapy --nogui -c ' + SCRIPTPATH +'/fits2image.py ' + 
+    # os.system('casapy --nogui -c ' + SCRIPTPATH +'/fits2image.py ' +
     #           imout + '-image.fits' + ' ' + imout +'.image')
 
 
@@ -1424,7 +1424,7 @@ def insertbeaminfo_mfs(image, templateim):
     return
 
 
-def do_fieldFFT(ms, image, imsize, cellsize, wsclean, mslist, 
+def do_fieldFFT(ms, image, imsize, cellsize, wsclean, mslist,
                 WSCleanRobust, WScleanWBgroup, numchanperms):
     """
     FIXME
@@ -1542,7 +1542,7 @@ if __name__ == "__main__":
     # so it is dangerous to let a user set this without being aware of this
 
     source_info_rec = numpy.genfromtxt(peelsourceinfo,
-                                       dtype="S50,S25,S5,S5,i8,i8,i8,i8,S2,S255,S255,S255,S5", 
+                                       dtype="S50,S25,S5,S5,i8,i8,i8,i8,S2,S255,S255,S255,S5",
                                        names=["sourcelist","directions","atrous_do","mscale_field","imsizes",
                                               "cellsizetime_p","cellsizetime_a","fieldsize","dynamicrange",
                                               "regionselfc","regionfield","peelskymodel","outliersource"],
@@ -1737,7 +1737,7 @@ if __name__ == "__main__":
 
         ### PHASESHIFT the FULL resolution dataset, for MODEL_DATA FFT subtract
             if outliersource[source_id] == 'False':
-                parset = create_phaseshift_parset_full(allbandspath + 'allbands.concat.ms', 
+                parset = create_phaseshift_parset_full(allbandspath + 'allbands.concat.ms',
                                                    allbandspath + 'allbands.concat.shifted_'+source+'.ms',
                                                    directions[source_id],'DATA')
                 os.system('NDPPP ' + parset + '&') # run in background
@@ -1764,14 +1764,14 @@ if __name__ == "__main__":
             logging.info('Region file: '+ str(regionselfc[source_id]))
 
             if StefCal:
-                os.system('python ' + SCRIPTPATH + '/selfcalv20.py ' + inputmslist + ' ' + source + ' ' + atrous_do[source_id] + ' ' + str(imsizes[source_id]) + ' ' + 
-                          str(nterms) + ' ' + str(cellsizetime_a[source_id]) + ' ' + str(cellsizetime_p[source_id]) + ' ' + TEC + ' ' + clock + ' ' + 
+                os.system('python ' + SCRIPTPATH + '/selfcalv20.py ' + inputmslist + ' ' + source + ' ' + atrous_do[source_id] + ' ' + str(imsizes[source_id]) + ' ' +
+                          str(nterms) + ' ' + str(cellsizetime_a[source_id]) + ' ' + str(cellsizetime_p[source_id]) + ' ' + TEC + ' ' + clock + ' ' +
                           str(dynamicrange[source_id]) + ' ' + regionselfc[source_id] + ' ' + str(uvrange) + ' ' + str(peelskymodel[source_id]) + ' ' +
                           str(cellsize))
 
             else:
-                os.system('python '+SCRIPTPATH+'/selfcalv19_ww_cep3.py ' + inputmslist + ' ' + source + ' ' + atrous_do[source_id] + ' ' + str(imsizes[source_id]) + ' ' + 
-                          str(nterms) + ' ' + str(cellsizetime_a[source_id]) + ' ' + str(cellsizetime_p[source_id]) + ' ' + TEC + ' ' + clock + ' ' + 
+                os.system('python '+SCRIPTPATH+'/selfcalv19_ww_cep3.py ' + inputmslist + ' ' + source + ' ' + atrous_do[source_id] + ' ' + str(imsizes[source_id]) + ' ' +
+                          str(nterms) + ' ' + str(cellsizetime_a[source_id]) + ' ' + str(cellsizetime_p[source_id]) + ' ' + TEC + ' ' + clock + ' ' +
                           str(dynamicrange[source_id]) + ' ' + regionselfc[source_id])
 
 
@@ -1854,7 +1854,7 @@ if __name__ == "__main__":
                     msavglist.append(ms.split('.')[0] + '.' + source + '.ms.avgfield')
 
                 for ms_id, ms in enumerate(mslist):
-                    parset = create_phaseshift_parset_field(ms, msavglist[ms_id], source, 
+                    parset = create_phaseshift_parset_field(ms, msavglist[ms_id], source,
                                                         directions[source_id], numchanperms)
 
                     cmd = "ps -u " + username + " | grep NDPPP | wc -l"
@@ -1888,7 +1888,7 @@ if __name__ == "__main__":
                     msavglist.append(ms.split('.')[0] + '.' + source + '.ms.avgfield')
 
                 imout,mask_out, imsizef = make_image_wsclean(msavglist, source, 'field0', 5, 3, nterms, 'True',
-                                                         None, output_template_im +'.masktmp', 
+                                                         None, output_template_im +'.masktmp',
                                                          mscale_field[source_id],regionfield[source_id],
                                                          cellsize, uvrange,wsclean,WSCleanRobust,BlankField,
                                                          WScleanWBgroup, numchanperms)
@@ -1900,7 +1900,7 @@ if __name__ == "__main__":
 
             if StartAtStep in ['preSC', 'doSC', 'postSC','preFACET','doFACET','postFACET']:
 
-                # if we are restarting, it's possible that 'allbands.concat.shifted_'+source+'.ms' 
+                # if we are restarting, it's possible that 'allbands.concat.shifted_'+source+'.ms'
                 #  may have been deleted earlier. So re-create it if it doesn't exist
 
                 if not(os.path.isdir(allbandspath + 'allbands.concat.shifted_'+source+'.ms')):

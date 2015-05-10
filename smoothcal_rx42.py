@@ -83,11 +83,11 @@ def median_window_filter(ampl, half_window, threshold):
 
     for i in range(len(mask)):
         if mask[i]:
-           ampl_tot_copy[i] = median_array[half_window+i] # fixed 2012
+            ampl_tot_copy[i] = median_array[half_window+i] # fixed 2012
     return ampl_tot_copy
 
 
-msname                   = str(sys.argv[1])                     
+msname                   = str(sys.argv[1])
 instrument_name          = str(sys.argv[2])
 instrument_name_smoothed = str(sys.argv[3])  # msname +'.instrument_smoothed'
 
@@ -125,23 +125,23 @@ for pol in pol_list:
     for antenna in antenna_list:
         print 'smoothing [antenna, polarization]:', antenna, pol
         amp = numpy.copy(parms[gain + ':' + pol + ':Ampl:'+ antenna]['values'][:, 0])
-     
+
         amp = median_window_filter(amp,window,10)
-	amp = 1./amp
-        amp = median_window_filter(amp,window,10)    
-	amp = 1./amp    
-	    
-	     
+        amp = 1./amp
+        amp = median_window_filter(amp,window,10)
+        amp = 1./amp
+
+
         amp = median_window_filter(amp,window,4)
-	amp = 1./amp
-        amp = median_window_filter(amp,window,4)    
-	amp = 1./amp    
+        amp = 1./amp
+        amp = median_window_filter(amp,window,4)
+        amp = 1./amp
 
         #amp = median_smooth(amp, 100)
 
-	    
+
         parms[gain + ':' + pol + ':Ampl:'+ antenna]['values'][:, 0] = amp
-         
+
 
 print 'writing the new database:', instrument_name_smoothed
 print 'check your results with: parmdbplot.py', instrument_name_smoothed

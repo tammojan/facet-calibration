@@ -81,11 +81,11 @@ def median_window_filter(ampl, half_window, threshold):
 
     for i in range(len(mask)):
         if mask[i]:
-           ampl_tot_copy[i] = median_array[half_window+i] # fixed 2012
+            ampl_tot_copy[i] = median_array[half_window+i] # fixed 2012
     return ampl_tot_copy
 
 
-msname                   = str(sys.argv[1])                     
+msname                   = str(sys.argv[1])
 instrument_name          = str(sys.argv[2])
 instrument_name_smoothed = str(sys.argv[3])  # msname +'.instrument_smoothed'
 
@@ -126,12 +126,12 @@ window = 4
 for pol in pol_list:
     for antenna in antenna_list:
         print 'smoothing [antenna, polarization]:', antenna, pol
-	
+
         #amp = numpy.copy(parms[gain + ':' + pol + ':Ampl:'+ antenna]['values'][:, 0])
-   
+
         real = numpy.copy(parms[gain + ':' + pol + ':Real:'+ antenna]['values'][:, 0])
         imag = numpy.copy(parms[gain + ':' + pol + ':Imag:'+ antenna]['values'][:, 0])
-     
+
         phase = numpy.arctan2(imag,real)
         amp   = numpy.sqrt(imag**2 + real**2)
 
@@ -143,25 +143,25 @@ for pol in pol_list:
         amp = median_window_filter(amp,100,6)
         amp = 1./amp
 
-	
+
         amp = median_window_filter(amp,window*3,6)
-	amp = 1./amp
-        amp = median_window_filter(amp,window*3,6)    
-	amp = 1./amp    
-	    
-	     
+        amp = 1./amp
+        amp = median_window_filter(amp,window*3,6)
+        amp = 1./amp
+
+
         amp = median_window_filter(amp,window,5)
-	amp = 1./amp
-        amp = median_window_filter(amp,window,5)    
-	amp = 1./amp    
+        amp = 1./amp
+        amp = median_window_filter(amp,window,5)
+        amp = 1./amp
 
 
         #amp = median_smooth(amp, 100)
 
-	    
+
         #parms[gain + ':' + pol + ':Ampl:'+ antenna]['values'][:, 0] = amp
         parms[gain + ':' + pol + ':Real:'+ antenna]['values'][:, 0] = amp*numpy.cos(phase)
-	parms[gain + ':' + pol + ':Imag:'+ antenna]['values'][:, 0] = amp*numpy.sin(phase)
+        parms[gain + ':' + pol + ':Imag:'+ antenna]['values'][:, 0] = amp*numpy.sin(phase)
 
 print 'writing the new database:', instrument_name_smoothed
 print 'check your results with: parmdbplot.py', instrument_name_smoothed

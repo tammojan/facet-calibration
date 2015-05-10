@@ -22,12 +22,12 @@ mscale    = sys.argv[el-1]
 cycfactor = 2.5
 
 if niter > 1500:
-   cycfactor = 3.0
+    cycfactor = 3.0
 
 
 scales = []
 if mscale == 'True':
-   scales = [0,3,7,25,60,150]
+    scales = [0,3,7,25,60,150]
 
 #timer = '>15:32:00'
 #timer = '<23:50:00' # to fix instabilities at the end of a 20 min block
@@ -37,29 +37,29 @@ nfacets = 1
 wplanes = 1
 
 if imsizep > 512:
-   wplanes = 64
+    wplanes = 64
 
 if imsizep > 799:
-   wplanes = 96
+    wplanes = 96
 
 if imsizep > 1023:
-   wplanes = 128
+    wplanes = 128
 
 if imsizep > 1599:
-   wplanes = 256
-   nfacets = 1
+    wplanes = 256
+    nfacets = 1
 
 if imsizep > 2047:
-  wplanes = 384
-  nfacets = 1
+    wplanes = 384
+    nfacets = 1
 
 if imsizep > 3000:
-  wplanes = 448 
-  nfacets = 1
+    wplanes = 448
+    nfacets = 1
 
 if imsizep > 4095:
-  wplanes = 512
-  nfacets  = 1
+    wplanes = 512
+    nfacets  = 1
 
 print ms, imageout, mask, threshold, niter, nterms
 
@@ -73,17 +73,17 @@ masktmp = mask
 
 
 if mask == "None":
-   mask = ""
+    mask = ""
 
 
 print masktmp.split(",")
 
 if len(masktmp.split(",")) >= 2 :
-  print 'Ok, we have more than one mask...'
-  mask = []
+    print 'Ok, we have more than one mask...'
+    mask = []
 
-  for idx in range(len(masktmp.split(","))):
-    mask.append(masktmp.split(",")[idx])
+    for idx in range(len(masktmp.split(","))):
+        mask.append(masktmp.split(",")[idx])
 
 print 'Using mask:', mask
 
