@@ -1298,12 +1298,12 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl,
         cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
         cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' -cleanborder 0 -threshold '+ cleandepth1 + ' '
         cmd3 = '-minuv-l '+ str(uvrange) \
-               +' -mgain 0.7 -fitbeam -datacolumn DATA -no-update-model-required -joinchannels -channelsout ' +\
+               +' -mgain 0.6 -fitbeam -datacolumn DATA -no-update-model-required -joinchannels -channelsout ' +\
                str(channelsout) + ' '  + outms
     else:
         cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
         cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' -cleanborder 0 -threshold '+ cleandepth1 + ' '
-        cmd3 = '-minuv-l '+ str(uvrange) +' -mgain 0.7 -fitbeam -datacolumn DATA -no-update-model-required ' + outms
+        cmd3 = '-minuv-l '+ str(uvrange) +' -mgain 0.6 -fitbeam -datacolumn DATA -no-update-model-required ' + outms
 
     print cmd1+cmd2+cmd3
     os.system(cmd1+cmd2+cmd3)
