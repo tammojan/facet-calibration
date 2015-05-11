@@ -15,7 +15,7 @@ import logging
 logging.basicConfig(filename='dde_reimage.log',level=logging.DEBUG, format='%(asctime)s -  %(message)s', datefmt='%Y-%d-%m %H:%M:%S')
 
 if len(sys.argv)<2:
-   raise Exception('Give the path to the setup code for the facet')
+    raise Exception('Give the path to the setup code for the facet')
 
 print 'Using',sys.argv[1],'as the setup code'
 execfile(sys.argv[1])
@@ -1406,12 +1406,10 @@ for source in do_sources:
         output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
         #pid = (Popen('pidof NDPPP', shell=True, stdout=PIPE).communicate()[0])
         #pid_list = pid.split(' ')
-        
+
 
     logging.info('making image')
     ### STEP 4a: do facet ##
     # make large field image and make mask
     imout,mask_out, imsizef = make_image(msfieldavgfacetlist1, source, 'field1', 5, 3, nterms, 'True', None, \
                             output_template_im, mscale_field[source_id],regionfield[source_id])
-
-        

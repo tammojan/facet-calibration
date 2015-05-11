@@ -11,39 +11,39 @@ import pyrap.images
 username = pwd.getpwuid(os.getuid())[0]
 
 def create_ndppp_parset(msin, msout):
-   ndppp_parset = msin.split('.')[0] +'ndppp_lowresavg.parset' 
-   os.system('rm -f ' + ndppp_parset)
+    ndppp_parset = msin.split('.')[0] +'ndppp_lowresavg.parset'
+    os.system('rm -f ' + ndppp_parset)
 
-   f=open(ndppp_parset, 'w')
-   f.write('msin ="%s"\n' % msin) 
-   f.write('msin.datacolumn = MODEL_DATA\n')
-   f.write('msin.autoweight = false\n')
-   f.write('msout ="%s"\n' % msout)
-   f.write('msout.writefullresflag=False\n') 
-   f.write('steps = [avg1]\n')
-   f.write('avg1.type = squash\n')
-   f.write('avg1.freqstep = 5\n')
-   f.write('avg1.timestep = 2\n')         
-   f.close()
-   return ndppp_parset
+    f=open(ndppp_parset, 'w')
+    f.write('msin ="%s"\n' % msin)
+    f.write('msin.datacolumn = MODEL_DATA\n')
+    f.write('msin.autoweight = false\n')
+    f.write('msout ="%s"\n' % msout)
+    f.write('msout.writefullresflag=False\n')
+    f.write('steps = [avg1]\n')
+    f.write('avg1.type = squash\n')
+    f.write('avg1.freqstep = 5\n')
+    f.write('avg1.timestep = 2\n')
+    f.close()
+    return ndppp_parset
 
 def wsclean_wait():
-   warned=False
-     ######### check that no wsclean is running
-   cmd = "ps -f -u " + username + " | grep wsclean | grep -v _wsclean_v2.py | grep -v wsclean.parset |grep -v grep |wc -l"
-   while True: # "grep -v grep" to prevent counting the grep command
-      output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])  
-      if output==0:
-         break
-      if not(warned):
-         print 'A wsclean is already running, waiting for it to finish'
-         warned=True
-      time.sleep(2)
+    warned=False
+      ######### check that no wsclean is running
+    cmd = "ps -f -u " + username + " | grep wsclean | grep -v _wsclean_v2.py | grep -v wsclean.parset |grep -v grep |wc -l"
+    while True: # "grep -v grep" to prevent counting the grep command
+        output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
+        if output==0:
+            break
+        if not(warned):
+            print 'A wsclean is already running, waiting for it to finish'
+            warned=True
+        time.sleep(2)
 
 ############ MAIN CODE ###########
 
 if len(sys.argv)<2:
-   raise Exception('Give the path to the setup code for the facet')
+    raise Exception('Give the path to the setup code for the facet')
 
 # setup code must set SCRIPTPATH, wsclean, mslist, casaregion, and may
 # do anything else needed
@@ -54,9 +54,9 @@ print 'script path is',SCRIPTPATH
 
 print 'working on MS list',mslist
 try:
-  cleanup
+    cleanup
 except NameError:
-  cleanup=False
+    cleanup=False
 
 # parameters below should not need to be changed
 
@@ -64,7 +64,7 @@ niterh = 40000
 niterl = 20000
 nterms = 1
 imsizeh= 6144
-imsizel= 4800 
+imsizel= 4800
 cellh  = '7.5arcsec'
 celll  = '25arcsec'
 
@@ -74,230 +74,230 @@ atrous_do = "True"
 
 for ms in mslist:
 
-  imhigh = ms.split('.')[0] + 'highres' 
-  imlow  = ms.split('.')[0] + 'lowres' 
-  finalsky =  ms.split('.')[0] + '.skymodel'
+    imhigh = ms.split('.')[0] + 'highres'
+    imlow  = ms.split('.')[0] + 'lowres'
+    finalsky =  ms.split('.')[0] + '.skymodel'
 
-  if cleanup:
-     os.system('rm -r '+imhigh+'*')
-     os.system('rm -r '+imlow+'*')
-     os.system('rm '+finalsky)
+    if cleanup:
+        os.system('rm -r '+imhigh+'*')
+        os.system('rm -r '+imlow+'*')
+        os.system('rm '+finalsky)
 
-  if os.path.isfile(imhigh+'-image.fits'):
-     print 'High-resolution image exists, NOT remaking it'
-  else:
+    if os.path.isfile(imhigh+'-image.fits'):
+        print 'High-resolution image exists, NOT remaking it'
+    else:
 # ---------------------
 # image without mask
-     cmd1 = wsclean + ' -reorder -name ' + imhigh + ' -size ' + str(imsizeh) + ' ' + str(imsizeh) + ' '
-     cmd2 = '-scale ' + cellh + ' -weight briggs 0.0 -niter ' + str(niterh) + ' '
-     cmd3 = '-maxuv-l 7e3 -mgain 0.65 -fitbeam -datacolumn CORRECTED_DATA -no-update-model-required ' + ms
- 
-     print cmd1+cmd2+cmd3
- 
-     wsclean_wait()
-     os.system(cmd1+cmd2+cmd3)
+        cmd1 = wsclean + ' -reorder -name ' + imhigh + ' -size ' + str(imsizeh) + ' ' + str(imsizeh) + ' '
+        cmd2 = '-scale ' + cellh + ' -weight briggs 0.0 -niter ' + str(niterh) + ' '
+        cmd3 = '-maxuv-l 7e3 -mgain 0.65 -fitbeam -datacolumn CORRECTED_DATA -no-update-model-required ' + ms
+
+        print cmd1+cmd2+cmd3
+
+        wsclean_wait()
+        os.system(cmd1+cmd2+cmd3)
 
 
 # create the mask
-  mask_name  = imhigh + '.fitsmask'
-  casa_mask  = imhigh + '.casamask'
+    mask_name  = imhigh + '.fitsmask'
+    casa_mask  = imhigh + '.casamask'
 
-  if os.path.isdir(casa_mask):
-     print 'Mask exists, NOT remaking it'
-  else:
-     
-     cmd='python '+SCRIPTPATH+'/makecleanmask_10sb_wsclean.py --threshpix '+str(threshpix)+\
-             ' --threshisl '+str(threshisl) +' --atrous_do '+ str(atrous_do)+' ' 
-     if casaregion!='':
-        cmd+='--casaregion  '+ casaregion +' '
-     cmd+=imhigh + '-image.fits'
+    if os.path.isdir(casa_mask):
+        print 'Mask exists, NOT remaking it'
+    else:
 
-     print cmd
-     os.system(cmd)
- 
-     maskim=pyrap.images.image(mask_name)
-     maskim.saveas(casa_mask)
+        cmd='python '+SCRIPTPATH+'/makecleanmask_10sb_wsclean.py --threshpix '+str(threshpix)+\
+                ' --threshisl '+str(threshisl) +' --atrous_do '+ str(atrous_do)+' '
+        if casaregion!='':
+            cmd+='--casaregion  '+ casaregion +' '
+        cmd+=imhigh + '-image.fits'
 
- # include region file
-     if casaregion != '':
-        os.system('casapy --nologger -c '+SCRIPTPATH+'/fitsandregion2image.py '\
-             + mask_name + ' ' + casa_mask + ' ' + casaregion)
-     else:
-        os.system('casapy --nologger -c '+SCRIPTPATH+'/fitsandregion2image.py '\
-             + mask_name + ' ' + casa_mask + ' ' + 'None')
- 
-  imhigh = imhigh + 'withmask'
- 
-  if os.path.isfile(imhigh+'-image.fits'):
-     print 'Masked high-resolution image exists, NOT remaking it'
-  else:
-     cmd1 = wsclean + ' -reorder -name ' + imhigh + ' -size ' + str(imsizeh) + ' ' + str(imsizeh) + ' '
-     cmd2 = '-scale ' + cellh + ' -weight briggs 0.0 -niter ' + str(niterh) + ' '
-     cmd3 = '-maxuv-l 7e3 -no-update-model-required -mgain 0.65 -fitbeam -datacolumn CORRECTED_DATA -casamask ' + casa_mask  + ' ' + ms
- 
-     print cmd1+cmd2+cmd3
-     wsclean_wait()
-     os.system(cmd1+cmd2+cmd3)
+        print cmd
+        os.system(cmd)
 
-  fits_model = imhigh + '-model.fits'
-  casa_model = imhigh + '.model'
-  if os.path.isdir(casa_model):
-     print 'CASA model exists, NOT remaking it'
-  else:
- 
-  # convert model fits image to casa .model format
-     print 'Converting model to casapy format', fits_model, ' ==> ', casa_model
- 
-     modelim=pyrap.images.image(fits_model)
-     modelim.saveas(casa_model)
+        maskim=pyrap.images.image(mask_name)
+        maskim.saveas(casa_mask)
 
- #os.system('casapy --nologger -c '+SCRIPTPATH+'/fits2image.py '\
- #            + fits_model + ' ' + casa_model)
+    # include region file
+        if casaregion != '':
+            os.system('casapy --nologger -c '+SCRIPTPATH+'/fitsandregion2image.py '\
+                 + mask_name + ' ' + casa_mask + ' ' + casaregion)
+        else:
+            os.system('casapy --nologger -c '+SCRIPTPATH+'/fitsandregion2image.py '\
+                 + mask_name + ' ' + casa_mask + ' ' + 'None')
 
- # ---------------------
- # make the skymodel
-  skymodel = imhigh  + '.skymodel'
-  if os.path.isfile(skymodel):
-     print 'Skymodel exists, NOT remaking it'
-  else:
-     os.system(SCRIPTPATH+'/casapy2bbs_one_patch_per_cc.py '  + casa_model + ' ' +  skymodel)
-   
-  bbslog=ms + '.highressubbbslog'
-  if os.path.isfile(bbslog):
-     print 'BBS log for subtraction exists, NOT re-doing subtraction. Be careful!'
-  else:
- # ---------------------
- # subtract the cc
-    parset = SCRIPTPATH+'/subtractall_highres_wsclean.parset'
-    cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name instrument_ap_smoothed '
-    cmd = cmd + ms + ' ' + parset + ' ' + skymodel + ' >' + bbslog 
-    print cmd
+    imhigh = imhigh + 'withmask'
 
-    os.system(cmd)
- 
- # ---------------------
- # average down for lowres image
+    if os.path.isfile(imhigh+'-image.fits'):
+        print 'Masked high-resolution image exists, NOT remaking it'
+    else:
+        cmd1 = wsclean + ' -reorder -name ' + imhigh + ' -size ' + str(imsizeh) + ' ' + str(imsizeh) + ' '
+        cmd2 = '-scale ' + cellh + ' -weight briggs 0.0 -niter ' + str(niterh) + ' '
+        cmd3 = '-maxuv-l 7e3 -no-update-model-required -mgain 0.65 -fitbeam -datacolumn CORRECTED_DATA -casamask ' + casa_mask  + ' ' + ms
 
-  msout = ms.split('.')[0] + '.lowres.ms'
-  if os.path.isdir(msout):
-     print 'Averaged lowres MS already exists, NOT remaking it'
-  else:
- 
-     ndppp_parset = create_ndppp_parset(ms, msout)
- 
-     os.system('rm -rf ' + msout)
-     os.system('NDPPP ' + ndppp_parset +' >'+ ms+'.NDPPPavelog')
- 
-  if os.path.isfile(imlow+'-image.fits'):
-     print 'Low-resolution image exists, NOT remaking it'
-  else:
+        print cmd1+cmd2+cmd3
+        wsclean_wait()
+        os.system(cmd1+cmd2+cmd3)
 
- # make the lowres image (no mask)
-     cmd1 = wsclean + ' -reorder -name ' + imlow + ' -size ' + str(imsizel) + ' ' + str(imsizel) + ' '
-     cmd2 = '-scale ' + celll + ' -weight briggs 0.0 -niter ' + str(niterl) + ' '
-     cmd3 = '-maxuv-l 2e3 -no-update-model-required -mgain 0.65 -fitbeam -datacolumn DATA ' + msout
- 
-     print cmd1+cmd2+cmd3
- 
- #########
-     os.system(cmd1+cmd2+cmd3)
- 
- # ---------------------
- # create the lowres mask
-  mask_name  = imlow + '.fitsmask'
-  casa_mask  = imlow + '.casamask'
+    fits_model = imhigh + '-model.fits'
+    casa_model = imhigh + '.model'
+    if os.path.isdir(casa_model):
+        print 'CASA model exists, NOT remaking it'
+    else:
 
-  if os.path.isdir(casa_mask):
-     print 'Low-res CASA mask exists, NOT re-making it'
-  else:
-     cmd='python '+SCRIPTPATH+'/makecleanmask_10sb_wsclean.py --threshpix '+str(5.0)+\
-            ' --threshisl '+str(4.0) +' --atrous_do '+ str(atrous_do) + ' '
-     if casaregion!='':
-        cmd+='--casaregion  '+ casaregion +' '
-     cmd+=imlow + '-image.fits'
-     os.system(cmd)
+    # convert model fits image to casa .model format
+        print 'Converting model to casapy format', fits_model, ' ==> ', casa_model
 
- # convert to CASA format
- 
-     maskim=pyrap.images.image(mask_name)
-     maskim.saveas(casa_mask)
+        modelim=pyrap.images.image(fits_model)
+        modelim.saveas(casa_model)
 
- # include region file
-     if casaregion != '':
-        os.system('casapy --nologger -c '+SCRIPTPATH+'/fitsandregion2image.py '\
-             + mask_name + ' ' + casa_mask + ' ' + casaregion)
-     else:
-        os.system('casapy --nologger -c '+SCRIPTPATH+'/fitsandregion2image.py '\
-             + mask_name + ' ' + casa_mask + ' ' + 'None')
+    #os.system('casapy --nologger -c '+SCRIPTPATH+'/fits2image.py '\
+    #            + fits_model + ' ' + casa_model)
 
-  imlow = imlow + 'withmask'
-  if os.path.isfile(imlow+'-image.fits'):
-     print 'Low-res masked image exists, NOT re-making it'
-  else:
-     cmd1 = wsclean + ' -reorder -name ' + imlow + ' -size ' + str(imsizel) + ' ' + str(imsizel) + ' '
-     cmd2 = '-scale ' + celll + ' -weight briggs 0.0 -niter ' + str(niterl) + ' '
-     cmd3 = '-maxuv-l 2e3 -no-update-model-required -mgain 0.65 -fitbeam -datacolumn DATA -casamask ' + casa_mask  + ' ' + msout
- 
-     print cmd1+cmd2+cmd3
- 
-  ######### check that no wsclean is running
-     wsclean_wait()
- #########
-     os.system(cmd1+cmd2+cmd3)
- 
+    # ---------------------
+    # make the skymodel
+    skymodel = imhigh  + '.skymodel'
+    if os.path.isfile(skymodel):
+        print 'Skymodel exists, NOT remaking it'
+    else:
+        os.system(SCRIPTPATH+'/casapy2bbs_one_patch_per_cc.py '  + casa_model + ' ' +  skymodel)
 
+    bbslog=ms + '.highressubbbslog'
+    if os.path.isfile(bbslog):
+        print 'BBS log for subtraction exists, NOT re-doing subtraction. Be careful!'
+    else:
+    # ---------------------
+    # subtract the cc
+        parset = SCRIPTPATH+'/subtractall_highres_wsclean.parset'
+        cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name instrument_ap_smoothed '
+        cmd = cmd + ms + ' ' + parset + ' ' + skymodel + ' >' + bbslog
+        print cmd
 
- 
-  fits_model = imlow + '-model.fits'
-  casa_model = imlow + '.model'
- 
-  if os.path.isdir(casa_model):
-     print 'Low-res CASA model exists, NOT re-making it'
-  else:
- # convert model fits image to casa .model format
-     print 'Converting model to casapy format', fits_model, ' ==> ', casa_model
+        os.system(cmd)
 
-     modelim=pyrap.images.image(fits_model)
-     modelim.saveas(casa_model)
+    # ---------------------
+    # average down for lowres image
 
- #os.system('casapy --nologger -c '+SCRIPTPATH+'/fits2image.py '\
- #            + fits_model + ' ' + casa_model)
- # ---------------------
- # create the low-res skymodel
-  skymodel = imlow  + '.skymodel'
+    msout = ms.split('.')[0] + '.lowres.ms'
+    if os.path.isdir(msout):
+        print 'Averaged lowres MS already exists, NOT remaking it'
+    else:
 
-  if os.path.isfile(skymodel):
-     print 'Skymodel exists, NOT remaking it'
-  else:
-     os.system(SCRIPTPATH+'/casapy2bbs_one_patch_per_cc.py '  + casa_model  + ' ' +  skymodel)
-  
-  # ---------------------
-  # subtract thelowres cc
-  bbslog=ms + '.lowressubbbslog'
-  if os.path.isfile(bbslog):
-     print 'BBS log exists, NOT doing low-res subtract (CAREFUL!)'
-  else:
-     parset = SCRIPTPATH+'/subtractall_lowres_wsclean.parset'
-     cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name instrument_ap_smoothed '
-     cmd = cmd + ms + ' ' + parset + ' ' + skymodel + ' >' + bbslog 
-     print cmd
-     os.system(cmd)
+        ndppp_parset = create_ndppp_parset(ms, msout)
+
+        os.system('rm -rf ' + msout)
+        os.system('NDPPP ' + ndppp_parset +' >'+ ms+'.NDPPPavelog')
+
+    if os.path.isfile(imlow+'-image.fits'):
+        print 'Low-resolution image exists, NOT remaking it'
+    else:
+
+    # make the lowres image (no mask)
+        cmd1 = wsclean + ' -reorder -name ' + imlow + ' -size ' + str(imsizel) + ' ' + str(imsizel) + ' '
+        cmd2 = '-scale ' + celll + ' -weight briggs 0.0 -niter ' + str(niterl) + ' '
+        cmd3 = '-maxuv-l 2e3 -no-update-model-required -mgain 0.65 -fitbeam -datacolumn DATA ' + msout
+
+        print cmd1+cmd2+cmd3
+
+    #########
+        os.system(cmd1+cmd2+cmd3)
+
+    # ---------------------
+    # create the lowres mask
+    mask_name  = imlow + '.fitsmask'
+    casa_mask  = imlow + '.casamask'
+
+    if os.path.isdir(casa_mask):
+        print 'Low-res CASA mask exists, NOT re-making it'
+    else:
+        cmd='python '+SCRIPTPATH+'/makecleanmask_10sb_wsclean.py --threshpix '+str(5.0)+\
+               ' --threshisl '+str(4.0) +' --atrous_do '+ str(atrous_do) + ' '
+        if casaregion!='':
+            cmd+='--casaregion  '+ casaregion +' '
+        cmd+=imlow + '-image.fits'
+        os.system(cmd)
+
+    # convert to CASA format
+
+        maskim=pyrap.images.image(mask_name)
+        maskim.saveas(casa_mask)
+
+    # include region file
+        if casaregion != '':
+            os.system('casapy --nologger -c '+SCRIPTPATH+'/fitsandregion2image.py '\
+                 + mask_name + ' ' + casa_mask + ' ' + casaregion)
+        else:
+            os.system('casapy --nologger -c '+SCRIPTPATH+'/fitsandregion2image.py '\
+                 + mask_name + ' ' + casa_mask + ' ' + 'None')
+
+    imlow = imlow + 'withmask'
+    if os.path.isfile(imlow+'-image.fits'):
+        print 'Low-res masked image exists, NOT re-making it'
+    else:
+        cmd1 = wsclean + ' -reorder -name ' + imlow + ' -size ' + str(imsizel) + ' ' + str(imsizel) + ' '
+        cmd2 = '-scale ' + celll + ' -weight briggs 0.0 -niter ' + str(niterl) + ' '
+        cmd3 = '-maxuv-l 2e3 -no-update-model-required -mgain 0.65 -fitbeam -datacolumn DATA -casamask ' + casa_mask  + ' ' + msout
+
+        print cmd1+cmd2+cmd3
+
+    ######### check that no wsclean is running
+        wsclean_wait()
+    #########
+        os.system(cmd1+cmd2+cmd3)
 
 
- # ---------------------
- # merge the skymodels
-  finalsky =  ms.split('.')[0] + '.skymodel'
-  if os.path.isfile(finalsky):
-     print 'Final sky model exists, NOT replacing it (why did you run this script, exactly?)'
-  else:
-     os.system('cp ' + imhigh+ '.skymodel ' + finalsky)
-     os.system("grep -v '#' "+  imlow+ ".skymodel > tmp.sky")
-     os.system("cat tmp.sky >>" + finalsky)
 
-     cmd = "sed -i 's/, , , /, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.5e8, [0.0]/g'"
-     os.system(cmd + ' ' + finalsky)
 
-     cmd = 'sed -i \"s/# (Name, Type, Patch, Ra, Dec, I, Q, U, V) = format/format = Name, Type, Patch, Ra, Dec, I, Q, U, V, MajorAxis, MinorAxis, Orientation, ReferenceFrequency=\'1.5e+08\', SpectralIndex=\'[]\'/g\"  '
-     os.system(cmd + ' ' + finalsky)
+    fits_model = imlow + '-model.fits'
+    casa_model = imlow + '.model'
 
-  print 'MS',ms,'all done!'
+    if os.path.isdir(casa_model):
+        print 'Low-res CASA model exists, NOT re-making it'
+    else:
+    # convert model fits image to casa .model format
+        print 'Converting model to casapy format', fits_model, ' ==> ', casa_model
+
+        modelim=pyrap.images.image(fits_model)
+        modelim.saveas(casa_model)
+
+    #os.system('casapy --nologger -c '+SCRIPTPATH+'/fits2image.py '\
+    #            + fits_model + ' ' + casa_model)
+    # ---------------------
+    # create the low-res skymodel
+    skymodel = imlow  + '.skymodel'
+
+    if os.path.isfile(skymodel):
+        print 'Skymodel exists, NOT remaking it'
+    else:
+        os.system(SCRIPTPATH+'/casapy2bbs_one_patch_per_cc.py '  + casa_model  + ' ' +  skymodel)
+
+    # ---------------------
+    # subtract thelowres cc
+    bbslog=ms + '.lowressubbbslog'
+    if os.path.isfile(bbslog):
+        print 'BBS log exists, NOT doing low-res subtract (CAREFUL!)'
+    else:
+        parset = SCRIPTPATH+'/subtractall_lowres_wsclean.parset'
+        cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name instrument_ap_smoothed '
+        cmd = cmd + ms + ' ' + parset + ' ' + skymodel + ' >' + bbslog
+        print cmd
+        os.system(cmd)
+
+
+    # ---------------------
+    # merge the skymodels
+    finalsky =  ms.split('.')[0] + '.skymodel'
+    if os.path.isfile(finalsky):
+        print 'Final sky model exists, NOT replacing it (why did you run this script, exactly?)'
+    else:
+        os.system('cp ' + imhigh+ '.skymodel ' + finalsky)
+        os.system("grep -v '#' "+  imlow+ ".skymodel > tmp.sky")
+        os.system("cat tmp.sky >>" + finalsky)
+
+        cmd = "sed -i 's/, , , /, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.5e8, [0.0]/g'"
+        os.system(cmd + ' ' + finalsky)
+
+        cmd = 'sed -i \"s/# (Name, Type, Patch, Ra, Dec, I, Q, U, V) = format/format = Name, Type, Patch, Ra, Dec, I, Q, U, V, MajorAxis, MinorAxis, Orientation, ReferenceFrequency=\'1.5e+08\', SpectralIndex=\'[]\'/g\"  '
+        os.system(cmd + ' ' + finalsky)
+
+    print 'MS',ms,'all done!'
