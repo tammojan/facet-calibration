@@ -939,10 +939,10 @@ if FFT:
               + ' ' + str(nterms) + ' '+ str(wplanes))
 
 ### CREATED MERGED PARMDB SCALARPHASE+AMPS ###
-### INCLUDES SPLINE INTERPOLARION OF AMPS ###
 if merge_parmdb:
     for ms in mslist:
-        command = "python ~/elais-n1/new_pipeline/jsmpipeline/merge_parmdb.py -t {t} {ms}".format(t="instrument_template_Gain_TEC_CSphase", ms=ms)
+        command = "python {path}/merge_parmdb.py -t {t} {ms}".format(
+            t="instrument_template_Gain_TEC_CSphase", ms=ms, path=SCRIPTPATH)
         print command
         os.system(command)
         # Copy the instrument_template_Gain_TEC_CSphase
