@@ -55,10 +55,8 @@ uvrange   =">80lambda"
 
 
 
-
-
-
-
+# clean up in case images are present from a previous run
+os.system('rm -rf ' + imageout + '.*')
 
 
 clean(vis=ms,imagename=imageout,outlierfile="",field="",spw="",selectdata=True,timerange=timer,\
