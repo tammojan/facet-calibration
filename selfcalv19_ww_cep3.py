@@ -717,7 +717,7 @@ def get_group(thismslist):
     return group
 
 
-if __name__ == "__main__"
+if __name__ == "__main__":
     el=len(sys.argv)
 
     mslist    = sys.argv[1:el-10]
