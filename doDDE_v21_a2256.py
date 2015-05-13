@@ -89,6 +89,7 @@ def runbbs(mslist, skymodel, parset, parmdb, replacesource):
     """
     #NOTE WORK FROM MODEL_DATA (contains correct phase data from 10SB calibration)
     logging.debug("Run BBS")
+    logging.debug("Parameters: ", mslist, skymodel, parset, parmdb, replacesource)
     for ms in mslist:
         log      =  ms + '.bbslog'
         if replacesource:
@@ -2013,7 +2014,7 @@ if __name__ == "__main__":
             logging.info("START: postFACET - Subtract step")
             #### DO THE SUBTRACT ####
             if peelskymodel[source_id] != 'empty': # should also cover "outliersource"
-                print 'Subtracting source with a user defined skymodel', peelskymodel[source_id]
+                logging.info('Subtracting source with a user defined skymodel', peelskymodel[source_id])
                 parset   = create_subtract_parset_field_outlier('SUBTRACTED_DATA_ALL',TEC)
                 runbbs(mslist, peelskymodel[source_id], parset, parmdb_master_out, True) # NOTE: no 'normalization' and replace sourcedb
                 logging.info('Subtracted outlier source from data for DDE : ' + source)
