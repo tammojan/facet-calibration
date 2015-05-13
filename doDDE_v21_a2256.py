@@ -1448,8 +1448,8 @@ def do_fieldFFT(ms, image, imsize, cellsize, wsclean, mslist,
         cmd1 = wsclean + ' -predict -name ' + image + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
         cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' '
         cmd3 = '-cleanborder 0 -mgain 0.85 -fitbeam -datacolumn DATA '+ ' ' + ms
-
-    print cmd1+cmd2+cmd3
+    
+    logging.debug(cmd1+cmd2+cmd3)
     os.system(cmd1+cmd2+cmd3)
     return
 
