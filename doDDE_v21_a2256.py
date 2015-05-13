@@ -1525,8 +1525,22 @@ if __name__ == "__main__":
 
 
     print 'StartAtStep is',StartAtStep
-
-    logging.basicConfig(filename='dde.log',level=logging.DEBUG, format='%(asctime)s -  %(message)s', datefmt='%Y-%d-%m %H:%M:%S')
+ 
+ 
+    ## Logger configuration
+    # Start
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)   
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%d-%m %H:%M:%S')
+    # Log to STDIN
+    ch = logging.StreamHandler()
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
+    # Log to file
+    file_name = "dde.log"
+    fh = logging.FileHandler(file_name) 
+    fh.setFormatter(formatter)
+    logger.addHandler(fh)
     logging.info('\n')
 
     os.system('cp ' + SCRIPTPATH + '/coordinates_mode.py .')
@@ -1668,32 +1682,32 @@ if __name__ == "__main__":
 
         # Tidying-up code from Wendy's version
 
-        #if StartAtStep in ['preSC']:
-                    ## remove selfcal images #
-            #logging.info("removing any existing sc ms")
-            #os.system("rm -rf *."+source+".ms")
-        #if StartAtStep in ['preSC', 'doSC']:
-            ## remove selfcal images #
-            #logging.info("removing any existing selfcal images")
-            #os.system("rm -rf im*_cluster"+source+"*")
-            ##os.system("rm -rf allbands.concat.shifted_'+source+'.ms")
-        #if StartAtStep in ['preSC', 'doSC', 'postSC','preFACET','doFACET']:
-            ## remove selfcal images #
-            #logging.info("removing any existing facet images")
-            #os.system("rm -rf imfield*_cluster"+source+"*")
-        #if StartAtStep in ['preSC', 'doSC', 'postSC','preFACET']:
-            #logging.info("removing any existing facet imaging average MS")
-            #os.system("rm -rf *."+source+".ms.avgfield*")
+        if StartAtStep in ['preSC']:
+                    # remove selfcal images #
+            logging.info("removing any existing sc ms")
+            os.system("rm -rf *."+source+".ms")
+        if StartAtStep in ['preSC', 'doSC']:
+            # remove selfcal images #
+            logging.info("removing any existing selfcal images")
+            os.system("rm -rf im*_cluster"+source+"*")
+            #os.system("rm -rf allbands.concat.shifted_'+source+'.ms")
+        if StartAtStep in ['preSC', 'doSC', 'postSC','preFACET','doFACET']:
+            # remove selfcal images #
+            logging.info("removing any existing facet images")
+            os.system("rm -rf imfield*_cluster"+source+"*")
+        if StartAtStep in ['preSC', 'doSC', 'postSC','preFACET']:
+            logging.info("removing any existing facet imaging average MS")
+            os.system("rm -rf *."+source+".ms.avgfield*")
 
-        ##check if allbands.concat.shifted_'+source+'.ms' is present
-        #if os.path.isdir(allbandspath + 'allbands.concat.shifted_'+source+'.ms'):
-            #print allbandspath + 'allbands.concat.shifted_'+source+'.ms'
-            #if StartAtStep in ['preSC']:
-                ##raise Exception('delete measurement set and then restart')
-                #os.system('rm -rf ' + allbandspath +'allbands.concat.shifted_'+source+'.ms')
-                #logging.info('removing')
-            #else:
-                #logging.info('...but continuing because we are redoing selfcal')
+        #check if allbands.concat.shifted_'+source+'.ms' is present
+        if os.path.isdir(allbandspath + 'allbands.concat.shifted_'+source+'.ms'):
+            print allbandspath + 'allbands.concat.shifted_'+source+'.ms'
+            if StartAtStep in ['preSC']:
+                #raise Exception('delete measurement set and then restart')
+                os.system('rm -rf ' + allbandspath +'allbands.concat.shifted_'+source+'.ms')
+                logging.info('removing')
+            else:
+                logging.info('...but continuing because we are redoing selfcal')
 
         if not os.path.isdir(allbandspath + 'allbands.concat.ms'):
             print allbandspath + 'allbands.concat.ms does not exist'
@@ -1721,18 +1735,20 @@ if __name__ == "__main__":
 
         ## STEP 1: prep for SC ##
         if StartAtStep in ['preSC']:
-            ### FIXME -- hard-wired CPU limit in what follows
-            #if len(mslist) > 32:
-                #runbbs_diffskymodel_addback16(mslist, 'instrument_ap_smoothed', True, directions[source_id],imsizes[source_id],output_template_im, do_ap)
-            #else:
-                #runbbs_diffskymodel_addback(mslist, 'instrument_ap_smoothed', True, directions[source_id],imsizes[source_id],output_template_im, do_ap)
+            logging.info("START: preSC")
+            
+            ## FIXME -- hard-wired CPU limit in what follows
+            if len(mslist) > 32:
+                runbbs_diffskymodel_addback16(mslist, 'instrument_ap_smoothed', True, directions[source_id],imsizes[source_id],output_template_im, do_ap)
+            else:
+                runbbs_diffskymodel_addback(mslist, 'instrument_ap_smoothed', True, directions[source_id],imsizes[source_id],output_template_im, do_ap)
 
-            ### average and phaseshift with NDPPP
-            #for ms_id, ms in enumerate(mslist):
-                #parset = create_phaseshift_parset(ms, msavglist[ms_id], source, directions[source_id],
-                                              #imsizes[source_id], dynamicrange[source_id], StefCal, numchanperms)
-                #os.system('rm -rf ' + msavglist[ms_id])
-                #os.system('NDPPP ' + parset)
+            ## average and phaseshift with NDPPP
+            for ms_id, ms in enumerate(mslist):
+                parset = create_phaseshift_parset(ms, msavglist[ms_id], source, directions[source_id],
+                                              imsizes[source_id], dynamicrange[source_id], StefCal, numchanperms)
+                os.system('rm -rf ' + msavglist[ms_id])
+                os.system('NDPPP ' + parset)
 
 
         ### PHASESHIFT the FULL resolution dataset, for MODEL_DATA FFT subtract
@@ -1741,11 +1757,12 @@ if __name__ == "__main__":
                                                    allbandspath + 'allbands.concat.shifted_'+source+'.ms',
                                                    directions[source_id],'DATA')
                 os.system('NDPPP ' + parset + '&') # run in background
-            sys.exit(1)
+
 
         ## END STEP 1
         ## STEP 2a: SC ##
         if StartAtStep in ['preSC', 'doSC']:
+            logging.info("START: doSC")
 
             # correct with amps and phases from selfcal, needs to be done here because CORRECTED_DATA needs to be reset for the selfcal
             if do_ap:
@@ -1779,6 +1796,8 @@ if __name__ == "__main__":
 
         ## STEP 2b:  SC wrap up ##
         if StartAtStep in ['preSC', 'doSC', 'postSC']:
+            logging.info("START: postSC")
+            
             # combine selfcal solutions with non-DDE phases
             for ms_id, ms in enumerate(mslist):
                 parmdb_selfcal     = msavglist[ms_id]+"/"+"instrument_merged"
@@ -1838,7 +1857,9 @@ if __name__ == "__main__":
         parmdb_master_out="instrument_master_" + source
         if outliersource[source_id] == 'False':
             if StartAtStep in ['preSC', 'doSC', 'postSC','preFACET']:
+                logging.info("START: preFACET")
                 ## STEP 3: prep for facet ##
+                
                 parmdb_master_out="instrument_master_" + source
                 runbbs_diffskymodel_addbackfield(mslist, 'instrument_ap_smoothed', True,  directions[source_id],imsizes[source_id], output_template_im, do_ap)
                 logging.info('Adding back rest of the field for DDE facet ' + source)
@@ -1883,6 +1904,8 @@ if __name__ == "__main__":
 
             # imsize None forces the code to work out the image size from the mask size
             if StartAtStep in ['preSC', 'doSC', 'postSC','preFACET','doFACET']:
+                logging.info("START: doFACET")
+                
                 msavglist = []
                 for ms_id, ms in enumerate(mslistorig): # remake msavglist from mslistorig(!) to capture a missing block
                     msavglist.append(ms.split('.')[0] + '.' + source + '.ms.avgfield')
@@ -1899,6 +1922,7 @@ if __name__ == "__main__":
             ## STEP 4b -- post facet ##
 
             if StartAtStep in ['preSC', 'doSC', 'postSC','preFACET','doFACET','postFACET']:
+                logging.info("START: postFACET")
 
                 # if we are restarting, it's possible that 'allbands.concat.shifted_'+source+'.ms'
                 #  may have been deleted earlier. So re-create it if it doesn't exist
@@ -1913,6 +1937,8 @@ if __name__ == "__main__":
                     # imout won't be set, so guess it
                     imout='imfield0_cluster'+source
                     imsizef=image_size_from_mask(output_template_im +'.masktmp')
+                    print "imout reloaded:", imout
+                    print "imsizef reloaded:", imsizef, "from:", output_template_im
 
                 # BACKUP SUBTRACTED DATA IN CASE OF CRASH
                 ###########################################################################
