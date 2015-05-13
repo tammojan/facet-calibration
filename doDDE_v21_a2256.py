@@ -89,7 +89,7 @@ def runbbs(mslist, skymodel, parset, parmdb, replacesource):
     """
     #NOTE WORK FROM MODEL_DATA (contains correct phase data from 10SB calibration)
     logging.debug("Run BBS")
-    logging.debug("Parameters: {} {} {} {} {}".format(mslist, skymodel, parset, parmdb, replacesource))
+    #logging.debug("Parameters: {} {} {} {} {}".format(mslist, skymodel, parset, parmdb, replacesource))
     for ms in mslist:
         log      =  ms + '.bbslog'
         if replacesource:
@@ -1921,83 +1921,83 @@ if __name__ == "__main__":
                 if len(mslist) > WScleanWBgroup:
                     logging.info('WSCLEAN Wideband CLEAN algorithm was used')
 
-            ### STEP 4b -- post facet ##
+            ## STEP 4b -- post facet ##
 
-            #if StartAtStep in ['preSC', 'doSC', 'postSC','preFACET','doFACET','postFACET']:
-                #logging.info("START: postFACET")
+            if StartAtStep in ['preSC', 'doSC', 'postSC','preFACET','doFACET','postFACET']:
+                logging.info("START: postFACET")
 
-                ## if we are restarting, it's possible that 'allbands.concat.shifted_'+source+'.ms'
-                ##  may have been deleted earlier. So re-create it if it doesn't exist
+                # if we are restarting, it's possible that 'allbands.concat.shifted_'+source+'.ms'
+                #  may have been deleted earlier. So re-create it if it doesn't exist
 
-                #if not(os.path.isdir(allbandspath + 'allbands.concat.shifted_'+source+'.ms')):
-                    #print allbandspath + 'allbands.concat.shifted_'+source+'.ms ' + 'does not exist, re-creating'
-                    #parset = create_phaseshift_parset_full(allbandspath + 'allbands.concat.ms',
-                                                       #allbandspath + 'allbands.concat.shifted_'+source+'.ms',
-                                                       #directions[source_id],'DATA')
-                    #os.system('NDPPP ' + parset)
-                #if StartAtStep=='postFACET':
-                    ## imout won't be set, so guess it
-                    #imout='imfield0_cluster'+source
-                    #imsizef=image_size_from_mask(output_template_im +'.masktmp')
-                    #print "imout reloaded:", imout
-                    #print "imsizef reloaded:", imsizef, "from:", output_template_im
+                if not(os.path.isdir(allbandspath + 'allbands.concat.shifted_'+source+'.ms')):
+                    print allbandspath + 'allbands.concat.shifted_'+source+'.ms ' + 'does not exist, re-creating'
+                    parset = create_phaseshift_parset_full(allbandspath + 'allbands.concat.ms',
+                                                       allbandspath + 'allbands.concat.shifted_'+source+'.ms',
+                                                       directions[source_id],'DATA')
+                    os.system('NDPPP ' + parset)
+                if StartAtStep=='postFACET':
+                    # imout won't be set, so guess it
+                    imout='imfield0_cluster'+source
+                    imsizef=image_size_from_mask(output_template_im +'.masktmp')
+                    print "imout reloaded:", imout
+                    print "imsizef reloaded:", imsizef, "from:", output_template_im
 
-                ## BACKUP SUBTRACTED DATA IN CASE OF CRASH
-                ############################################################################
-                ## (NEW: run in parallel)
-                #for ms_id, ms in enumerate(mslist):
-                    #cmd = "ps -u " + username + " | grep taql | wc -l"
-                    #output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
+                # BACKUP SUBTRACTED DATA IN CASE OF CRASH
+                ###########################################################################
+                # (NEW: run in parallel)
+                for ms_id, ms in enumerate(mslist):
+                    cmd = "ps -u " + username + " | grep taql | wc -l"
+                    output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
 
-                    #while output > 3 : # max 4 processes
-                        #time.sleep(10)
-                        #output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
+                    while output > 3 : # max 4 processes
+                        time.sleep(10)
+                        output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
 
-                    ## START taql BECAUSE LESS/EQ 2 PROCESSES ARE RUNNING
-                    #os.system("taql 'update " + ms + " set CORRECTED_DATA=SUBTRACTED_DATA_ALL' &")
+                    # START taql BECAUSE LESS/EQ 2 PROCESSES ARE RUNNING
+                    os.system("taql 'update " + ms + " set CORRECTED_DATA=SUBTRACTED_DATA_ALL' &")
 
-                ## Check if all taql processes are finished
-                #output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
-                #while output > 0 :
-                    #time.sleep(10)
-                    #output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
-                #logging.info('Backup SUBTRACTED_DATA_ALL: completed')
-                ############################################################################
+                # Check if all taql processes are finished
+                output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
+                while output > 0 :
+                    time.sleep(10)
+                    output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
+                logging.info('Backup SUBTRACTED_DATA_ALL: completed')
+                ###########################################################################
 
 
-                ## DO THE FFT
-                #logging.info('FFTed model of DDE facet: ' + source)
-                #do_fieldFFT(allbandspath + 'allbands.concat.shifted_'+source+'.ms',imout, imsizef, cellsize, wsclean,
-                         #msavglist, WSCleanRobust, WScleanWBgroup, numchanperms)
+                # DO THE FFT
+                logging.info('FFTed model of DDE facet: ' + source)
+                do_fieldFFT(allbandspath + 'allbands.concat.shifted_'+source+'.ms',imout, imsizef, cellsize, wsclean,
+                         msavglist, WSCleanRobust, WScleanWBgroup, numchanperms)
 
-                ## SHIFT PHASE CENTER BACK TO ORIGINAL
-                #logging.info('Shift model back to pointing centre')
-                #parset = create_phaseshift_parset_full(allbandspath + 'allbands.concat.shifted_'+source+'.ms',
-                                                   #allbandspath + 'allbands.concat.shiftedback_'+source+'.ms',
-                                                       #pointingcenter,'MODEL_DATA')
+                # SHIFT PHASE CENTER BACK TO ORIGINAL
+                logging.info('Shift model back to pointing centre')
+                parset = create_phaseshift_parset_full(allbandspath + 'allbands.concat.shifted_'+source+'.ms',
+                                                   allbandspath + 'allbands.concat.shiftedback_'+source+'.ms',
+                                                       pointingcenter,'MODEL_DATA')
 
-                #os.system('NDPPP ' + parset)
-                #os.system('rm -rf ' + allbandspath + 'allbands.concat.shifted_'+source+'.ms') # clean up
+                os.system('NDPPP ' + parset)
+                os.system('rm -rf ' + allbandspath + 'allbands.concat.shifted_'+source+'.ms') # clean up
 
-                ## Add MODEL_DATA (allbands.concat.shiftedback.ms) into ADDED_DATA_SOURCE from mslist
-                #logging.info('Add MODEL_DATA into ADDED_DATA_SOURCE from mslist')
-                #freq_tab1= pt.table(allbandspath + 'allbands.concat.ms' + '/SPECTRAL_WINDOW')
-                #numchan1    = freq_tab1.getcol('NUM_CHAN')
-                #freq_tab2= pt.table(mslist[0] + '/SPECTRAL_WINDOW')
-                #numchan2    = freq_tab2.getcol('NUM_CHAN')
-                #freq_tab1.close()
-                #freq_tab2.close()
+                # Add MODEL_DATA (allbands.concat.shiftedback.ms) into ADDED_DATA_SOURCE from mslist
+                logging.info('Add MODEL_DATA into ADDED_DATA_SOURCE from mslist')
+                freq_tab1= pt.table(allbandspath + 'allbands.concat.ms' + '/SPECTRAL_WINDOW')
+                numchan1    = freq_tab1.getcol('NUM_CHAN')
+                freq_tab2= pt.table(mslist[0] + '/SPECTRAL_WINDOW')
+                numchan2    = freq_tab2.getcol('NUM_CHAN')
+                freq_tab1.close()
+                freq_tab2.close()
 
-                #if (numchan1[0]) == (numchan2[0]*len(mslist)):
-                    #cmd = ('python ' + SCRIPTPATH + '/copy_over_columns.py '+ msliststr +
-                              #' ' +allbandspath+'allbands.concat.shiftedback_'+source+'.ms'+' ' + 'ADDED_DATA_SOURCE')
-                #else:
-                    #cmd = ('python ' + SCRIPTPATH + '/copy_over_columns.py '+ mslistorigstr +
-                              #' ' +allbandspath+'allbands.concat.shiftedback_'+source+'.ms'+' ' + 'ADDED_DATA_SOURCE')
-                #logging.debug(cmd)
-                #os.system(cmd)
+                if (numchan1[0]) == (numchan2[0]*len(mslist)):
+                    cmd = ('python ' + SCRIPTPATH + '/copy_over_columns.py '+ msliststr +
+                              ' ' +allbandspath+'allbands.concat.shiftedback_'+source+'.ms'+' ' + 'ADDED_DATA_SOURCE')
+                else:
+                    cmd = ('python ' + SCRIPTPATH + '/copy_over_columns.py '+ mslistorigstr +
+                              ' ' +allbandspath+'allbands.concat.shiftedback_'+source+'.ms'+' ' + 'ADDED_DATA_SOURCE')
+                logging.debug(cmd)
+                os.system(cmd)
 
-                #os.system('rm -rf ' + allbandspath + 'allbands.concat.shiftedback_'+source+'.ms') # clean up
+                os.system('rm -rf ' + allbandspath + 'allbands.concat.shiftedback_'+source+'.ms') # clean up
 
         #### OUTLIER CASE ####
         else:  # do this because we are not going to add back field sources
@@ -2014,7 +2014,7 @@ if __name__ == "__main__":
             logging.info("START: postFACET - Subtract step")
             #### DO THE SUBTRACT ####
             if peelskymodel[source_id] != 'empty': # should also cover "outliersource"
-                logging.info('Subtracting source with a user defined skymodel', peelskymodel[source_id])
+                logging.info('Subtracting source with a user defined skymodel '+peelskymodel[source_id])
                 parset   = create_subtract_parset_field_outlier('SUBTRACTED_DATA_ALL',TEC)
                 runbbs(mslist, peelskymodel[source_id], parset, parmdb_master_out, True) # NOTE: no 'normalization' and replace sourcedb
                 logging.info('Subtracted outlier source from data for DDE : ' + source)
