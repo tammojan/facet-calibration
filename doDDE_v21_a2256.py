@@ -89,7 +89,7 @@ def runbbs(mslist, skymodel, parset, parmdb, replacesource):
     """
     #NOTE WORK FROM MODEL_DATA (contains correct phase data from 10SB calibration)
     logging.debug("Run BBS")
-    logging.debug("Parameters: ", mslist, skymodel, parset, parmdb, replacesource)
+    logging.debug("Parameters: {} {} {} {} {}".format(mslist, skymodel, parset, parmdb, replacesource))
     for ms in mslist:
         log      =  ms + '.bbslog'
         if replacesource:
