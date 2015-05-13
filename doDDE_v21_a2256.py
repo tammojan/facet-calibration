@@ -1612,18 +1612,18 @@ if __name__ == "__main__":
 
     freq_tab     = pt.table(mslist[0]  + '/SPECTRAL_WINDOW')
     numchanperms = freq_tab.getcol('NUM_CHAN')[0]
-    print 'Number of channels per ms is ', numchanperms
+    logging.info('Number of channels per ms is ', numchanperms)
     freq_tab.close()
 
     freq_tab     = pt.table(allbandspath +'allbands.concat.ms/SPECTRAL_WINDOW')
     numchan_all = freq_tab.getcol('NUM_CHAN')[0]
-    print 'Number of channels allbands.concat.ms is ', numchan_all
+    logging.info('Number of channels allbands.concat.ms is '+numchan_all)
     freq_tab.close()
     
     if (numchanperms*len(mslistorig)) != numchan_all:
-      print 'Used a total numbers of ' + str(len(mslistorig)) + ' blocks with ' + str(numchanperms) + ' channels per block'
-      print 'Number of channels allbands.concat.ms is ', numchan_all  
-      raise Exception('#channels in allbands.concat.ms does not match with what is expected from mslistorig (from parameter BANDS)')
+        logging.error('Used a total numbers of ' + str(len(mslistorig)) + ' blocks with ' + str(numchanperms) + ' channels per block')
+        logging.error('Number of channels allbands.concat.ms is ' + numchan_all)
+        raise Exception('#channels in allbands.concat.ms does not match with what is expected from mslistorig (from parameter BANDS)')
 
     #if len(mslist) == 1:
     #  TEC    = "False" # no TEC fitting for one (channel) dataset
@@ -1640,10 +1640,10 @@ if __name__ == "__main__":
 
     if len(mslist) > WScleanWBgroup:
         nterms = 2
-        print 'Forcing nterms=2 since wideband clean was requested'
+        logging.warning('Forcing nterms=2 since wideband clean was requested')
     else:
         if WScleanWBgroup < 1000:
-            print "WScleanWBgroup > len(mslist), wrong user input, exiting"
+            logging.error("WScleanWBgroup > len(mslist), wrong user input, exiting")
             raise Exception('WScleanWBgroup must be lowered')
 
 
@@ -1662,7 +1662,7 @@ if __name__ == "__main__":
             parset = create_phaseshift_parset_formasks(mslist[0], tmpn, source, directions[source_id])
             os.system('NDPPP ' + parset)
             output_template_im = 'templatemask_' + source
-            print output_template_im
+            logging.debug(output_template_im)
             os.system('casapy --nogui -c ' + SCRIPTPATH + '/make_empty_image.py '+ tmpn + ' ' + output_template_im + ' ' + str(fieldsize[source_id]) + ' ' +'1.5arcsec')
             os.system('rm -rf ' + tmpn)
             # now generate the mask
@@ -1683,14 +1683,13 @@ if __name__ == "__main__":
 
         source_id = sourcelist.index(source)
 
-        print 'DOING DDE patch:', source
         logging.info('')
         logging.info('DOING DDE patch: '+ source)
 
         # Tidying-up code from Wendy's version
 
         if StartAtStep in ['preSC']:
-                    # remove selfcal images #
+            # remove selfcal images #
             logging.info("removing any existing sc ms")
             os.system("rm -rf *."+source+".ms")
         if StartAtStep in ['preSC', 'doSC']:
@@ -1708,7 +1707,7 @@ if __name__ == "__main__":
 
         #check if allbands.concat.shifted_'+source+'.ms' is present
         if os.path.isdir(allbandspath + 'allbands.concat.shifted_'+source+'.ms'):
-            print allbandspath + 'allbands.concat.shifted_'+source+'.ms'
+            logging.debug(allbandspath + 'allbands.concat.shifted_'+source+'.ms')
             if StartAtStep in ['preSC']:
                 #raise Exception('delete measurement set and then restart')
                 os.system('rm -rf ' + allbandspath +'allbands.concat.shifted_'+source+'.ms')
@@ -1717,7 +1716,7 @@ if __name__ == "__main__":
                 logging.info('...but continuing because we are redoing selfcal')
 
         if not os.path.isdir(allbandspath + 'allbands.concat.ms'):
-            print allbandspath + 'allbands.concat.ms does not exist'
+            logging.debug(allbandspath + 'allbands.concat.ms does not exist')
             raise Exception('make measurement set and then restart')
 
         dummyskymodel   = SCRIPTPATH + '/dummy.skymodel' ## update every time again with new source, not used, just a dummy for correct
@@ -1742,6 +1741,7 @@ if __name__ == "__main__":
 
         ## STEP 1: prep for SC ##
         if StartAtStep in ['preSC']:
+            logging.info('START: preSC')
             ## FIXME -- hard-wired CPU limit in what follows
             if len(mslist) > 32:
                 runbbs_diffskymodel_addback16(mslist, 'instrument_ap_smoothed', True, directions[source_id],imsizes[source_id],output_template_im, do_ap)
@@ -1767,7 +1767,7 @@ if __name__ == "__main__":
         ## END STEP 1
         ## STEP 2a: SC ##
         if StartAtStep in ['preSC', 'doSC']:
-
+            logging.info('START: doSC')
             # correct with amps and phases from selfcal, needs to be done here because CORRECTED_DATA needs to be reset for the selfcal
             if do_ap:
                 runbbs_2(msavglist, mslist, dummyskymodel ,SCRIPTPATH+'/correct.parset','instrument_ap_smoothed')
@@ -1800,6 +1800,7 @@ if __name__ == "__main__":
 
         ## STEP 2b:  SC wrap up ##
         if StartAtStep in ['preSC', 'doSC', 'postSC']:
+            logging.info('START: postSC')
             # combine selfcal solutions with non-DDE phases
             for ms_id, ms in enumerate(mslist):
                 parmdb_selfcal     = msavglist[ms_id]+"/"+"instrument_merged"
@@ -1812,7 +1813,7 @@ if __name__ == "__main__":
                 else:
                     join_parmdb(ms, parmdb_selfcal,parmdb_nondde, parmdb_template, this_parmdb_master_out,
                           TEC, clock)
-                print 'joined SC and DDE parmdbs for {ms}'.format(ms=ms)
+                logging.info('joined SC and DDE parmdbs for {ms}'.format(ms=ms))
                 parmdb_master_out  = "instrument_master_" + source   # reset because runbbs uses basename of ms
 
 
@@ -1839,7 +1840,7 @@ if __name__ == "__main__":
                     os.system(SCRIPTPATH + '/plot_solutions_all_stations_v2.py \
                             -s -a -p --freq 150 ' + parmdb_master_plot + ' ' + plotim_base +'&')
 
-            print 'Updated frequency boundaries parmdb and normalized amps to 1.0'
+            logging.info('Updated frequency boundaries parmdb and normalized amps to 1.0')
             time.sleep(5)
             # make new mslist for field averaged data
             #msavglist = []
@@ -1859,6 +1860,7 @@ if __name__ == "__main__":
         parmdb_master_out="instrument_master_" + source
         if outliersource[source_id] == 'False':
             if StartAtStep in ['preSC', 'doSC', 'postSC','preFACET']:
+                logging.info('START: preFACET')
                 ## STEP 3: prep for facet ##
                 parmdb_master_out="instrument_master_" + source
                 runbbs_diffskymodel_addbackfield(mslist, 'instrument_ap_smoothed', True,  directions[source_id],imsizes[source_id], output_template_im, do_ap)
@@ -1904,6 +1906,7 @@ if __name__ == "__main__":
 
             # imsize None forces the code to work out the image size from the mask size
             if StartAtStep in ['preSC', 'doSC', 'postSC','preFACET','doFACET']:
+                logging.info('START: doFACET')
                 msavglist = []
                 for ms_id, ms in enumerate(mslistorig): # remake msavglist from mslistorig(!) to capture a missing block
                     msavglist.append(ms.split('.')[0] + '.' + source + '.ms.avgfield')
@@ -1920,12 +1923,13 @@ if __name__ == "__main__":
             ## STEP 4b -- post facet ##
 
             if StartAtStep in ['preSC', 'doSC', 'postSC','preFACET','doFACET','postFACET']:
+                logging.info('START: postFACET')
 
                 # if we are restarting, it's possible that 'allbands.concat.shifted_'+source+'.ms'
                 #  may have been deleted earlier. So re-create it if it doesn't exist
 
                 if not(os.path.isdir(allbandspath + 'allbands.concat.shifted_'+source+'.ms')):
-                    print allbandspath + 'allbands.concat.shifted_'+source+'.ms ' + 'does not exist, re-creating'
+                    logging.info(allbandspath + 'allbands.concat.shifted_'+source+'.ms ' + 'does not exist, re-creating')
                     parset = create_phaseshift_parset_full(allbandspath + 'allbands.concat.ms',
                                                        allbandspath + 'allbands.concat.shifted_'+source+'.ms',
                                                        directions[source_id],'DATA')
@@ -2002,9 +2006,11 @@ if __name__ == "__main__":
             logging.info('Backup SUBTRACTED_DATA_ALL for outliersource')
 
         if StartAtStep in ['preSC', 'doSC', 'postSC','preFACET','doFACET','postFACET']:
-        #### DO THE SUBTRACT ####
+            
+            #### DO THE SUBTRACT ####
+            logging.info(' postFACET subtract')
             if peelskymodel[source_id] != 'empty': # should also cover "outliersource"
-                print 'Subtracting source with a user defined skymodel', peelskymodel[source_id]
+                logging.debug('Subtracting source with a user defined skymodel ' + peelskymodel[source_id])
                 parset   = create_subtract_parset_field_outlier('SUBTRACTED_DATA_ALL',TEC)
                 runbbs(mslist, peelskymodel[source_id], parset, parmdb_master_out, True) # NOTE: no 'normalization' and replace sourcedb
                 logging.info('Subtracted outlier source from data for DDE : ' + source)
