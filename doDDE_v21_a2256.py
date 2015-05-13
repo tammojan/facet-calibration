@@ -88,13 +88,14 @@ def runbbs(mslist, skymodel, parset, parmdb, replacesource):
           to be replaced or not
     """
     #NOTE WORK FROM MODEL_DATA (contains correct phase data from 10SB calibration)
+    logging.debug("Run BBS")
     for ms in mslist:
         log      =  ms + '.bbslog'
         if replacesource:
             cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
         else:
             cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
-        print cmd
+        logging.debug(cmd)
         os.system(cmd)
     time.sleep(10)
 
