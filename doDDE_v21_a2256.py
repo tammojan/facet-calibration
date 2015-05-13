@@ -1964,9 +1964,9 @@ if __name__ == "__main__":
 
 
                 # DO THE FFT
+                logging.info('FFTed model of DDE facet: ' + source)
                 do_fieldFFT(allbandspath + 'allbands.concat.shifted_'+source+'.ms',imout, imsizef, cellsize, wsclean,
                          msavglist, WSCleanRobust, WScleanWBgroup, numchanperms)
-                logging.info('FFTed model of DDE facet: ' + source)
 
                 # SHIFT PHASE CENTER BACK TO ORIGINAL
                 logging.info('Shift model back to pointing centre')
@@ -1978,7 +1978,7 @@ if __name__ == "__main__":
                 os.system('rm -rf ' + allbandspath + 'allbands.concat.shifted_'+source+'.ms') # clean up
 
                 # Add MODEL_DATA (allbands.concat.shiftedback.ms) into ADDED_DATA_SOURCE from mslist
-
+                logging.info('Add MODEL_DATA into ADDED_DATA_SOURCE from mslist')
                 freq_tab1= pt.table(allbandspath + 'allbands.concat.ms' + '/SPECTRAL_WINDOW')
                 numchan1    = freq_tab1.getcol('NUM_CHAN')
                 freq_tab2= pt.table(mslist[0] + '/SPECTRAL_WINDOW')
@@ -1987,11 +1987,13 @@ if __name__ == "__main__":
                 freq_tab2.close()
 
                 if (numchan1[0]) == (numchan2[0]*len(mslist)):
-                    os.system('python ' + SCRIPTPATH + '/copy_over_columns.py '+ msliststr +
+                    cmd = ('python ' + SCRIPTPATH + '/copy_over_columns.py '+ msliststr +
                               ' ' +allbandspath+'allbands.concat.shiftedback_'+source+'.ms'+' ' + 'ADDED_DATA_SOURCE')
                 else:
-                    os.system('python ' + SCRIPTPATH + '/copy_over_columns.py '+ mslistorigstr +
+                    cmd = ('python ' + SCRIPTPATH + '/copy_over_columns.py '+ mslistorigstr +
                               ' ' +allbandspath+'allbands.concat.shiftedback_'+source+'.ms'+' ' + 'ADDED_DATA_SOURCE')
+                logging.debug(cmd)
+                os.system(cmd)
 
                 os.system('rm -rf ' + allbandspath + 'allbands.concat.shiftedback_'+source+'.ms') # clean up
 
@@ -2007,7 +2009,8 @@ if __name__ == "__main__":
             logging.info('Backup SUBTRACTED_DATA_ALL for outliersource')
 
         if StartAtStep in ['preSC', 'doSC', 'postSC','preFACET','doFACET','postFACET']:
-        #### DO THE SUBTRACT ####
+            logging.info("START: postFACET - Subtract step")
+            #### DO THE SUBTRACT ####
             if peelskymodel[source_id] != 'empty': # should also cover "outliersource"
                 print 'Subtracting source with a user defined skymodel', peelskymodel[source_id]
                 parset   = create_subtract_parset_field_outlier('SUBTRACTED_DATA_ALL',TEC)
@@ -2019,6 +2022,7 @@ if __name__ == "__main__":
                 logging.info('Subtracted facet model from data for DDE : ' + source)
 
             # CHECK IF THE SUBTRACT WORKED OK by making dirty low-res images
+            logging.info("START: postFACET - Verify step")
             inputmslist = ''
             for ms in mslist:
                 inputmslist = inputmslist + ' ' + ms
