@@ -1297,11 +1297,11 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl,
         print 'Bandwidth is divided into a total of ' + str(numpy.int(numpy.ceil(numpy.float(len(mslist))/numpy.float(WScleanWBgroup)))) + ' parts '
         cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
         cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' -cleanborder 0 -threshold '+ cleandepth1 + ' '
-        cmd3 = '-minuv-l '+ str(uvrange) \
+        cmd3 = '-minuv-l '+ str(uvrange) + ' -casamask ' +  inputmask + ' '\
                +' -mgain 0.6 -fitbeam -datacolumn DATA -no-update-model-required -joinchannels -channelsout ' +\
                str(channelsout) + ' '  + outms
     else:
-        cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
+        cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' -casamask ' +  inputmask + ' '
         cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' -cleanborder 0 -threshold '+ cleandepth1 + ' '
         cmd3 = '-minuv-l '+ str(uvrange) +' -mgain 0.6 -fitbeam -datacolumn DATA -no-update-model-required ' + outms
 
@@ -1602,7 +1602,15 @@ if __name__ == "__main__":
     print 'Number of channels per ms is ', numchanperms
     freq_tab.close()
 
-
+    freq_tab     = pt.table(allbandspath +'allbands.concat.ms/SPECTRAL_WINDOW')
+    numchan_all = freq_tab.getcol('NUM_CHAN')[0]
+    print 'Number of channels allbands.concat.ms is ', numchan_all
+    freq_tab.close()
+    
+    if (numchanperms*len(mslistorig)) != numchan_all:
+      print 'Used a total numbers of ' + str(len(mslistorig)) + ' blocks with ' + str(numchanperms) + ' channels per block'
+      print 'Number of channels allbands.concat.ms is ', numchan_all  
+      raise Exception('#channels in allbands.concat.ms does not match with what is expected from mslistorig (from parameter BANDS)')
 
     #if len(mslist) == 1:
     #  TEC    = "False" # no TEC fitting for one (channel) dataset
@@ -1997,7 +2005,8 @@ if __name__ == "__main__":
             for ms in mslist:
                 inputmslist = inputmslist + ' ' + ms
             #os.system('python ' + SCRIPTPATH + '/verify_subtract_v3.py ' + inputmslist + ' 0.3 ' + source)
-            os.system('python '+ SCRIPTPATH+'/verify_subtract_v5.py ' + inputmslist + ' 0.1 ' + source)
+            os.system('python '+ SCRIPTPATH+'/verify_subtract_v5.py ' + inputmslist + ' 0.15 ' + source)
 
         os.system('rm -rf *.ms.avgfield') # clean up as these are never used anymore  
+        os.system('rm -rf *.ms.avgcheck') # clean up to remove clutter
         logging.info('finished '+source)

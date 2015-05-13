@@ -34,41 +34,26 @@ if __name__ == '__main__':
     image_name = args[0]
 
     mask_name  = image_name.split('.image')[0] + '.cleanmask'
-    gausmodel  = image_name.split('.image')[0] + '.gausmodel'
-
+    
     print '\n\n\n'
     print 'Making mask:', mask_name
     print '\n\n\n'
 
     os.system('rm -rf ' + mask_name)
-    os.system('rm -rf ' + gausmodel)
-    os.system('cp -r '  + image_name + ' ' + mask_name)
-
 
     # DO THE SOURCE DETECTION
-    img = bdsm.process_image(image_name, mean_map='zero', rms_box=(70,10), thresh_pix=numpy.float(o.threshpix), \
-                             thresh_isl=numpy.float(o.threshisl), atrous_do=o.atrous_do,ini_method='curvature')
+    #img = bdsm.process_image(image_name, mean_map='zero', rms_box=(70,10), thresh_pix=numpy.float(o.threshpix), \
+    #                         thresh_isl=numpy.float(o.threshisl), atrous_do=o.atrous_do,ini_method='curvature')
+    
+    img = bdsm.process_image(image_name, mean_map='zero', rms_box=(80,20), thresh_pix=numpy.float(o.threshpix), \
+                             thresh_isl=numpy.float(o.threshisl), atrous_do=o.atrous_do,ini_method='curvature', \
+                             adaptive_rms_box=True, adaptive_thresh=150, rms_box_bright=(35,7), rms_map=True)
 
-    #img = bdsm.process_image(image_name, mean_map='zero', rms_map=False, thresh_pix=numpy.int(o.threshpix), \
-    #                         thresh_isl=numpy.int(o.threshisl), atrous_do=o.atrous_do,ini_method='curvature')
+
 
     #img.show_fit()
 
-    # WRITE THE GAUSSIAN MODEL FITS
-    #img.export_image(img_type='gaus_model', outfile=gausmodel)
+    # WRITE THE ISLAND MASK
     img.export_image(img_type='island_mask',img_format='casa',outfile=mask_name, clobber=True)
 
 
-
-    #img         = pyrap.images.image(mask_name)
-    #pixels      = numpy.copy(img.getdata())
-    #pixels_mask = 0.*numpy.copy(pixels)
-
-    #hdulist   = pyfits.open(gausmodel)
-    #pixels_gs = hdulist[0].data
-
-    #idx = numpy.where(pixels_gs > gs_cut)
-    #pixels_mask[idx] = 1.0
-
-
-    #img.putdata(pixels_mask)
