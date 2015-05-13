@@ -1526,7 +1526,20 @@ if __name__ == "__main__":
 
     print 'StartAtStep is',StartAtStep
 
-    logging.basicConfig(filename='dde.log',level=logging.DEBUG, format='%(asctime)s -  %(message)s', datefmt='%Y-%d-%m %H:%M:%S')
+    ## Logger configuration
+    # Start
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)   
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%d-%m %H:%M:%S')
+    # Log to STDIN
+    ch = logging.StreamHandler()
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
+    # Log to file
+    file_name = "dde.log"
+    fh = logging.FileHandler(file_name) 
+    fh.setFormatter(formatter)
+    logger.addHandler(fh)
     logging.info('\n')
 
     os.system('cp ' + SCRIPTPATH + '/coordinates_mode.py .')
