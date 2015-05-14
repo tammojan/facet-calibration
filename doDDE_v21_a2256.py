@@ -12,7 +12,6 @@ import pyrap.images
 import pwd
 import logging
 from numpy import pi
-import sys
 from coordinates_mode import *
 import blank
 
