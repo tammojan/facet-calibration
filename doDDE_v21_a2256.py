@@ -1795,16 +1795,38 @@ if __name__ == "__main__":
             logging.info('Region file: '+ str(regionselfc[source_id]))
 
             if StefCal:
-                os.system('python ' + SCRIPTPATH + '/' + parms["selfcal_stefcal"] + ' ' + inputmslist + ' ' + source + ' ' + atrous_do[source_id] + ' ' + str(imsizes[source_id]) + ' ' +
-                          str(nterms) + ' ' + str(cellsizetime_a[source_id]) + ' ' + str(cellsizetime_p[source_id]) + ' ' + TEC + ' ' + clock + ' ' +
-                          str(dynamicrange[source_id]) + ' ' + regionselfc[source_id] + ' ' + str(uvrange) + ' ' + str(peelskymodel[source_id]) + ' ' +
+                cmd = ('python ' + SCRIPTPATH + '/' + parms["selfcal_stefcal"] + ' ' + 
+                          inputmslist + ' ' + 
+                          source + ' ' + 
+                          atrous_do[source_id] + ' ' + 
+                          str(imsizes[source_id]) + ' ' +
+                          str(nterms) + ' ' + 
+                          str(cellsizetime_a[source_id]) + ' ' + 
+                          str(cellsizetime_p[source_id]) + ' ' + 
+                          TEC + ' ' + 
+                          clock + ' ' +
+                          str(dynamicrange[source_id]) + ' ' + 
+                          regionselfc[source_id] + ' ' + 
+                          str(uvrange) + ' ' + 
+                          str(peelskymodel[source_id]) + ' ' +
                           str(cellsize))
-
+                logging.debug(cmd)
+                os.system(cmd)
             else:
-                os.system('python ' + SCRIPTPATH + '/' + parms["selfcal"] + ' ' + inputmslist + ' ' + source + ' ' + atrous_do[source_id] + ' ' + str(imsizes[source_id]) + ' ' +
-                          str(nterms) + ' ' + str(cellsizetime_a[source_id]) + ' ' + str(cellsizetime_p[source_id]) + ' ' + TEC + ' ' + clock + ' ' +
-                          str(dynamicrange[source_id]) + ' ' + regionselfc[source_id])
-
+                cmd = ('python ' + SCRIPTPATH + '/' + parms["selfcal"] + ' ' + 
+                          inputmslist + ' ' + 
+                          source + ' ' + 
+                          atrous_do[source_id] + ' ' + 
+                          str(imsizes[source_id]) + ' ' +
+                          str(nterms) + ' ' + 
+                          str(cellsizetime_a[source_id]) + ' ' + 
+                          str(cellsizetime_p[source_id]) + ' ' + 
+                          TEC + ' ' + 
+                          clock + ' ' +
+                          str(dynamicrange[source_id]) + ' ' + 
+                          regionselfc[source_id])
+                logging.debug(cmd)
+                os.system(cmd)
 
             logging.info('Finished selfcal DDE patch: '+ source)
 
