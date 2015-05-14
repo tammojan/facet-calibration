@@ -1622,17 +1622,17 @@ if __name__ == "__main__":
 
     freq_tab     = pt.table(mslist[0]  + '/SPECTRAL_WINDOW')
     numchanperms = freq_tab.getcol('NUM_CHAN')[0]
-    logging.info('Number of channels per ms is ', numchanperms)
+    logging.info('Number of channels per ms is {:d}'.format(numchan_all))
     freq_tab.close()
 
     freq_tab     = pt.table(allbandspath +'allbands.concat.ms/SPECTRAL_WINDOW')
     numchan_all = freq_tab.getcol('NUM_CHAN')[0]
-    logging.info('Number of channels allbands.concat.ms is '+numchan_all)
+    logging.info('Number of channels allbands.concat.ms is {:d}'.format(numchan_all))
     freq_tab.close()
     
     if (numchanperms*len(mslistorig)) != numchan_all:
         logging.error('Used a total numbers of ' + str(len(mslistorig)) + ' blocks with ' + str(numchanperms) + ' channels per block')
-        logging.error('Number of channels allbands.concat.ms is ' + numchan_all)
+        logging.error('Number of channels allbands.concat.ms is {:d}'.format(numchan_all))
         raise Exception('#channels in allbands.concat.ms does not match with what is expected from mslistorig (from parameter BANDS)')
 
     #if len(mslist) == 1:
@@ -1795,16 +1795,38 @@ if __name__ == "__main__":
             logging.info('Region file: '+ str(regionselfc[source_id]))
 
             if StefCal:
-                os.system('python ' + SCRIPTPATH + '/' + parms["selfcal_stefcal"] + ' ' + inputmslist + ' ' + source + ' ' + atrous_do[source_id] + ' ' + str(imsizes[source_id]) + ' ' +
-                          str(nterms) + ' ' + str(cellsizetime_a[source_id]) + ' ' + str(cellsizetime_p[source_id]) + ' ' + TEC + ' ' + clock + ' ' +
-                          str(dynamicrange[source_id]) + ' ' + regionselfc[source_id] + ' ' + str(uvrange) + ' ' + str(peelskymodel[source_id]) + ' ' +
+                cmd = ('python ' + SCRIPTPATH + '/' + parms["selfcal_stefcal"] + ' ' + 
+                          inputmslist + ' ' + 
+                          source + ' ' + 
+                          atrous_do[source_id] + ' ' + 
+                          str(imsizes[source_id]) + ' ' +
+                          str(nterms) + ' ' + 
+                          str(cellsizetime_a[source_id]) + ' ' + 
+                          str(cellsizetime_p[source_id]) + ' ' + 
+                          TEC + ' ' + 
+                          clock + ' ' +
+                          str(dynamicrange[source_id]) + ' ' + 
+                          regionselfc[source_id] + ' ' + 
+                          str(uvrange) + ' ' + 
+                          str(peelskymodel[source_id]) + ' ' +
                           str(cellsize))
-
+                logging.debug(cmd)
+                os.system(cmd)
             else:
-                os.system('python ' + SCRIPTPATH + '/' + parms["selfcal"] + ' ' + inputmslist + ' ' + source + ' ' + atrous_do[source_id] + ' ' + str(imsizes[source_id]) + ' ' +
-                          str(nterms) + ' ' + str(cellsizetime_a[source_id]) + ' ' + str(cellsizetime_p[source_id]) + ' ' + TEC + ' ' + clock + ' ' +
-                          str(dynamicrange[source_id]) + ' ' + regionselfc[source_id])
-
+                cmd = ('python ' + SCRIPTPATH + '/' + parms["selfcal"] + ' ' + 
+                          inputmslist + ' ' + 
+                          source + ' ' + 
+                          atrous_do[source_id] + ' ' + 
+                          str(imsizes[source_id]) + ' ' +
+                          str(nterms) + ' ' + 
+                          str(cellsizetime_a[source_id]) + ' ' + 
+                          str(cellsizetime_p[source_id]) + ' ' + 
+                          TEC + ' ' + 
+                          clock + ' ' +
+                          str(dynamicrange[source_id]) + ' ' + 
+                          regionselfc[source_id])
+                logging.debug(cmd)
+                os.system(cmd)
 
             logging.info('Finished selfcal DDE patch: '+ source)
 
