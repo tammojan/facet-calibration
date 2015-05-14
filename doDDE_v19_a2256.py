@@ -1035,8 +1035,6 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms
 
     niter   = numpy.int(5000 * (numpy.sqrt(numpy.float(len(mslist)))))
     cellsizeim = str(cellsize) +'arcsec'
-    #wsclean =  '/home/rvweeren/software/WSClean/wsclean-1.6+MORESANE+MASKS4/build/wsclean'
-    #wsclean = '/home/rvweeren/software/WSClean/wsclean-1.7/build/wsclean'
 
     depth =  1e-3*0.7 / (numpy.sqrt(numpy.float(len(mslist))))
     cleandepth1 = str(depth*1.5) #+ 'mJy'
@@ -1093,12 +1091,12 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms
         cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
         cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + '-cleanborder 0 -threshold '+ cleandepth1 + ' '
         cmd3 = '-minuv-l '+ str(uvrange) \
-               +' -mgain 0.75 -fitbeam -datacolumn DATA -no-update-model-required -joinchannels -channelsout ' +\
+               +' -mgain 0.6 -fitbeam -casamask '+inputmask+' -datacolumn DATA -no-update-model-required -joinchannels -channelsout ' +\
                str(channelsout) + ' '  + outms
     else:
         cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
         cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' -cleanborder 0 -threshold '+ cleandepth1 + ' '
-        cmd3 = '-minuv-l '+ str(uvrange) +' -mgain 0.75 -fitbeam -datacolumn DATA -no-update-model-required ' + outms
+        cmd3 = '-minuv-l '+ str(uvrange) +' -mgain 0.6 -fitbeam -casamask '+inputmask+' -datacolumn DATA -no-update-model-required ' + outms
 
     print cmd1+cmd2+cmd3
     os.system(cmd1+cmd2+cmd3)
