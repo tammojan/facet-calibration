@@ -1506,7 +1506,6 @@ if __name__ == "__main__":
     except NameError:
         StefCal=False
         print 'StefCal not set, defaulting to', StefCal
-        print 'Overwriting TEC user input, TEC will be when using StefCal'
 
     try:
         WScleanWBgroup
@@ -1522,6 +1521,7 @@ if __name__ == "__main__":
 
     if StefCal:
         TEC = "False" # cannot fit for TEC in StefCal
+        print 'Overwriting TEC user input, TEC will be False when using StefCal'
 
 
     print 'StartAtStep is',StartAtStep
