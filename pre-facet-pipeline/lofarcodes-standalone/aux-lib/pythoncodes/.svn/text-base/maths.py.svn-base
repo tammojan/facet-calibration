@@ -1,0 +1,68 @@
+
+#-----------------------------------------------------------
+
+def find_chi_squared(values,expected):
+    """Given a set of values and a set of expected values this
+    will return the chi-squared value
+    """
+
+    chisquared = 0.0
+    
+    for i in range(0,len(values)):
+        chisquared += ((values[i]-expected[i])**2.0)/expected[i]
+
+    return chisquared
+
+
+
+#-----------------------------------------------------------
+
+def standard_dev(list):
+    """ 
+    Given a list this returns the standard deviation
+    """
+    sum = 0.0
+    sum2 = 0.0
+    for element in list:
+        sum = float(line) + sum
+        sum2 = float(line)**2 + sum2
+        i = i + 1
+
+    mean = sum/i
+    stan_dev = (abs((sum2/i)-(mean**2)))**0.5
+    rms = sqrt(sum2/i)
+
+    return stan_dev
+
+#-----------------------------------------------------------
+
+def mean(list):
+    """ 
+    Given a list this routine returns the mean
+    """
+
+    i=0.0
+    sum = 0.0
+    for element in list:
+        sum += float(element)
+        i += 1.0
+    mean = sum/i
+    return mean
+#-----------------------------------------------------------
+
+def rms(list):
+    """
+    Given a list this routine returns the rms
+    """
+    i =0.0
+    sum = 0.0
+    sum2 = 0.0
+    for element in list:
+        sum = float(element) + sum
+        sum2 = float(element)**2 + sum2
+        i = i + 1.0
+     
+    rms = sqrt(sum2/i)
+
+    return rms
+

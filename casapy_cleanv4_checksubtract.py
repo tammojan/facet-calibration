@@ -22,29 +22,29 @@ nfacets = 1
 wplanes = 1
 
 if imsizep > 512:
-   wplanes = 64
+    wplanes = 64
 
 if imsizep > 799:
-   wplanes = 72
+    wplanes = 72
 
 if imsizep > 1023:
-   wplanes = 96
+    wplanes = 96
 
 if imsizep > 1599:
-   wplanes = 128
-   nfacets = 1
+    wplanes = 128
+    nfacets = 1
 
 if imsizep > 2047:
-  wplanes = 164
-  nfacets = 1
+    wplanes = 164
+    nfacets = 1
 
 if imsizep > 3000:
-  wplanes = 256
-  nfacets = 1
+    wplanes = 256
+    nfacets = 1
 
 if imsizep > 4095:
-  wplanes = 448
-  nfacets  = 1
+    wplanes = 448
+    nfacets  = 1
 
 print ms, imageout
 
@@ -55,10 +55,8 @@ uvrange   =">80lambda"
 
 
 
-
-
-
-
+# clean up in case images are present from a previous run
+os.system('rm -rf ' + imageout + '.*')
 
 
 clean(vis=ms,imagename=imageout,outlierfile="",field="",spw="",selectdata=True,timerange=timer,\

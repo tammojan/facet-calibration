@@ -1,0 +1,41 @@
+20a21,50
+> 
+> def combine_measurementsets_test(measurementlist,msout,logfile,timeavg,freqavg,incol):
+>     # Measurement list needs to be e.g. /disks/lofar/ELAIS/data/*
+>     combfile = open('ndppp_comb.parset','w')
+> 
+>     combfile.write('msin = ')
+>     combfile.write('%s\n'%measurementlist)
+>     combfile.write('msin.datacolumn = %s\n'%incol)
+>     combfile.write('msout = %s\n'%msout)
+>     combfile.write('steps = [avg1]\n')
+>     combfile.write('avg1.type=squash\n')
+>     combfile.write('avg1.freqstep=%s\n'%freqavg)
+>     combfile.write('avg1.timestep=%s\n'%timeavg)
+>     combfile.close()
+> 
+>     os.system('NDPPP ndppp_comb.parset > %s 2>&1'%logfile)
+> 
+> def flag_measurementset_test(measurementset,msout,logfile):
+>     flagfile = open('ndppp_flag.parset','w')
+> 
+>     flagfile.write('msin =%s\n'%measurementset)
+>     flagfile.write('msin.missingdata = true \n')
+>     flagfile.write('msin.datacolumn = DATA \n')
+>     flagfile.write('msout =%s \n'%msout)
+>     flagfile.write('steps=[flag1] \n')
+>     flagfile.write('flag1.type=aoflagger \n')
+>     flagfile.close()
+> 
+>     os.system('NDPPP ndppp_flag.parset > %s 2>&1'%logfile)
+> 
+31d60
+< 
+41,43c70,72
+< combine_measurementsets('%s/*'%datadirectory,'mergedfile.ms','ndppp_comb.parset.log',timeavg,freqavg,'DATA')
+< 
+< flag_measurementset('mergedfile.ms','mergedfile.ms','ndppp_flag.parset.log')
+---
+> if not os.path.exists('mergedfile.ms'):
+> 	combine_measurementsets_test('tobe_comb/*','mergedfile.ms','ndppp_comb.parset.log',2,2,'DATA')
+> 	flag_measurementset_test('mergedfile.ms','mergedfile.ms','ndppp_flag.parset.log')

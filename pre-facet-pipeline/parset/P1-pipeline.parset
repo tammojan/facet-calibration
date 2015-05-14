@@ -1,0 +1,255 @@
+#pipeline.steps=[createmap,sourcemap,parmmap,loopme,dpppex,awiex,showoutput]
+#pipeline.steps=[createmap,casatest,showoutput2]
+#pipeline.steps=[createmap,loopme,fixbeam,calscript]
+#pipeline.steps=[createmap,calscript]
+pipeline.steps=[timmap,dpppprepcal,calibcal,ginst,gvdsfile,parmcoll,h5imp,fitclock,ampl,plots,concatmapcal,phase,calib,timtargetmap,dppppreptar,ateamtarget,ateamcliptar,trans,parmmap,calibtarget,dpppaverage,concatmaptar,createmap2,dpppconcat,flagrfi,gsmcalibtarget]
+#,selfcal]
+pipeline.pluginpath=plugins
+
+timmap.control.kind=plugin
+timmap.control.type=addMapfile
+timmap.control.cmdline.create=mapfile_from_folder
+timmap.control.opts.mapfile_dir=input.output.mapfile_dir
+timmap.control.opts.filename=tims.mapfile
+timmap.control.opts.folder=/car-data/shimwell/datastore/P1_caldata
+
+dpppprepcal.control.kind=recipe
+dpppprepcal.control.type=dppp
+dpppprepcal.control.opts.mapfile_in=timmap.output.mapfile
+dpppprepcal.control.opts.inputkey=msin
+dpppprepcal.control.opts.outputkey=msout
+dpppprepcal.parsetarg.msin.datacolumn = DATA
+dpppprepcal.parsetarg.msin.missingdata=True
+dpppprepcal.parsetarg.msin.orderms=False
+dpppprepcal.parsetarg.msout.datacolumn = DATA
+dpppprepcal.parsetarg.steps = [flag,filter,avg,flagamp]
+dpppprepcal.parsetarg.filter.type = filter
+dpppprepcal.parsetarg.filter.baseline = [ [CS*] , [RS*] ]
+dpppprepcal.parsetarg.filter.remove = true
+dpppprepcal.parsetarg.avg.type = average
+dpppprepcal.parsetarg.avg.freqstep =2
+dpppprepcal.parsetarg.avg.timestep = 2
+dpppprepcal.parsetarg.flag.type = preflagger
+dpppprepcal.parsetarg.flag.baseline = [ DE* , FR* , SE* , UK* , CS301HBA*]
+dpppprepcal.parsetarg.flagamp.type = preflagger
+dpppprepcal.parsetarg.flagamp.amplmin = 1e-30
+dpppprepcal.control.opts.max_per_node=12
+
+calibcal.control.kind=recipe
+calibcal.control.type=executable_args
+calibcal.control.opts.mapfile_in=dpppprepcal.output.mapfile
+calibcal.control.opts.executable=/soft/lofar-091114/bin/calibrate-stand-alone
+calibcal.control.opts.inputkeys=[calms]
+calibcal.control.opts.arguments=[-v,-f,calms,/home/shimwell/survey_pipeline/parset/calibcal.parset,/home/shimwell/survey_pipeline/3C196-pandey.skymodel]
+calibcal.control.opts.max_per_node=12
+
+ginst.control.kind=recipe
+ginst.control.type=vdsmaker
+ginst.control.cmdline.inmap=dpppprepcal.output.mapfile
+ginst.control.opts.unlink=True
+
+gvdsfile.control.kind=plugin
+gvdsfile.control.type=addMapfile
+gvdsfile.control.cmdline.create=mapfile_from_folder
+gvdsfile.control.opts.mapfile_dir=input.output.mapfile_dir
+gvdsfile.control.opts.filename=gvds.mapfile
+gvdsfile.control.opts.folder=/car-data/shimwell/pipeline-output/runtime/P1-pipeline/vds
+
+parmcoll.control.kind=recipe
+parmcoll.control.type=executable_args
+parmcoll.control.opts.mapfile_in=gvdsfile.output.mapfile
+parmcoll.control.opts.executable=/home/shimwell/survey_pipeline/losoto/tools/parmdb_collector.py
+parmcoll.control.opts.arguments=[-v,-d,gvds,-g,globaldb]
+parmcoll.control.opts.inputkey=gvds
+parmcoll.control.opts.outputkey=globaldb
+
+h5imp.control.kind=recipe
+h5imp.control.type=executable_args
+h5imp.control.opts.mapfile_in=parmcoll.output.mapfile
+h5imp.control.opts.executable=/home/shimwell/survey_pipeline/losoto/tools/H5parm_importer.py
+h5imp.control.opts.arguments=[-v,h5thingy,collectedparmdb]
+h5imp.control.opts.inputkey=collectedparmdb
+h5imp.control.opts.outputkey=h5thingy
+
+
+fitclock.control.kind=recipe
+fitclock.control.type=executable_args
+fitclock.control.opts.mapfile_in=h5imp.output.mapfile
+fitclock.control.opts.executable=/home/shimwell/survey_pipeline/face-cal-scripts/fit_clocktec_initialguess_losoto.py
+fitclock.control.opts.arguments=[h5gvds,somename,20]
+fitclock.control.opts.inputkey=h5gvds
+#fitclock.control.opts.outputkey=fitted_clock
+
+
+ampl.control.kind=recipe
+ampl.control.type=executable_args
+ampl.control.opts.mapfile_in=h5imp.output.mapfile
+ampl.control.opts.executable=/home/shimwell/survey_pipeline/face-cal-scripts/amplitudes_losoto.py
+ampl.control.opts.arguments=[h5gvds,somename,1]
+ampl.control.opts.inputkey=h5gvds
+
+plots.control.kind=recipe
+plots.control.type=executable_args
+plots.control.opts.mapfile_in=h5imp.output.mapfile
+plots.control.opts.executable=/home/shimwell/survey_pipeline/face-cal-scripts/examine_npys.py
+plots.control.opts.skip_infile=True
+plots.control.opts.arguments=[somename]
+
+
+concatmapcal.control.kind=plugin
+concatmapcal.control.type=addMapfile
+concatmapcal.control.cmdline.create=mapfile_all_to_one
+concatmapcal.control.opts.mapfile_in=dpppprepcal.output.mapfile
+concatmapcal.control.opts.mapfile_dir=input.output.mapfile_dir
+concatmapcal.control.opts.filename=concatcal.mapfile
+
+
+phase.control.kind=recipe
+phase.control.type=executable_args
+phase.control.opts.mapfile_in=concatmapcal.output.mapfile
+phase.control.opts.executable=/home/shimwell/survey_pipeline/face-cal-scripts/find_cal_global_phaseoffset.py
+phase.control.opts.arguments=[allms,somename]
+phase.control.opts.inputkey=allms
+
+calib.control.kind=recipe
+calib.control.type=executable_args
+calib.control.opts.mapfile_in=concatmapcal.output.mapfile
+calib.control.opts.executable=/soft/lofar-091114/bin/calibrate-stand-alone
+calib.control.opts.skip_infile=True
+calib.control.opts.arguments=[-f,--parmdb-name,template,/car-data/shimwell/datastore/P1_targetdata/L241959_SB150_uv.dppp.MS,/home/shimwell/survey_pipeline/parset/calibtarget_beam.parset,/home/shimwell/survey_pipeline/parset/template_parmdb.model]
+
+timtargetmap.control.kind=plugin
+timtargetmap.control.type=addMapfile
+timtargetmap.control.cmdline.create=mapfile_from_folder
+timtargetmap.control.opts.mapfile_dir=input.output.mapfile_dir
+timtargetmap.control.opts.filename=timstarget.mapfile
+timtargetmap.control.opts.folder=/car-data/shimwell/datastore/P1_targetdata/
+
+dppppreptar.control.kind=recipe
+dppppreptar.control.type=dppp
+dppppreptar.control.opts.mapfile_in=timtargetmap.output.mapfile
+dppppreptar.control.opts.inputkey=msin
+dppppreptar.control.opts.outputkey=msout
+dppppreptar.parsetarg.msin.datacolumn = DATA
+dppppreptar.parsetarg.msin.missingdata=True
+dppppreptar.parsetarg.msin.orderms=False
+dppppreptar.parsetarg.msout.datacolumn = DATA
+dppppreptar.parsetarg.steps = [flag,filter,avg,flagamp]
+dppppreptar.parsetarg.filter.type = filter
+dppppreptar.parsetarg.filter.baseline = [ [CS*] , [RS*] ]
+dppppreptar.parsetarg.filter.remove = true
+dppppreptar.parsetarg.avg.type = average
+dppppreptar.parsetarg.avg.freqstep =2
+dppppreptar.parsetarg.avg.timestep = 2
+dppppreptar.parsetarg.flag.type = preflagger
+dppppreptar.parsetarg.flag.baseline = [ DE* , FR* , SE* , UK* , CS013HBA*]
+dppppreptar.parsetarg.flagamp.type = preflagger
+dppppreptar.parsetarg.flagamp.amplmin = 1e-30
+dppppreptar.control.opts.max_per_node=12
+
+ateamtarget.control.kind=recipe
+ateamtarget.control.type=executable_args
+ateamtarget.control.opts.executable=/soft/lofar-091114/bin/calibrate-stand-alone
+ateamtarget.control.opts.mapfile_in=dppppreptar.output.mapfile
+ateamtarget.control.opts.inputkeys=[targetms]
+ateamtarget.control.opts.arguments=[-f,targetms,/home/shimwell/survey_pipeline/parset/ateamclip.parset,/home/shimwell/survey_pipeline/parset/Ateam_LBA_CC.skymodel]
+ateamtarget.control.opts.max_per_node=12
+
+ateamcliptar.control.kind=recipe
+ateamcliptar.control.type=executable_args
+ateamcliptar.control.opts.mapfile_in=dppppreptar.output.mapfile
+ateamcliptar.control.opts.executable=/home/shimwell/survey_pipeline/face-cal-scripts/Ateamclipper.py
+ateamcliptar.control.opts.arguments=[allms]
+ateamcliptar.control.opts.inputkey=allms
+ateamcliptar.control.opts.max_per_node=12
+
+trans.control.kind=recipe
+trans.control.type=executable_args
+trans.control.opts.mapfile_in=dppppreptar.output.mapfile
+trans.control.opts.executable=/home/shimwell/survey_pipeline/face-cal-scripts/transfer_amplitudes+clock+offset.py
+trans.control.opts.arguments=[targetms,instrument_amp_clock_offset,/car-data/shimwell/pipeline-output/products/P1-pipeline,/car-data/shimwell/datastore/P1_targetdata/L241959_SB150_uv.dppp.MS/template,somename]
+trans.control.opts.inputkey=targetms
+
+parmmap.control.kind=plugin
+parmmap.control.type=changeMapfile
+parmmap.control.opts.mapfile_in=dppppreptar.output.mapfile
+parmmap.control.opts.join_files=instrument_amp_clock_offset
+parmmap.control.opts.newname=targetparmdb.mapfile
+
+calibtarget.control.kind=recipe
+calibtarget.control.type=executable_args
+calibtarget.control.opts.executable=/soft/lofar-091114/bin/calibrate-stand-alone
+calibtarget.control.opts.mapfiles_in=[parmmap.output.mapfile,dppppreptar.output.mapfile]
+calibtarget.control.opts.inputkeys=[ampinstrument,targetms]
+calibtarget.control.opts.arguments=[-v,--parmdb,ampinstrument,targetms,/home/shimwell/survey_pipeline/parset/applyparmdb.parset]
+calibtarget.control.opts.max_per_node=12
+
+dpppaverage.control.kind=recipe
+dpppaverage.control.type=dppp
+dpppaverage.control.opts.mapfile_in=dppppreptar.output.mapfile
+dpppaverage.control.opts.inputkey=msin
+dpppaverage.control.opts.outputkey=msout
+dpppaverage.control.opts.max_per_node=12
+dpppaverage.parsetarg.msin.datacolumn = CORRECTED_DATA
+dpppaverage.parsetarg.msout.datacolumn = DATA
+dpppaverage.parsetarg.steps = [count,flag,count,avg]
+dpppaverage.parsetarg.flag.type=aoflagger
+dpppaverage.parsetarg.avg.type = average
+dpppaverage.parsetarg.avg.freqstep = 2
+dpppaverage.parsetarg.avg.timestep = 2
+
+concatmaptar.control.kind=plugin
+concatmaptar.control.type=addMapfile
+concatmaptar.control.cmdline.create=mapfile_all_to_one
+concatmaptar.control.opts.mapfile_in=dpppaverage.output.mapfile
+concatmaptar.control.opts.mapfile_dir=input.output.mapfile_dir
+concatmaptar.control.opts.filename=concatmaptar.mapfile
+
+
+createmap2.control.kind=plugin
+createmap2.control.type=addMapfile
+createmap2.control.cmdline.create=mapfile_split_list
+createmap2.control.opts.mapfile_dir=input.output.mapfile_dir
+createmap2.control.opts.listsize=12
+createmap2.control.opts.filename=splitlist.mapfile
+createmap2.control.opts.mapfile_in=concatmaptar.output.mapfile
+
+dpppconcat.control.kind=recipe
+dpppconcat.control.type=dppp
+dpppconcat.control.opts.mapfile_in=createmap2.output.mapfile
+dpppconcat.control.opts.inputkey=msin
+dpppconcat.control.opts.outputkey=msout
+dpppconcat.parsetarg.msin.datacolumn = DATA
+dpppconcat.parsetarg.msin.missingdata=True
+dpppconcat.parsetarg.msin.orderms=False
+dpppconcat.parsetarg.msout.datacolumn = DATA
+dpppconcat.parsetarg.steps = []
+dpppconcat.control.opts.max_per_node=12
+
+
+flagrfi.control.kind=recipe
+flagrfi.control.type=executable_args
+flagrfi.control.opts.mapfile_in=dpppconcat.output.mapfile
+flagrfi.control.opts.executable=/soft/lofar-091114/bin/rficonsole
+flagrfi.control.opts.arguments=[infile]
+flagrfi.control.opts.inputkey=infile
+flagrfi.control.opts.max_per_node=12
+
+
+gsmcalibtarget.control.kind=recipe
+gsmcalibtarget.control.type=executable_args
+gsmcalibtarget.control.opts.executable=/soft/lofar-091114/bin/calibrate-stand-alone
+gsmcalibtarget.control.opts.mapfile_in=dpppconcat.output.mapfile
+gsmcalibtarget.control.opts.inputkeys=[targetms]
+gsmcalibtarget.control.opts.arguments=[-f,targetms,/home/shimwell/survey_pipeline/parset/gsmcal_beam.parset,/home/shimwell/survey_pipeline/grid_models/P1_hetdex_5deg.txt]
+gsmcalibtarget.control.opts.max_per_node=12
+
+selfcal.control.kind=recipe
+selfcal.control.type=executable_args
+selfcal.control.opts.mapfile_in=dpppconcat.output.mapfile
+selfcal.control.opts.executable=/home/shimwell/Desktop/work/LOFAR/lofarcodes/lofar-selfcal-image-smootherphase-flag-noiseclean-arrayfactor-argparse.py
+selfcal.control.opts.arguments=[targetms,--workdir,selfcaldir]
+selfcal.control.opts.inputkey=targetms
+selfcal.control.opts.outputkey=selfcaldir
+selfcal.control.opts.max_per_node=2
+

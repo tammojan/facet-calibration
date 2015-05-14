@@ -1,0 +1,4 @@
+FORMAT = Name, Type, Ra, Dec, I, Q, U, V, ReferenceFrequency='60e6', SpectralIndex='[0.0]', MajorAxis, MinorAxis, Orientation
+
+# the next lines define the sources
+1209.7+4655, POINT, 12:09:44.86080000, +46.55.21.00000000, 2.4614, , , , , [-0.8206, -0.0575]

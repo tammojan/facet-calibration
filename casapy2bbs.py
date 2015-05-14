@@ -8,7 +8,7 @@ from optparse import OptionParser
 
 # Return the fractional part of the floating point number x.
 def fraction(x):
-  return numpy.modf(x)[0]
+    return numpy.modf(x)[0]
 
 # Convert an angle from degrees to radians.
 def deg2rad(angle):
@@ -114,26 +114,26 @@ def main(options, args):
     assert(len(args) >= 1)
 
     # Load CLEAN component map and reformat.
- 
- 
+
+
     if options.nterms > 1:
-      component_map_im      = pyrap.images.image(args[0]+'.tt0') 
-      component_map_im_tt1  = pyrap.images.image(args[0]+'.tt1') 
-      if options.nterms > 2: 
-        component_map_im_tt2  = pyrap.images.image(args[0]+'.tt2')
+        component_map_im      = pyrap.images.image(args[0]+'.tt0')
+        component_map_im_tt1  = pyrap.images.image(args[0]+'.tt1')
+        if options.nterms > 2:
+            component_map_im_tt2  = pyrap.images.image(args[0]+'.tt2')
     else:
-      component_map_im = pyrap.images.image(args[0]) 
-      
+        component_map_im = pyrap.images.image(args[0])
+
     ref_freq = component_map_im.info()['coordinates']['spectral2']['restfreqs'][0]
 
-    
+
     if options.nterms > 1:
-      component_map, axis_index = load_data_and_reformat(component_map_im, ["Stokes", "Declination", "Right Ascension"])
-      component_map_tt1, axis_index_tt1 = load_data_and_reformat(component_map_im_tt1, ["Stokes", "Declination", "Right Ascension"])
-      if options.nterms > 2:
-        component_map_tt2, axis_index_tt2 = load_data_and_reformat(component_map_im_tt2, ["Stokes", "Declination", "Right Ascension"])
+        component_map, axis_index = load_data_and_reformat(component_map_im, ["Stokes", "Declination", "Right Ascension"])
+        component_map_tt1, axis_index_tt1 = load_data_and_reformat(component_map_im_tt1, ["Stokes", "Declination", "Right Ascension"])
+        if options.nterms > 2:
+            component_map_tt2, axis_index_tt2 = load_data_and_reformat(component_map_im_tt2, ["Stokes", "Declination", "Right Ascension"])
     else:
-      component_map, axis_index = load_data_and_reformat(component_map_im, ["Stokes", "Declination", "Right Ascension"])
+        component_map, axis_index = load_data_and_reformat(component_map_im, ["Stokes", "Declination", "Right Ascension"])
 
     # Ugly kludge to find out mapping from Stokes coordinates to indices. No
     # better alternative seems to be available using pyrap at this time.
@@ -146,15 +146,15 @@ def main(options, args):
         sys.exit(1)
 
     # Find locations of all CLEAN components (pixels with non-zero flux).
-    component_flux = component_map[stokes_index[0], :, :]  
+    component_flux = component_map[stokes_index[0], :, :]
     components = numpy.nonzero(component_flux)
-    
+
     if options.nterms > 1:
-      component_flux_tt1 = component_map_tt1[stokes_index[0], :, :]  
-      components_tt1 = numpy.nonzero(component_flux_tt1)
-      if options.nterms > 2:
-        component_flux_tt2 = component_map_tt2[stokes_index[0], :, :]  
-        components_tt2 = numpy.nonzero(component_flux_tt2)
+        component_flux_tt1 = component_map_tt1[stokes_index[0], :, :]
+        components_tt1 = numpy.nonzero(component_flux_tt1)
+        if options.nterms > 2:
+            component_flux_tt2 = component_map_tt2[stokes_index[0], :, :]
+            components_tt2 = numpy.nonzero(component_flux_tt2)
 
 
 
@@ -201,8 +201,8 @@ def main(options, args):
                 continue
 
             # Get the absolute flux for the current CLEAN component.
-	    
-	    
+
+
             flux = component_flux[component]
 
             # Append CLEAN component to the right patch and update the patch
@@ -295,7 +295,7 @@ def main(options, args):
     # Write the catalog header.
     if options.use_patches:
         #print >>out, "# (Name, Type, Patch, Ra, Dec, I, Q, U, V) = format"
-	print >>out, "format = Name, Type, Patch, Ra, Dec, I, Q, U, V, MajorAxis, MinorAxis, Orientation, ReferenceFrequency='%f', SpectralIndex='[]'" %ref_freq
+        print >>out, "format = Name, Type, Patch, Ra, Dec, I, Q, U, V, MajorAxis, MinorAxis, Orientation, ReferenceFrequency='%f', SpectralIndex='[]'" %ref_freq
     else:
         print >>out, "# (Name, Type, Ra, Dec, I, Q, U, V) = format"
 
@@ -343,31 +343,31 @@ def main(options, args):
                 else:
                     stokes_desc[i] = "%f" % component_map[(stokes_index[i], component[0], component[1])]
             print >>out, ", ".join(stokes_desc),
-	    print >>out, ",0.0,0.0,0.0,", 
-	    print >>out, "%f," % ref_freq, 
-	    ## ALPHA = TT1/TT0 from http://casa.nrao.edu/docs/userman/UserMansu247.html
-	    #print numpy.shape(component_map[(stokes_index[i], component[0], component[1])])
-	    alpha = 0.0 # in case we do not use spectral index (nterms=1)
-	    if options.nterms > 1:
-	      alpha = -0.7 # default spectral index
-	      alpha = numpy.copy( (component_map_tt1[(0,component[0], component[1])]) / (component_map[(0, component[0], component[1])]) )
+            print >>out, ",0.0,0.0,0.0,",
+            print >>out, "%f," % ref_freq,
+            ## ALPHA = TT1/TT0 from http://casa.nrao.edu/docs/userman/UserMansu247.html
+            #print numpy.shape(component_map[(stokes_index[i], component[0], component[1])])
+            alpha = 0.0 # in case we do not use spectral index (nterms=1)
+            if options.nterms > 1:
+                alpha = -0.7 # default spectral index
+                alpha = numpy.copy( (component_map_tt1[(0,component[0], component[1])]) / (component_map[(0, component[0], component[1])]) )
             # to prevent crazy values
-	      if (numpy.abs(alpha) > 6.0): # 10, noticed unstable behaviour if 1000
-	       alpha = -0.7
-	      if options.nterms > 2:
-	        beta = numpy.copy( ((component_map_tt2[(0,component[0], component[1])])/(component_map[(0, component[0], component[1])])) -\
-		                     (0.5*alpha*(alpha-1.0)))
-	        if (numpy.abs(beta) > 6.0): # 10, noticed unstable behaviour if 1000
-	          beta = 0.0
-	          if alpha == -0.7: # because then the beta is flawed anyway by wrong alpha
-		     beta = 0.0
-	       
-	    if (options.nterms) == 1 or (options.nterms == 2):
-	       print >>out, "[%f]" % alpha
-	    if (options.nterms) == 3: 
-	       spix_str = str(alpha)+','+str(beta)
-	       print >>out, "[%s]" % spix_str
-	     
+                if (numpy.abs(alpha) > 6.0): # 10, noticed unstable behaviour if 1000
+                    alpha = -0.7
+                if options.nterms > 2:
+                    beta = numpy.copy( ((component_map_tt2[(0,component[0], component[1])])/(component_map[(0, component[0], component[1])])) -\
+                                         (0.5*alpha*(alpha-1.0)))
+                    if (numpy.abs(beta) > 6.0): # 10, noticed unstable behaviour if 1000
+                        beta = 0.0
+                        if alpha == -0.7: # because then the beta is flawed anyway by wrong alpha
+                            beta = 0.0
+
+            if (options.nterms) == 1 or (options.nterms == 2):
+                print >>out, "[%f]" % alpha
+            if (options.nterms) == 3:
+                spix_str = str(alpha)+','+str(beta)
+                print >>out, "[%s]" % spix_str
+
             component_count += 1
 
         print >>out

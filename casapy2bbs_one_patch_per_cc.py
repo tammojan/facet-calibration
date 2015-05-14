@@ -8,7 +8,7 @@ from optparse import OptionParser
 
 # Return the fractional part of the floating point number x.
 def fraction(x):
-  return numpy.modf(x)[0]
+    return numpy.modf(x)[0]
 
 # Convert an angle from degrees to radians.
 def deg2rad(angle):
@@ -295,11 +295,11 @@ def main(options, args):
             component_count = 0
 
         # Output all the CLEAN components in the patch.
-	basename = args[0]
-	basename = basename.split('.')[0]
+        basename = args[0]
+        basename = basename.split('.')[0]
         for component in patch:
             if options.use_patches:
-	        print >>out, ", , %spatch-%d, 00:00:00, +90.00.00" % (basename,component_count) 
+                print >>out, ", , %spatch-%d, 00:00:00, +90.00.00" % (basename,component_count)
                 print >>out, "%spatch-%d-%d, POINT, %spatch-%d," % (basename,patch_count, component_count, basename,component_count),
             else:
                 print >>out, "component-%d, POINT," % (component_count),

@@ -16,6 +16,4 @@ os.system('rm -rf ' + imageout)
 
 importfits(fitsimage=inputim,imagename=imageout,whichrep=0,\
            whichhdu=-1,zeroblanks=True,overwrite=True,defaultaxes=False,\
-	   defaultaxesvalues=[],beam=[])
-
-
+           defaultaxesvalues=[],beam=[])

@@ -1,0 +1,9 @@
+# (Name, Type, Patch, Ra, Dec, I, Q, U, V, ReferenceFrequency='139e6', SpectralIndex='[-0.64,-0.01]', MajorAxis, MinorAxis, Orientation) = format
+, , 3C196, 08:13:36.05, +48.13.00.0
+3C196A1, POINT, 3C196, 8:13:35.981540, +48.12.59.174770, 32.214646, 0.0, 0.0, 0.0, 143e6, [-0.4356, 00.0926], 0, 0, 0
+3C196A2, POINT, 3C196, 8:13:35.817620, +48.13.01.598800, 11.878165, 0.0, 0.0, 0.0, 143e6, [-1.0042, 00.7354], 0, 0, 0
+3C196B1, POINT, 3C196, 8:13:36.232730, +48.13.03.849360, 16.174678, 0.0, 0.0, 0.0, 143e6, [-0.5346, -0.4209], 0, 0, 0
+3C196B2, POINT, 3C196, 8:13:36.441790, +48.13.01.879160, 19.410151, 0.0, 0.0, 0.0, 143e6, [-0.7803, 00.7238], 0, 0, 0
+#Pls do not remove these lines
+#Tag:fitted (10SB) version 0.0.15.04.2013.80897.1.10: 15-Apr-2013: pandey@astron.nl using L80897_1CH10S
+#Freq Range: 115-189MHz. Please email me for any comments on the model or if you have an improved one

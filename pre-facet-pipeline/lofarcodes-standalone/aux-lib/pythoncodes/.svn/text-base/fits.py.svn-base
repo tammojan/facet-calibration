@@ -1,0 +1,32 @@
+
+import pyfits
+
+def read_fitsheader_keywords(filename,keywords):
+    """
+    Read the keywords from a fitheader
+    """
+    
+    file = pyfits.open(filename)
+
+    wordsarray = {}
+    
+    for word in keywords:
+        wordsarray[word] = file[0].header[word]
+
+    file.close()
+    return wordsarray
+
+def read_fitsimage(filename,decx,ray):
+    """
+    Read a fits image into a 2D array [RA][DEC]
+    """
+    file = pyfits.open(filename)
+
+    data = decx*[0.0]
+    for dec in range(0,decx):
+        data[dec] = ray*[0.0]
+        for ra in range(0,ray):
+            data[dec][ra] = file[0].data[0][0][dec][ra]
+            
+    return data
+    file.close()

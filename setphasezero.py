@@ -196,24 +196,24 @@ def median_window_filter(ampl, half_window, threshold):
 
     for i in range(len(mask)):
         if mask[i]:
-           ampl_tot_copy[i] = median_array[half_window+i] # fixed 2012
+            ampl_tot_copy[i] = median_array[half_window+i] # fixed 2012
     return ampl_tot_copy
 
 
 
 
-msname                   = str(sys.argv[1])                     
+msname                   = str(sys.argv[1])
 instrument_name          = str(sys.argv[2])
 instrument_name_smoothed = str(sys.argv[3])  # msname +'.instrument_smoothed'
 
 ##### EDIT THESE PARAMETERS BELOW #####
 
 gain             = 'Gain'
- 
-output_phasezero = True   # if True the phases will be set to zero (for amplitude solutions transfer 
+
+output_phasezero = True   # if True the phases will be set to zero (for amplitude solutions transfer
                           # if False the phases will be left untouched
-			  
-  
+
+
 #######################################
 
 pdb = lofar.parmdb.parmdb(instrument_name)
@@ -245,15 +245,15 @@ for ii in range(len(key_names)):
 
 antenna_list =['CS001HBA0', 'CS001HBA1', 'CS002HBA0', 'CS002HBA1', 'CS003HBA0', \
                'CS003HBA1', 'CS004HBA0', 'CS004HBA1', 'CS005HBA0', 'CS005HBA1', \
-	       'CS006HBA0', 'CS006HBA1', 'CS007HBA0', 'CS007HBA1', 'CS011HBA0', \
-	       'CS011HBA1', 'CS021HBA0', 'CS021HBA1', 'CS024HBA0', 'CS024HBA1', \
-	       'CS026HBA0', 'CS026HBA1', 'CS030HBA0', 'CS030HBA1', 'CS031HBA0', \
-	       'CS031HBA1', 'CS032HBA0', 'CS032HBA1', 'CS101HBA0', 'CS101HBA1', \
-	       'CS103HBA0', 'CS103HBA1', 'CS201HBA0', 'CS201HBA1', 'CS301HBA0', \
-	       'CS301HBA1', 'CS302HBA0', 'CS302HBA1', 'CS401HBA0', 'CS401HBA1', \
-	       'CS501HBA0', 'CS501HBA1', 'RS106HBA', 'RS205HBA', 'RS208HBA', \
-	       'RS305HBA', 'RS306HBA', 'RS307HBA', 'RS310HBA', 'RS406HBA', \
-	       'RS407HBA', 'RS409HBA', 'RS503HBA', 'RS508HBA', 'RS509HBA']
+               'CS006HBA0', 'CS006HBA1', 'CS007HBA0', 'CS007HBA1', 'CS011HBA0', \
+               'CS011HBA1', 'CS021HBA0', 'CS021HBA1', 'CS024HBA0', 'CS024HBA1', \
+               'CS026HBA0', 'CS026HBA1', 'CS030HBA0', 'CS030HBA1', 'CS031HBA0', \
+               'CS031HBA1', 'CS032HBA0', 'CS032HBA1', 'CS101HBA0', 'CS101HBA1', \
+               'CS103HBA0', 'CS103HBA1', 'CS201HBA0', 'CS201HBA1', 'CS301HBA0', \
+               'CS301HBA1', 'CS302HBA0', 'CS302HBA1', 'CS401HBA0', 'CS401HBA1', \
+               'CS501HBA0', 'CS501HBA1', 'RS106HBA', 'RS205HBA', 'RS208HBA', \
+               'RS305HBA', 'RS306HBA', 'RS307HBA', 'RS310HBA', 'RS406HBA', \
+               'RS407HBA', 'RS409HBA', 'RS503HBA', 'RS508HBA', 'RS509HBA']
 
 
 
@@ -286,13 +286,13 @@ for pol in pol_list:
 
         # ---------------------------------------------------------------
             if output_phasezero:
-              parms[gain + ':' + pol + ':Imag:' + antenna]['values'][:,chan] = numpy.copy(amp*numpy.sin(0.0))
-              parms[gain + ':' + pol + ':Real:' + antenna]['values'][:,chan] = numpy.copy(amp*numpy.cos(0.0))
-          
-	    else:
-              parms[gain + ':' + pol + ':Imag:' + antenna]['values'][:,chan] = numpy.copy(amp*numpy.sin(phase))
-              parms[gain + ':' + pol + ':Real:' + antenna]['values'][:,chan] = numpy.copy(amp*numpy.cos(phase))
-          
+                parms[gain + ':' + pol + ':Imag:' + antenna]['values'][:,chan] = numpy.copy(amp*numpy.sin(0.0))
+                parms[gain + ':' + pol + ':Real:' + antenna]['values'][:,chan] = numpy.copy(amp*numpy.cos(0.0))
+
+            else:
+                parms[gain + ':' + pol + ':Imag:' + antenna]['values'][:,chan] = numpy.copy(amp*numpy.sin(phase))
+                parms[gain + ':' + pol + ':Real:' + antenna]['values'][:,chan] = numpy.copy(amp*numpy.cos(phase))
+
 
 
 print 'writing the new database:', instrument_name_smoothed
@@ -302,5 +302,3 @@ print 'compare with: parmdbplot.py', instrument_name
 pdbnew = lofar.parmdb.parmdb(instrument_name_smoothed, create=True)
 pdbnew.addValues(parms)
 pdbnew.flush()
-
-

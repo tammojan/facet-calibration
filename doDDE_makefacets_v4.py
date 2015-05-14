@@ -23,7 +23,7 @@ username = pwd.getpwuid(os.getuid())[0]
 ###         INPUTS               ###
 ####################################
 
-SCRIPTPATH      = '/home/'+username+'/scripts/a2256_hba/' 
+SCRIPTPATH      = '/home/'+username+'/scripts/a2256_hba/'
 
 peelsourceinfo  =  '/home/'+username+'/scripts/a2256_hba/peel_source_info_a2256.txt'
 
@@ -138,7 +138,7 @@ optional - specify max number of processes (default 2)
                 p = Popen(cmd.split(), stdout=f, stderr=STDOUT)
                 processes.add(p)
                 pid=p.pid
-                
+
                 if Monitor:
                     monitor_cmd = 'python {scriptpath}/monitorjob.py {pid} {monitorname}'.format(pid=pid, monitorname=monitorname, scriptpath=scriptpath)
                     process_monitors.add(Popen(monitor_cmd.split()))
@@ -147,7 +147,7 @@ optional - specify max number of processes (default 2)
             p = Popen(cmd.split())
             processes.add(p)
             pid=p.pid
-                
+
             if Monitor:
                 monitor_cmd = 'python {scriptpath}/monitorjob.py {pid} {monitorname}'.format(pid=pid, monitorname=monitorname, scriptpath=scriptpath)
                 process_monitors.add(Popen(monitor_cmd.split()))
@@ -175,7 +175,7 @@ optional - specify max number of processes (default 2)
             #with open(cmdlog,'w') as f:
                 #f.write(p.communicate()[0])
     #processes.difference_update([p for p in processes if p.poll() is not None])
-            
+
     return
 
 
@@ -187,10 +187,10 @@ def image_centre(image):
     im = pyrap.images.image(image)
     ic = im.coordinates()
     lon,lat = ic.get_referencevalue()[2]
-    
+
     ra = lat*180./pi
     dec = lon*180./pi
-        
+
     return ra,dec
 
 
@@ -202,8 +202,8 @@ def image_world_to_image(image,ra,dec):
     im = pyrap.images.image(image)
     ic = im.coordinates()
     freq,stokes,pos = ic.get_referencevalue()
-    
-    
+
+
     x = []
     y = []
     for rai,deci in zip(ra,dec):
@@ -212,7 +212,7 @@ def image_world_to_image(image,ra,dec):
         y.append(yi)
     x = numpy.array(x)
     y = numpy.array(y)
-    
+
     return x,y
 
 
@@ -224,7 +224,7 @@ def image_image_to_world(image,x,y):
     ic = im.coordinates()
     freq,stokes,pos = ic.get_referencevalue()
     nf,nc,nx,ny = im.shape()
-    
+
     ra = []
     dec = []
     for xi,yi in zip(x,y):
@@ -233,7 +233,7 @@ def image_image_to_world(image,x,y):
         dec.append(deci*180./pi)
     ra = numpy.array(ra)
     dec = numpy.array(dec)
-    
+
     return ra,dec
 
 
@@ -309,7 +309,7 @@ def dec_to_degrees(dec_str, delim=' '):
             else:
                 t = dec_s.split(delim)
             dec_deg[i] = (float(t[0]) + float(t[1])/60. + float(t[2])/3600.)
-        return dec_deg        
+        return dec_deg
 
 def ra_to_str(dra, ndec=2,delim=':'):
     '''
@@ -321,7 +321,7 @@ def ra_to_str(dra, ndec=2,delim=':'):
     else:
         delim1 = delim
         delim2 = delim
-    
+
     dra = dra/15.
     dd = math.floor(dra)
     dfrac = dra - dd
@@ -334,7 +334,7 @@ def ra_to_str(dra, ndec=2,delim=':'):
     if dm == 60.:
         dm = 0.
         dd += 1
-    sra = '%02d%s%02d%s%05.2f' %(dd,delim1,dm,delim2,dsec)  
+    sra = '%02d%s%02d%s%05.2f' %(dd,delim1,dm,delim2,dsec)
     return sra
 def dec_to_str(ddec,ndec=1,delim=':'):
     '''
@@ -346,7 +346,7 @@ def dec_to_str(ddec,ndec=1,delim=':'):
     else:
         delim1 = delim
         delim2 = delim
-        
+
     dd = math.floor(ddec)
     dfrac = ddec - dd
     dmins = dfrac*60.
@@ -360,10 +360,10 @@ def dec_to_str(ddec,ndec=1,delim=':'):
         dd += 1
     sdec = '%02d%s%02d%s%04.1f' %(dd,delim1,dm,delim2,dsec)
     return sdec
-    
+
 
 def dir2pos(direction):
-    
+
     def d2p(d):
         sra, sdec = d.split(',')
         rah = int(sra.split('h')[0])
@@ -375,7 +375,7 @@ def dir2pos(direction):
         decs = float(sdec.split('d')[1].split('m')[1])
         dec = decd+decm/60.+decs/3600.
         return ra,dec
-    
+
     if isinstance(direction, numpy.ndarray) or  isinstance(direction, list):
         ra = numpy.zeros(len(direction))
         dec = numpy.zeros(len(direction))
@@ -391,24 +391,24 @@ def dir2pos(direction):
     #resolution - in arcsec
     #'''
     #edge = 25.
-        
+
     #t = region.transpose()
     #ra = t[0]
     #dec = t[1]
-    
+
     #span_x = (ra.max() - ra.min())*3600./resolution
     #span_y = (dec.max() - dec.min())*3600./resolution
-    
+
     #max_span = max(span_x, span_y) + 2*edge
-    
+
     #midra = (ra.max() + ra.min())/2.
     #middec = (dec.max() + dec.min())/2.
     #position =  '{x:s},{y:s}'.format(x=ra_to_str(midra,delim='h'),y=dec_to_str(middec,delim='d'))
-    
+
     #trysizes = numpy.copy(sorted([6400,6144,5600,5400,5184,5000,4800,4608,4320,4096,3840,3600,3200,3072,2880,2560,2304,2048, 1600, 1536, 1200, 1024, 800, 512]))
     #trysizes1 = numpy.copy(trysizes[::-1])
     #this_size = trysizes1[numpy.sum(trysizes1>= max_span)]
-    
+
     #return this_size, position
 
 #def find_newsize_centre(image):
@@ -422,7 +422,7 @@ def dir2pos(direction):
  #sh      = sh[0]
  #newsize = sh
  ##print mask, newsize
- 
+
  #trysizes = numpy.copy(sorted([6400,6144,5600,5400,5184,5000,4800,4608,4320,4096,3840,3600,3200,3072,2880,2560,2304,2048, 1600, 1536, 1200, 1024, 800, 512]))
  ##idx = numpy.where(trysizes < sh)
  ##print idx
@@ -433,7 +433,7 @@ def dir2pos(direction):
  #idx = numpy.where(pixels  != 0)
  #idx_x = idx[2]
  #idx_y = idx[3]
- 
+
  ##span_x1 = 2*abs(max(idx_x) - sh/2)
  ##span_x2 = 2*abs(sh/2 - min(idx_x))
  ##span_y1 = 2*abs(max(idx_y)- sh/2)
@@ -442,7 +442,7 @@ def dir2pos(direction):
  ##print span_x1, span_x2
  ##print span_y1, span_y2
  ##print max_span
- 
+
  #span_x = max(idx_x) - min(idx_x) + 1
  #span_y = max(idx_y) - min(idx_y) + 1
  #max_span = max(span_x, span_y) + 2*edge
@@ -451,20 +451,20 @@ def dir2pos(direction):
  #print max(idx_x), min(idx_x), span_x
  #print max(idx_y), min(idx_y), span_y
  #print max_span
- 
- 
+
+
  #cen_span_dec, cen_span_ra = img.toworld([0,0,cen_span_x, cen_span_y])[2:4]
- #cen_span_ra *= 180./pi 
+ #cen_span_ra *= 180./pi
  #cen_span_dec *= 180./pi
- 
+
  #center_pix = '{x:.0f},{y:.0f}'.format(x=cen_span_x,y=cen_span_y)
  #center = '{x:s},{y:s}'.format(x=ra_to_str(cen_span_ra,delim='h'),y=dec_to_str(cen_span_dec,delim='d'))
- 
- 
+
+
  ##print numpy.sum(trysizes1>= max_span)
  #this_size = trysizes1[numpy.sum(trysizes1>= max_span)-1]
  ##print "New size:", this_size
- 
+
  #newsize = this_size
 
  ##trysizes = numpy.copy(sorted([6400,6144,5600,5400,5184,5000,4800,4608,4320,4096,3840,3600,3200,3072,2880,2560,2304,2048, 1600, 1536, 1200, 1024, 800, 512]))
@@ -477,12 +477,12 @@ def dir2pos(direction):
     ###print 'Trying', size
     ##cutedge = numpy.int((sh - size)/2.)
     ###print cutedge
-   
+
     ##idx1 = numpy.size(numpy.where(pixels[0,0,  0:cutedge,0:sh]      != 0))
     ##idx2 = numpy.size(numpy.where(pixels[0,0,  sh-cutedge:sh,0:sh]  != 0))
     ##idx3 = numpy.size(numpy.where(pixels[0,0,  0:sh,0:cutedge]      != 0))
     ##idx4 = numpy.size(numpy.where(pixels[0,0,  0:sh,sh-cutedge:sh]  != 0))
-  
+
     ###print idx1, idx2, idx3, idx4
 
     ##if ((idx1) == 0) and ((idx2)  == 0) and ((idx3)  == 0) and ((idx4) == 0):
@@ -497,43 +497,43 @@ def dir2pos(direction):
 
 
 
- 
-def create_dummyms_parset_formasks(msin, msout):
-  ndppp_parset = (msin.split('.')[0]) +'_ndppp_dummy.parset' 
-  os.system('rm -f ' + ndppp_parset)
 
-  f=open(ndppp_parset, 'w')
-  f.write('msin ="%s"\n' % msin) 
-  f.write('msin.datacolumn = DATA\n')
-  f.write('msin.autoweight = false\n')
-  f.write('msout ="%s"\n' % msout)
-  f.write('msout.writefullresflag=False\n') 
-  f.write('steps = [avg1]\n')
-  f.write('avg1.type = squash\n')
-  f.write('avg1.freqstep = 20\n')
-  f.write('avg1.timestep = 20\n')         
-  f.close()
-  return ndppp_parset 
+def create_dummyms_parset_formasks(msin, msout):
+    ndppp_parset = (msin.split('.')[0]) +'_ndppp_dummy.parset'
+    os.system('rm -f ' + ndppp_parset)
+
+    f=open(ndppp_parset, 'w')
+    f.write('msin ="%s"\n' % msin)
+    f.write('msin.datacolumn = DATA\n')
+    f.write('msin.autoweight = false\n')
+    f.write('msout ="%s"\n' % msout)
+    f.write('msout.writefullresflag=False\n')
+    f.write('steps = [avg1]\n')
+    f.write('avg1.type = squash\n')
+    f.write('avg1.freqstep = 20\n')
+    f.write('avg1.timestep = 20\n')
+    f.close()
+    return ndppp_parset
 
 def create_phaseshift_parset_formasks(msin, msout, source, direction):
-  ndppp_parset = (msin.split('.')[0]) +'_ndppp_avgphaseshift.'+source+'.parset' 
-  os.system('rm -f ' + ndppp_parset)
+    ndppp_parset = (msin.split('.')[0]) +'_ndppp_avgphaseshift.'+source+'.parset'
+    os.system('rm -f ' + ndppp_parset)
 
-  f=open(ndppp_parset, 'w')
-  f.write('msin ="%s"\n' % msin) 
-  f.write('msin.datacolumn = DATA\n')
-  f.write('msin.autoweight = false\n')
-  f.write('msout ="%s"\n' % msout)
-  f.write('msout.writefullresflag=False\n') 
-  f.write('steps = [shift]\n')
-  f.write('shift.type        = phaseshift\n')
-  f.write('shift.phasecenter = [%s]\n' % direction)
-  f.close()
-  return ndppp_parset 
- 
+    f=open(ndppp_parset, 'w')
+    f.write('msin ="%s"\n' % msin)
+    f.write('msin.datacolumn = DATA\n')
+    f.write('msin.autoweight = false\n')
+    f.write('msout ="%s"\n' % msout)
+    f.write('msout.writefullresflag=False\n')
+    f.write('steps = [shift]\n')
+    f.write('shift.type        = phaseshift\n')
+    f.write('shift.phasecenter = [%s]\n' % direction)
+    f.close()
+    return ndppp_parset
 
-   
-    
+
+
+
 
 
 
@@ -718,7 +718,7 @@ def voronoi_finite_polygons_2d_box(vor, box):
 
     regions, imvertices = new_regions, numpy.asarray(new_vertices)
     #return new_regions, numpy.asarray(new_vertices)
-    
+
     ## now force them to be in the bounding box
     poly = numpy.asarray([imvertices[v] for v in regions])
 
@@ -750,26 +750,26 @@ def make_facet_mask(imname, maskout, region, pad=True):
     print "making facet mask " + maskout +" ("+str(sh[2])+")"
 
     facetmask    = (numpy.copy(pixels)*0.0) + 1.0
-    
+
     region_pixel = []
     for p in region:
         p = p*pi/180.
         region_pixel.append(img.topixel([1,1,p[1], p[0]])[2:4])
     region_pixel = numpy.array(region_pixel)
-    
+
     from PIL import Image, ImageDraw
     imgmask = Image.new('L', (sh[2], sh[3]), 0)
     lpoly=[tuple(v) for v in region_pixel]
     ImageDraw.Draw(imgmask).polygon(lpoly, outline=1, fill=1)
     mask = numpy.array(imgmask)
     mask = mask.transpose()  ## get the orientation right
-    
+
     #pl.imshow(pixels[0,0,:,:])
     c = pl.imshow(mask)
     pl.colorbar()
     for p in region_pixel:
         pl.plot(p[0],p[1],'ko')
- 
+
     if pad:
         # mask the edges of the image
         mask[0:edge,0:sh[3]] = 0.
@@ -796,11 +796,11 @@ def add_facet_mask(maskout, region, value, direction, size,  lowres=15., actualr
 
     facetmask    = numpy.copy(pixels)
     imagefacetmask = facetmask[0,0,:,:]
-    
-    
+
+
     ic = img.coordinates()
     freq,stokes,pos = ic.get_referencevalue()
-    
+
     region_pixel = []
     for p in region:
         #print p
@@ -811,44 +811,44 @@ def add_facet_mask(maskout, region, value, direction, size,  lowres=15., actualr
         #print p[1], p[0]
         region_pixel.append(img.topixel([freq,stokes[0],p[1], p[0]])[2:4])
     region_pixel = numpy.array(region_pixel)
-    
+
     from PIL import Image, ImageDraw
     imgmaskreg = Image.new('L', (sh[2], sh[3]), 0)
     lpoly=[tuple(v) for v in region_pixel]
     ImageDraw.Draw(imgmaskreg).polygon(lpoly, outline=1, fill=1)
     maskreg = numpy.array(imgmaskreg)
     maskreg = maskreg.transpose()  ## get the orientation right
-    
-    
-    
+
+
+
     C = direction.split(',')
     cen_ra = ra_to_degrees(C[0],delim='h')
     cen_dec = dec_to_degrees(C[1],delim='d')
     cen_y, cen_x = img.topixel([1,1,cen_dec*pi/180., cen_ra*pi/180.])[2:4]
-    
+
     D = int(size*actualres/lowres)/2
     #print D
-    
+
     ## do the facet image mask
     imgmaskbox = Image.new('L', (sh[2], sh[3]), 0)
     facet_corners = numpy.array([[cen_y-D, cen_x-D],[cen_y-D, cen_x+D],[cen_y+D, cen_x+D], [cen_y+D, cen_x-D]])
-    
+
     #print region_pixel
     #print facet_corners
     lpoly=[tuple(v) for v in facet_corners]
     ImageDraw.Draw(imgmaskbox).polygon(lpoly, outline=1, fill=1)
     maskbox = numpy.array(imgmaskbox)
-    maskbox = maskbox.transpose()  
-    
-    
+    maskbox = maskbox.transpose()
+
+
     mask = value*maskreg*maskbox
-    
+
     #import pylab as pl
     ##pl.imshow(pixels[0,0,:,:])
     #pl.imshow(mask)
     #for p in region_pixel:
         #pl.plot(p[0],p[1],'ko')
- 
+
     #print mask
     #print numpy.sum(mask>0)
     #print imagefacetmask
@@ -865,7 +865,7 @@ def add_facet_mask(maskout, region, value, direction, size,  lowres=15., actualr
     #print thismask
     addmask = mask
     addmask[~thismask] *= 0
-    
+
     #new_facetmask = facetmask == 0
     #addmask = numpy.where(facetmask[0,0,:,:]==0)
     #mask
@@ -876,9 +876,9 @@ def add_facet_mask(maskout, region, value, direction, size,  lowres=15., actualr
     return
 
 def show_facets(facetmap, directions, directions2=None, maxsize=6400, lowres=15., actualres=1.5, r=[1.,2.]):
-    
+
 #if 1:
-    
+
 
     edge      = 25 # mask this number of pixels from the edge
 
@@ -894,12 +894,12 @@ def show_facets(facetmap, directions, directions2=None, maxsize=6400, lowres=15.
     pixels    = numpy.copy(pixels)
     mask = pixels[0,0,:,:]
     mask[mask==0] *= numpy.nan
-    
+
     import matplotlib.pyplot as plt
     plt.figure()
     plt.title(facetmap)
     c = plt.imshow(mask, origin='lower', interpolation='none' )#, extent=[0,0,NX,NY])
-    
+
     x0 = NX/2
     y0 = NY/2
     theta = numpy.arange(0,2*pi,pi/1000)
@@ -911,8 +911,8 @@ def show_facets(facetmap, directions, directions2=None, maxsize=6400, lowres=15.
     plt.colorbar()
     plt.xlim(0,NX)
     plt.ylim(0,NY)
-    
-    
+
+
     for direction in directions:
         C = direction.split(',')
         cen_ra = ra_to_degrees(C[0],delim='h')
@@ -928,9 +928,9 @@ def show_facets(facetmap, directions, directions2=None, maxsize=6400, lowres=15.
             except:
                 svalue ='?'
             plt.text(cen_x, cen_y, svalue)
-        
+
         plt.plot(cen_x, cen_y, 'ko')
-        
+
     if directions2 is not None:
         for direction in directions2:
             C = direction.split(',')
@@ -945,22 +945,22 @@ def show_facets(facetmap, directions, directions2=None, maxsize=6400, lowres=15.
                 svalue = str(int(value))
             except:
                 svalue ='?'
-            
+
             plt.plot(cen_x, cen_y, 'k+')
             plt.text(cen_x, cen_y, svalue)
-        
-    
+
+
     plt.savefig(facetmap+'.png')
-    
+
     return
-    
+
 
 def find_newsize_centre_lowresfacets(facetmap, region, direction, source, maxsize=6400, lowres=15., actualres=1.5):
-    
+
 #if 1:
-    
+
     value = int(source.replace('s',''))
-    
+
     print "doing source " + source
 
     edge      = 25 # mask this number of pixels from the edge
@@ -976,8 +976,8 @@ def find_newsize_centre_lowresfacets(facetmap, region, direction, source, maxsiz
 
     pixels    = numpy.copy(pixels)
     mask = pixels[0,0,:,:]
-    
-    
+
+
     C = direction.split(',')
     cen_ra = ra_to_degrees(C[0],delim='h')
     cen_dec = dec_to_degrees(C[1],delim='d')
@@ -985,7 +985,7 @@ def find_newsize_centre_lowresfacets(facetmap, region, direction, source, maxsiz
     #print 'original direction world:', cen_ra, cen_dec
     cen_y, cen_x = img.topixel([1,1,cen_dec*pi/180., cen_ra*pi/180.])[2:4]
     #print 'original direction pixel:', cen_x, cen_y
-    
+
     # get the facet pixels
     maskpix = numpy.where(mask == value)
     maskpix_y = maskpix[0]
@@ -994,16 +994,16 @@ def find_newsize_centre_lowresfacets(facetmap, region, direction, source, maxsiz
     #nonmaskpix = numpy.where(mask != value)
     #nonmaskpix_x = nonmaskpix[0]
     #nonmaskpix_y = nonmaskpix[1]
-    
+
     #import matplotlib.pyplot as plt
     #plt.imshow(mask == value)
     #plt.show()
-    
+
     #sep = numpy.sqrt((nonmaskpix_x-cen_x)**2.+ (nonmaskpix_y-cen_y)**2.)
     #maxedgesep = numpy.max(sep)
     #minedgesep = numpy.min(sep)
     #print maxedgesep, minedgesep, maxedgesep/minedgesep
-    
+
     X1, X2 = numpy.min(maskpix_x),numpy.max(maskpix_x)
     Y1, Y2 = numpy.min(maskpix_y),numpy.max(maskpix_y)
     #print 'X1,X2 = ', X1,X2
@@ -1018,10 +1018,10 @@ def find_newsize_centre_lowresfacets(facetmap, region, direction, source, maxsiz
     #max_span_y = 2.*max(Y01, Y02)
     #print 'max x dist to facet edge: ', max_span_x
     #print 'max y dist to facet edge: ', max_span_y
-    
+
     maxrealsize = maxsize  #*lowres/actualres  # in actual pixels
     #print 'maxrealsize: ',maxrealsize
-    
+
     new_cen_x = (X2+X1)/2.
     new_cen_y = (Y2+Y1)/2.
     span_x = X2-X1
@@ -1045,22 +1045,22 @@ def find_newsize_centre_lowresfacets(facetmap, region, direction, source, maxsiz
         new_real_span = trysizes1[selind]
     new_span = new_real_span*actualres/lowres
     #print 'new_span (real)', new_span, new_real_span
-    
+
     new_cen_dec, new_cen_ra = img.toworld([0,0,new_cen_x, new_cen_y])[2:4]
-    new_cen_ra *= 180./pi 
+    new_cen_ra *= 180./pi
     new_cen_dec *= 180./pi
     new_position =  '{x:s},{y:s}'.format(x=ra_to_str(new_cen_ra,delim='h'),y=dec_to_str(new_cen_dec,delim='d'))
-    
+
     #d  = new_span/2
     #this_mask = mask[max(0,new_cen_x-d):min(new_cen_x+d,NX), max(new_cen_y-d,0):min(new_cen_y+d,NY)]
-    
-    
+
+
     ##maskpix = numpy.where(mask == value)
     ##maskpix_x = maskpix[0]
     ##maskpix_y = maskpix[1]
     ##new_maxsize = max(numpy.sqrt((maskpix_x-new_cen_x)**2.+ (maskpix_y-new_cen_y)**2.))
     ##print maxsize, new_maxsize
-    
+
     #outer = False
     #special = False
     #if (X1 == 0) or (Y1 == 0) or (X2 == NX) or (Y2 == NY):
@@ -1078,7 +1078,7 @@ def find_newsize_centre_lowresfacets(facetmap, region, direction, source, maxsiz
     #if (span_x/span_y > axratio) or (span_y/span_x > axratio):
         #print "***elongated facet***"
         #special = True
-        
+
     #if outer or special:
         #print "using calibrator direction"
         ##maskpix = numpy.where(mask == value)
@@ -1088,26 +1088,26 @@ def find_newsize_centre_lowresfacets(facetmap, region, direction, source, maxsiz
         ##new_maxsize = max(numpy.sqrt((maskpix_x-new_cen_x)**2.+ (maskpix_y-new_cen_y)**2.))
         ##print maxsize, new_maxsize
         #new_position =  direction
-    
+
     #import matplotlib.pyplot as plt
     #plt.imshow(this_mask)
     #plt.show()
-    
-    ## update dist 
+
+    ## update dist
     #nX01 = abs(numpy.max(maskpix_x)-new_cen_x)
     #nX02 = abs(new_cen_x-numpy.min(maskpix_x))
     #nY01 = abs(numpy.max(maskpix_y)-new_cen_y)
     #nY02 = abs(new_cen_y-numpy.min(maskpix_y))
     #new_min_boundary_dist = min(numpy.sqrt((edgepix_x-new_cen_x)**2.+ (edgepix_y-new_cen_y)**2.))
-    
-    ## if any x,y dist from centre is 
+
+    ## if any x,y dist from centre is
     #if numpy.sum(numpy.array([X01, X02, Y01, Y02]) >= min_boundary_dist) > 0:
         #print "boundary hit on original coords"
         #boundary = True
     #if numpy.sum(numpy.array([nX01, nX02, nY01, nY02]) >= new_min_boundary_dist) > 0:
         #print "boundary hit on updated coords"
         #boundary = True
-    
+
     #if not boundary:
         #new_cen_x = (max(maskpix_x) + min(maskpix_x))/2.
         #new_cen_y = (max(maskpix_y) + min(maskpix_y))/2.
@@ -1117,51 +1117,51 @@ def find_newsize_centre_lowresfacets(facetmap, region, direction, source, maxsiz
         #new_cen_x = cen_x
         #new_cen_y = cen_y
         #new_span = min_boundary_dist
-        
+
     #print new_cen_x, new_cen_y, new_span
-    
+
     ##def find_imsize_from_region(region, resolution):
     #'''
     #get approx image size from region and image resolution - ignoring correct wcs
     #resolution - in arcsec
     #'''
     #edge = 25.
-        
+
     #t = region.transpose()
     #ra = t[0]
     #dec = t[1]
-    
+
     #span_x = (ra.max() - ra.min())*3600./resolution
     #span_y = (dec.max() - dec.min())*3600./resolution
-    
+
     #max_span = max(span_x, span_y) + 2*edge
-    
+
     #midra = (ra.max() + ra.min())/2.
     #middec = (dec.max() + dec.min())/2.
     #position =  '{x:s},{y:s}'.format(x=ra_to_str(midra,delim='h'),y=dec_to_str(middec,delim='d'))
-    
+
     #trysizes = numpy.copy(sorted([6400,6144,5600,5400,5184,5000,4800,4608,4320,4096,3840,3600,3200,3072,2880,2560,2304,2048, 1600, 1536, 1200, 1024, 800, 512]))
     #trysizes1 = numpy.copy(trysizes[::-1])
     #this_size = trysizes1[numpy.sum(trysizes1>= max_span)]
-    
+
     #return this_size, position
-    
- 
+
+
     #facetmask[0,0,:,:] += mask
 
     #img.putdata(facetmask)
     #print new_position, new_real_span
-    
+
     return new_position, new_real_span
 
 
 
 def find_newsize_lowresfacets(facetmap, region, direction, source, maxsize=6400, lowres=15., actualres=1.5, debug=False):
-    
+
 #if 1:
-    
+
     value = int(source.replace('s',''))
-    
+
     if debug : print "doing source " + source
 
     edge      = 25 # mask this number of pixels from the edge
@@ -1177,8 +1177,8 @@ def find_newsize_lowresfacets(facetmap, region, direction, source, maxsize=6400,
 
     pixels    = numpy.copy(pixels)
     mask = pixels[0,0,:,:]
-    
-    
+
+
     C = direction.split(',')
     cen_ra = ra_to_degrees(C[0],delim='h')
     cen_dec = dec_to_degrees(C[1],delim='d')
@@ -1186,7 +1186,7 @@ def find_newsize_lowresfacets(facetmap, region, direction, source, maxsize=6400,
     #print 'original direction world:', cen_ra, cen_dec
     cen_y, cen_x = img.topixel([1,1,cen_dec*pi/180., cen_ra*pi/180.])[2:4]
     #print 'original direction pixel:', cen_x, cen_y
-    
+
     # get the facet pixels
     maskpix = numpy.where(mask == value)
     maskpix_y = maskpix[0]
@@ -1195,16 +1195,16 @@ def find_newsize_lowresfacets(facetmap, region, direction, source, maxsize=6400,
     #nonmaskpix = numpy.where(mask != value)
     #nonmaskpix_x = nonmaskpix[0]
     #nonmaskpix_y = nonmaskpix[1]
-    
+
     #import matplotlib.pyplot as plt
     #plt.imshow(mask == value)
     #plt.show()
-    
+
     #sep = numpy.sqrt((nonmaskpix_x-cen_x)**2.+ (nonmaskpix_y-cen_y)**2.)
     #maxedgesep = numpy.max(sep)
     #minedgesep = numpy.min(sep)
     #print maxedgesep, minedgesep, maxedgesep/minedgesep
-    
+
     X1, X2 = numpy.min(maskpix_x),numpy.max(maskpix_x)
     Y1, Y2 = numpy.min(maskpix_y),numpy.max(maskpix_y)
     if debug : print 'X1,X2 = ', X1,X2
@@ -1219,10 +1219,10 @@ def find_newsize_lowresfacets(facetmap, region, direction, source, maxsize=6400,
     max_span_y = 2.*max(Y01, Y02)
     if debug : print 'max x dist to facet edge: ', max_span_x
     if debug : print 'max y dist to facet edge: ', max_span_y
-    
+
     maxrealsize = maxsize  #*lowres/actualres  # in actual pixels
     #print 'maxrealsize: ',maxrealsize
-    
+
     #new_cen_x = (X2+X1)/2.
     #new_cen_y = (Y2+Y1)/2.
     #span_x = X2-X1
@@ -1246,14 +1246,14 @@ def find_newsize_lowresfacets(facetmap, region, direction, source, maxsize=6400,
         new_real_span = trysizes1[selind]
     new_span = new_real_span*actualres/lowres
     #print 'new_span (real)', new_span, new_real_span
-    
+
     #new_cen_dec, new_cen_ra = img.toworld([0,0,new_cen_x, new_cen_y])[2:4]
-    #new_cen_ra *= 180./pi 
+    #new_cen_ra *= 180./pi
     #new_cen_dec *= 180./pi
     #new_position =  '{x:s},{y:s}'.format(x=ra_to_str(new_cen_ra,delim='h'),y=dec_to_str(new_cen_dec,delim='d'))
-    
+
     if debug : print new_real_span
-    
+
     return new_real_span
 
 
@@ -1326,12 +1326,12 @@ def fwhm_freq(freq, alpha=1.02):
 source_info_rec = numpy.genfromtxt(peelsourceinfo, \
                                    dtype="S50,S25,S5,S5,i8,i8,i8,i8,S2,S255,S255,S255,S5", \
                                    names=["sourcelist","directions","atrous_do","mscale_field","imsizes",\
-				   "cellsizetime_p","cellsizetime_a","fieldsize","dynamicrange",\
-				   "regionselfc","regionfield","peelskymodel","outliersource"],comments='#')
+                                   "cellsizetime_p","cellsizetime_a","fieldsize","dynamicrange",\
+                                   "regionselfc","regionfield","peelskymodel","outliersource"],comments='#')
 
 sourcelist = source_info_rec["sourcelist"]
-directions = source_info_rec["directions"] 
-atrous_do = source_info_rec["atrous_do"] 
+directions = source_info_rec["directions"]
+atrous_do = source_info_rec["atrous_do"]
 mscale_field = source_info_rec["mscale_field"]
 imsizes = source_info_rec["imsizes"]
 cellsizetime_p = source_info_rec["cellsizetime_p"]
@@ -1379,7 +1379,7 @@ if not os.path.exists(dummy_image):
     os.system(cmd)
 
 ra0,dec0 = image_centre(dummy_image)
-    
+
 #tesselate#
 print "doing tesselation"
 ra,dec = dir2pos(directions)
@@ -1400,7 +1400,7 @@ vor = Voronoi(numpy.array((x, y)).transpose())
 # impoly is an array of (n,2) arrays defining the polygon region
 impoly = voronoi_finite_polygons_2d_box(vor, box)
 
-# convert image coordinates of regions to 
+# convert image coordinates of regions to
 worldpoly = []
 for p in impoly:
     pp = p.transpose()
@@ -1419,11 +1419,11 @@ if plot_facets:
         pp = p.transpose()
         ax1.plot(pp[0],pp[1])
 
-        
+
     ax1.set_xlabel('x')
     ax1.set_ylabel('y')
-        
-        
+
+
     ax2 = pl.subplot(122)
     ax2.plot(ra,dec,'*')
     for p in worldpoly:
@@ -1451,7 +1451,7 @@ if 1:
     for source_id,source in enumerate(sourcelist):
         value = int(source.replace('s',''))
         add_facet_mask(facet_image_name_huge, poly[source_id], value, directions[source_id], sizes[source_id], lowres=lowresolution, actualres=resolution)
-        
+
 
     show_facets(facet_image_name_huge, directions, r=rad)
 
@@ -1470,28 +1470,28 @@ if 1:
     sizes = []
     for source_id,source in enumerate(sourcelist):
         d = directions[source_id]
-        
+
         C = d.split(',')
         ra = ra_to_degrees(C[0],delim='h')
         dec = dec_to_degrees(C[1],delim='d')
         dist_from_pointing = angsep(ra,dec,ra0,dec0)
-        
-        
+
+
         if dist_from_pointing > outlierdist:
             sizes.append(maxoutliersize)
         else:
             sizes.append(maxcentralsize)
-        
+
 
     for source_id,source in enumerate(sourcelist):
         value = int(source.replace('s',''))
         add_facet_mask(facet_image_name, poly[source_id], value, directions[source_id], sizes[source_id], lowres=lowresolution, actualres=resolution)
-        
+
 
     show_facets(facet_image_name, directions, r=rad)
 
 
-## obsolete - never shift the facet centres    
+## obsolete - never shift the facet centres
 ## get smallest size possible - with shifting the facet centre
 ## but use the max image size
 #newpositionsshift = []
@@ -1500,11 +1500,11 @@ if 1:
     #new_pos, new_size = find_newsize_centre_lowresfacets(facet_image_name_huge, poly[source_id], directions[source_id], source, maxsize=max_fieldsize, lowres=lowresolution, actualres=resolution)
     #newpositionsshift.append(new_pos)
     #newsizesshift.append(new_size)
-    
-  
+
+
 #for source_id,source in enumerate(sourcelist):
     #print source, newsizesshift[source_id], newsizes[source_id], sizes[source_id]
-    
+
 #facet_image_name = 'facets_wide_shifted.image'
 #os.system('rm -rf {im2}'.format(im2=facet_image_name))
 #os.system('cp -r {im1} {im2}'.format(im1=dummy_image,im2=facet_image_name))
@@ -1516,15 +1516,15 @@ if 1:
 
 reduce_sizes = True
 if reduce_sizes:
-    
+
     print "reducing image sizes where possible"
-    
+
     # get smallest size possible - without shifting the facet centre
     newsizes = []
     for source_id,source in enumerate(sourcelist):
         new_size = find_newsize_lowresfacets(facet_image_name_huge, poly[source_id], directions[source_id], source, maxsize=max_fieldsize, lowres=lowresolution, actualres=resolution)
         newsizes.append(new_size)
-    
+
     facet_image_name = 'facets.image'
     os.system('rm -rf {im2}'.format(im2=facet_image_name))
     os.system('cp -r {im1} {im2}'.format(im1=dummy_image,im2=facet_image_name))
@@ -1536,8 +1536,8 @@ if reduce_sizes:
 
 sizes = newsizes
 positions = directions
-    
-    
+
+
 
 for p,source in zip(poly,sourcelist):
     write_ds9_region('peel_facet_{source}.reg'.format(source=source), p, source)
@@ -1557,14 +1557,14 @@ mslist = []
 imagelist = []
 sizelist = []
 for source_id,source in enumerate(sourcelist):
-    
+
     tmpn  = ms.split('.')[0] + '.' + source + '.ms.tmp'
     mslist.append(tmpn)
     imagelist.append('templatemask_' + source)
     sizelist.append(str(sizes[source_id]))
     parset = create_phaseshift_parset_formasks(tmpms, tmpn, source, positions[source_id])
     NDPPPcmds.append('NDPPP ' + parset)
-    
+
 run_parallel(NDPPPcmds, nthreads=8,logs='auto')
 
 mslistfile = 'mslist.npy'
@@ -1580,20 +1580,18 @@ run_parallel(Imcmds, nthreads=1,logs='auto')
 for source_id,source in enumerate(sourcelist):
     tmpn  = ms.split('.')[0] + '.' + source + '.ms.tmp'
     os.system('rm -rf '+tmpn)
-    tmpn  = ms.split('.')[0] +'_ndppp_avgphaseshift.'+source+'.parset' 
+    tmpn  = ms.split('.')[0] +'_ndppp_avgphaseshift.'+source+'.parset'
     os.system('rm -rf '+tmpn)
-    
+
 #mask_cmds = ["casapy --nologger --nologfile -c ~/para/scripts/dde_weeren/bootes_hba/make_mask_from_region.py templatemask0_{source}  peel_facet_{source}.rgn templatemask0_{source}.masktmp False".format(source=source) for source in sourcelist]
 #run_parallel(mask_cmds, nthreads=1,logs='auto')
 
 for source_id,source in enumerate(sourcelist):
     make_facet_mask("templatemask_{source}".format(source=source), "templatemask_{source}.masktmp".format(source=source), poly[source_id], pad=True)
-    
-    
+
+
 # make a mosaic of the templates - at full res - this serves as a check of how the facets will be mosaiced
 if make_mosaic:
     print "making mask mosaic, this may take some time"
     cmd = 'python '+SCRIPTPATH+'/mos_masks.py'
     os.system(cmd)
-    
-    

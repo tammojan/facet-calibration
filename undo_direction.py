@@ -11,7 +11,7 @@ username = pwd.getpwuid(os.getuid())[0]
 #mslist = glob.glob('BOOTES24_SB*.2ch8s.ms')
 
 if len(sys.argv)<2:
-   raise Exception('Give the path to the setup code for the facet')
+    raise Exception('Give the path to the setup code for the facet')
 
 print 'Using',sys.argv[1],'as the setup code'
 execfile(sys.argv[1])
@@ -28,7 +28,7 @@ for ms in mslist:
     os.system("taql 'update " + ms + " set SUBTRACTED_DATA_ALL=CORRECTED_DATA' &")
     time.sleep(10)
     cmd = "ps -u " + username + " | grep taql | wc -l"
-    output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])  
+    output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
     while output > 5 :   # dont run more than 5 at a time!! taql is disk intensive
         time.sleep(10)
         output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])

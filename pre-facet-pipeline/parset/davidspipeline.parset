@@ -1,0 +1,347 @@
+#pipeline.steps=[dpppex,chgcentre,calscript,fft]
+#pipeline.steps=[createmap,chgcentre,loopim]#,modelone,fft]#,splittime]
+pipeline.steps=[createmap,loopim,convertimage,casatobbs,wscleantwo]
+#pipeline.steps=[createmap,wsclean,mask,printargs]
+pipeline.pluginpath=plugins
+
+createmap.control.kind=plugin
+createmap.control.type=addMapfile
+createmap.control.cmdline.create=mapfile_from_folder
+createmap.control.opts.mapfile_dir=input.output.mapfile_dir
+createmap.control.opts.filename=initial.mapfile
+createmap.control.opts.folder=/home/sfroehli/PipelineExample/data
+
+chgcentre.control.kind=recipe
+chgcentre.control.type=executable_args
+chgcentre.control.opts.executable=/path/to/bin/chgcentre
+chgcentre.control.opts.mapfile_in=createmap.output.mapfile
+chgcentre.control.opts.inputkey=inputms
+chgcentre.control.opts.inplace=True
+chgcentre.control.opts.arguments=[-zenith, -shiftback, inputms]
+chgcentre.control.opts.max_per_node=24
+
+loopim.control.kind=loop
+loopim.control.loopsteps=[wsclean,mask,wsclean2]
+loopim.control.loopcount=1
+
+wsclean.control.kind=recipe
+wsclean.control.type=wsclean
+wsclean.control.opts.mapfile_in=createmap.output.mapfile
+wsclean.control.opts.inputkey=inputms
+wsclean.control.opts.outputkey=name
+wsclean.control.opts.arguments=[-joinchannels,-no-update-model-required,inputms]
+#wsclean.control.opts.max_per_node=12
+wsclean.parsetarg.size=512 512
+wsclean.parsetarg.nwlayers=wplanes
+wsclean.parsetarg.niter=100
+wsclean.parsetarg.threshold='0mJy'
+wsclean.parsetarg.pol=I
+wsclean.parsetarg.weight=briggs -0.25
+wsclean.parsetarg.channelsout=1
+wsclean.parsetarg.mgain=0.8
+wsclean.parsetarg.gain=0.1
+wsclean.parsetarg.j=12
+wsclean.parsetarg.minuv-l=80
+wsclean.parsetarg.maxuv-l=7000
+wsclean.parsetarg.scale=0.01
+
+mask.control.kind=recipe
+mask.control.type=pythonplugin
+mask.control.opts.executable=/home/sfroehli/PipelineExample/bin/make_clean_mask.py
+mask.control.opts.mapfile_in=wsclean.output.wsclean-image.fits.mapfile
+#mask.control.opts.args_format=argparse
+mask.control.opts.inputkey=inputms
+mask.control.opts.outputkey=outname
+mask.control.opts.arguments=[inputms, outname]
+mask.parsetarg.image_beam=None
+mask.parsetarg.atrous_do=False
+mask.parsetarg.threshisl=2.5
+mask.parsetarg.threshpix=4
+mask.parsetarg.rmsbox=(60,20)
+mask.parsetarg.iterate_threshold=False
+mask.parsetarg.adaptive_rmsbox=False
+#mask.parsetarg.beam=None
+mask.parsetarg.img_format=fits
+
+#mask.control.kind=recipe
+#mask.control.type=executable_args
+#mask.control.opts.executable=/home/sfroehli/PipelineExample/bin/make_clean_mask.py
+#mask.control.opts.mapfile_in=wsclean.output.wsclean-image.fits
+##mask.control.opts.args_format=argparse
+#mask.control.opts.inputkey=inputms
+#mask.control.opts.outputkey=outname
+#mask.control.opts.arguments=[inputms, outname]
+#mask.parsetarg.atrous_do=False
+#mask.parsetarg.threshisl=2.5
+#mask.parsetarg.threshpix=4
+#mask.parsetarg.rmsbox=(60,20)
+#mask.parsetarg.iterate_threshold=False
+#mask.parsetarg.adaptive_rmsbox=False
+##mask.parsetarg.beam=None
+#mask.parsetarg.image_beam=None
+#mask.parsetarg.img_format=fits
+
+wsclean2.control.kind=recipe
+wsclean2.control.type=wsclean
+wsclean2.control.opts.mapfiles_in=[createmap.output.mapfile,mask.output.mapfile]
+wsclean2.control.opts.inputkeys=[inputms,fitsmask]
+wsclean2.control.opts.outputkey=name
+wsclean2.control.opts.arguments=[-joinchannels,-no-update-model-required,inputms]
+#wsclean2.control.opts.max_per_node=12
+wsclean2.parsetarg.size=512 512
+wsclean2.parsetarg.nwlayers=wplanes
+wsclean2.parsetarg.niter=100
+wsclean2.parsetarg.threshold='0mJy'
+wsclean2.parsetarg.pol=I
+wsclean2.parsetarg.weight=briggs -0.25
+wsclean2.parsetarg.channelsout=1
+wsclean2.parsetarg.mgain=0.8
+wsclean2.parsetarg.gain=0.1
+wsclean2.parsetarg.j=12
+wsclean2.parsetarg.minuv-l=80
+wsclean2.parsetarg.maxuv-l=7000
+wsclean2.parsetarg.scale=0.01
+
+convertimage.control.kind=recipe
+convertimage.control.type=executable_args
+convertimage.control.opts.executable=/home/sfroehli/PipelineExample/bin/convert_fits_to_image.py
+convertimage.control.opts.mapfile_in=wsclean2.output.wsclean2-model.fits
+convertimage.control.opts.inputkey=image
+convertimage.control.opts.arguments=[image,True]
+
+casatobbs.control.kind=recipe
+casatobbs.control.type=casapy2bbs
+#casatobbs.control.opts.executable=%(lofarroot)s/bin/casapy2bbs.py
+casatobbs.control.opts.mapfile_in=wsclean2.output.wsclean2-model.image
+casatobbs.control.opts.inputkey=inputmodel
+casatobbs.control.opts.outputkey=outfile
+casatobbs.control.opts.arguments=[inputmodel,outfile]
+
+wscleantwo.control.kind=recipe
+wscleantwo.control.type=wsclean
+wscleantwo.control.opts.mapfile_in=createmap.output.mapfile
+wscleantwo.control.opts.mapfile_out=wsclean.output.mapfile
+wscleantwo.control.opts.inputkey=inputms
+wscleantwo.control.opts.outputkey=name
+wscleantwo.control.opts.args_format=wsclean
+wscleantwo.control.opts.arguments=[-predict,inputms]
+#wscleantwo.control.opts.max_per_node=12
+wscleantwo.parsetarg.size=512 512
+wscleantwo.parsetarg.scale=0.01
+wscleantwo.parsetarg.channelsout=1
+wscleantwo.parsetarg.j=12
+
+
+
+##############################
+# working part upwards
+##############################
+# all template stuff downwards
+##############################
+
+
+printargs.control.kind=recipe
+printargs.control.type=pythonplugin
+printargs.control.opts.executable=/home/sfroehli/PipelineExample/bin/printargs.py
+printargs.control.opts.mapfile_in=mask.output.monitor_stats.mapfile
+printargs.control.opts.inputkey=inputms
+printargs.control.opts.outputkey=outname
+printargs.control.opts.arguments=[inputms, outname]
+
+
+fft.control.kind=recipe
+fft.control.type=executable_args
+fft.control.opts.executable={{ imagerroot }}/bin/wsclean
+fft.control.opts.mapfiles_in=[{{ vis_datamap }}, {{model_datamap}}]
+fft.control.opts.inputkeys=[inputms, imagename]
+fft.control.opts.arguments=[-predict, -name, imagename, -size, {{ imsize }}, {{ imsize }}, -scale, {{ cell_deg }}, -channelsout, {{ nchannels }}, -j, {{ ncpu }}, inputms]
+fft.control.opts.max_per_node={{ n_per_node }}
+
+modelone.control.kind=recipe
+model.control.type=executable_args
+model.control.opts.executable=/usr/bin/python
+model.control.opts.mapfiles_in=[{{ input_datamap }}, {{ output_datamap }}]
+model.control.opts.inputkeys=[inputmodel, outputmodel]
+model.control.opts.arguments=[{{ scriptname }}, inputmodel, {{ nterms }}, outputmodel]
+model.control.opts.max_per_node={{ n_per_node }}
+
+dpppex.control.kind=recipe
+dpppex.control.type=dppp
+dpppex.control.opts.mapfile_in={{ input_datamap }}
+dpppex.control.opts.inputkey=msin
+dpppex.control.opts.executable={{ lofarroot }}/bin/NDPPP
+dpppex.control.opts.mapfile_out={{ output_datamap }}
+dpppex.control.opts.outputkey=msout
+dpppex.control.opts.max_per_node={{ n_per_node }}
+
+dpppex.parsetarg.msin.datacolumn={{ columnname }}
+dpppex.parsetarg.steps=[avg]
+dpppex.parsetarg.avg.type=squash
+dpppex.parsetarg.avg.freqstep={{ freqstep }}
+dpppex.parsetarg.avg.timestep={{ timestep }}
+
+calscript.control.kind=recipe
+calscript.control.type=executable_args
+calscript.control.opts.mapfiles_in=[{{ vis_datamap }}, {{ skymodel_datamap }}]
+calscript.control.opts.executable={{ lofarroot }}/bin/calibrate-stand-alone
+calscript.control.opts.inputkeys=[inputms, inputskymodel]
+calscript.control.opts.arguments=[{{ flags }}, inputms, {{ parset }}, inputskymodel]
+calscript.control.opts.max_per_node={{ n_per_node }}
+
+dpppex.control.kind=recipe
+dpppex.control.type=dppp
+dpppex.control.opts.mapfile_in={{ input_datamap }}
+dpppex.control.opts.inputkey=msin.name
+dpppex.control.opts.executable={{ lofarroot }}/bin/NDPPP
+dpppex.control.opts.mapfile_out={{ output_datamap }}
+dpppex.control.opts.outputkey=msout
+dpppex.control.opts.max_per_node={{ n_per_node }}
+
+dpppex.parsetarg.msin.name=temp
+dpppex.parsetarg.msin.datacolumn={{ columnname }}
+dpppex.parsetarg.steps=[]
+
+fft.control.kind=recipe
+fft.control.type=awimager
+fft.control.opts.mapfiles_in=[{{ vis_datamap }}, {{model_datamap}}]
+fft.control.opts.inputkeys=[data.ms, predict.modelimage]
+fft.control.opts.arguments=[]
+fft.control.opts.max_per_node={{ n_per_node }}
+
+awimager.parsetarg.operation = predict
+
+fft.control.kind=recipe
+fft.control.type=casapy
+fft.control.opts.mapfiles_in=[{{ vis_datamap }}, {{model_datamap}}]
+fft.control.opts.inputkeys=[inputms, modelimg]
+fft.control.opts.arguments=[--nologger, --log2term, --nogui, -c, {{ scriptname }}, inputms, modelimg, {{ nterms }}, {{ wplanes }}]
+fft.control.opts.max_per_node={{ n_per_node }}
+
+
+#pipeline.steps=[import, losoto, export]
+
+import.control.kind=recipe
+import.control.type=executable_args
+import.control.opts.mapfiles_in=[{{ input_datamap }}, {{ h5parm_datamap }}]
+import.control.opts.executable={{ h5importer_exec }}
+import.control.opts.inputkeys=[inputms, h5parm]
+import.control.opts.arguments=[h5parm, inputms, -i, instrument]
+import.control.opts.max_per_node={{ n_per_node }}
+
+losoto.control.kind=recipe
+losoto.control.type=executable_args
+losoto.control.opts.executable={{ losoto_exec }}
+losoto.control.opts.mapfile_in={{ h5parm_datamap }}
+losoto.control.opts.inputkey=h5parm
+losoto.control.opts.arguments=[h5parm, {{ parset }}]
+losoto.control.opts.max_per_node={{ n_per_node }}
+
+export.control.kind=recipe
+export.control.type=executable_args
+export.control.opts.executable={{ h5exporter_exec }}
+export.control.opts.mapfiles_in=[{{ input_datamap }}, {{ h5parm_datamap }}]
+export.control.opts.inputkeys=[inputms, h5parm]
+export.control.opts.arguments=[h5parm, inputms, -i, instrument, -c]
+export.control.opts.max_per_node={{ n_per_node }}
+
+model.control.kind=recipe
+model.control.type=executable_args
+model.control.opts.mapfiles_in=[{{ input_datamap }}, {{ output_datamap}}]
+model.control.opts.inputkeys=[inputskymodel, outputskymodel]
+model.control.opts.executable=/usr/bin/python
+model.control.opts.arguments=[{{scriptname}}, inputskymodel, outputskymodel, {{ cal_only }}]
+model.control.opts.max_per_node={{ n_per_node }}
+
+awimager.control.kind=recipe
+awimager.control.type=awimager
+awimager.control.opts.mapfile_in={{ vis_datamap }}
+awimager.control.opts.mapfile_out={{ output_datamap }}
+awimager.control.opts.inputkey=data.ms
+awimager.control.opts.outputkey=output.imagename
+awimager.control.opts.arguments=[]
+awimager.control.opts.max_per_node={{ n_per_node }}
+
+awimager.parsetarg.operation = clean
+awimager.parsetarg.data.uvrange='{{ uvrange }}'
+awimager.parsetarg.image.nterms={{ nterms }}
+awimager.parsetarg.image.cellsize='{{ cell }}'
+awimager.parsetarg.image.npix={{ imsize }}
+awimager.parsetarg.weight.type='robust'
+awimager.parsetarg.weight.robust=-0.25
+awimager.parsetarg.clean.niter={{ niter }}
+awimager.parsetarg.clean.gain={{ gain }}
+awimager.parsetarg.clean.threshold='{{ threshold }}'
+awimager.parsetarg.clean.nscales={{ nscales }}
+awimager.parsetarg.clean.uservector={{ scales }}
+awimager.parsetarg.clean.maskimage='{{ mask }}'
+
+casapy.control.kind=recipe
+casapy.control.type=casapy
+casapy.control.opts.mapfiles_in=[{{ vis_datamap }}, {{ output_datamap }}]
+casapy.control.opts.inputkeys=[inputms, outputimage]
+casapy.control.opts.arguments=[--nologger, --log2term, --nogui, -c, {{ scriptname }}, inputms, outputimage]
+casapy.control.opts.max_per_node={{ n_per_node }}
+
+casapy.control.kind=recipe
+casapy.control.type=casapy
+casapy.control.opts.mapfile_in={{ vis_datamap }}
+casapy.control.opts.mapfile_out={{ output_datamap }}
+casapy.control.opts.inputkey=clean.vis
+casapy.control.opts.outputkey=clean.imagename
+casapy.control.opts.arguments=[--nologger,--log2term,--nogui,-c]
+casapy.control.opts.max_per_node={{ n_per_node }}
+
+casapy.parsetarg.clean.gridmode='widefield'
+casapy.parsetarg.clean.wprojplanes={{ wplanes }}
+casapy.parsetarg.clean.selectdata=True
+casapy.parsetarg.clean.uvrange='{{ uvrange }}'
+casapy.parsetarg.clean.mode='mfs'
+casapy.parsetarg.clean.nterms={{ nterms }}
+casapy.parsetarg.clean.niter={{ niter }}
+casapy.parsetarg.clean.gain={{ gain }}
+casapy.parsetarg.clean.threshold='{{ threshold }}'
+casapy.parsetarg.clean.psfmode='clark'
+casapy.parsetarg.clean.interactive=False
+casapy.parsetarg.clean.imsize=[{{ imsize }}, {{ imsize }}]
+casapy.parsetarg.clean.cell=['{{ cell }}', '{{ cell }}']
+casapy.parsetarg.clean.weighting='briggs'
+casapy.parsetarg.clean.robust=-0.25
+casapy.parsetarg.clean.uvtaper=False
+casapy.parsetarg.clean.pbcor=False
+casapy.parsetarg.clean.minpb=0.2
+casapy.parsetarg.clean.multiscale={{ scales }}
+casapy.parsetarg.clean.mask={{ mask }}
+
+merge.control.kind=recipe
+merge.control.type=executable_args
+merge.control.opts.executable=/usr/bin/python
+merge.control.opts.mapfiles_in=[{{ skymodel1_datamap }}, {{ skymodel2_datamap }}, {{ output_datamap }}]
+merge.control.opts.inputkeys=[inputskymodel1, inputskymodel2, outputskymodel]
+merge.control.opts.arguments=[{{mergescriptname}}, inputskymodel1, inputskymodel2, outputskymodel]
+merge.control.opts.max_per_node={{ n_per_node }}
+
+dpppex.control.kind=recipe
+dpppex.control.type=dppp
+dpppex.control.opts.mapfile_in={{ input_datamap }}
+dpppex.control.opts.inputkey=msin
+dpppex.control.opts.executable={{ lofarroot }}/bin/NDPPP
+dpppex.control.opts.mapfile_out={{ output_datamap }}
+dpppex.control.opts.outputkey=msout
+dpppex.control.opts.max_per_node={{ n_per_node }}
+
+dpppex.parsetarg.msin.datacolumn={{ columnname }}
+dpppex.parsetarg.steps=[shift]
+dpppex.parsetarg.shift.type=phaseshifter
+dpppex.parsetarg.shift.phasecenter = [{{ ra }}deg, {{ dec }}deg]
+
+dpppex.control.kind=recipe
+dpppex.control.type=dppp
+dpppex.control.opts.mapfile_in={{ input_datamap }}
+dpppex.control.opts.inputkey=msin.name
+dpppex.control.opts.executable={{ lofarroot }}/bin/NDPPP
+dpppex.control.opts.mapfile_out={{ output_datamap }}
+dpppex.control.opts.outputkey=msout
+dpppex.control.opts.max_per_node={{ n_per_node }}
+
+dpppex.parsetarg.msin.datacolumn={{ columnname }}
+dpppex.parsetarg.steps=[]
