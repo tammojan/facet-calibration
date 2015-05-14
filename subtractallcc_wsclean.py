@@ -102,10 +102,10 @@ for ms in mslist:
 
     # include region file
     if casaregion != '':
-        os.system('casapy --nologger -c '+SCRIPTPATH+'/fitsandregion2image.py '\
+        os.system('casapy --nogui -c '+SCRIPTPATH+'/fitsandregion2image.py '\
                   + mask_name + ' ' + casa_mask + ' ' + casaregion)
     else:
-        os.system('casapy --nologger -c '+SCRIPTPATH+'/fitsandregion2image.py '\
+        os.system('casapy --nogui -c '+SCRIPTPATH+'/fitsandregion2image.py '\
                   + mask_name + ' ' + casa_mask + ' ' + 'None')
 
     imhigh = imhigh + 'withmask'
@@ -134,7 +134,7 @@ for ms in mslist:
     modelim=pyrap.images.image(fits_model)
     modelim.saveas(casa_model)
 
-    #os.system('casapy --nologger -c '+SCRIPTPATH+'/fits2image.py '\
+    #os.system('casapy --nogui -c '+SCRIPTPATH+'/fits2image.py '\
     #            + fits_model + ' ' + casa_model)
 
     # ---------------------
@@ -201,10 +201,10 @@ for ms in mslist:
 
     # include region file
     if casaregion != '':
-        os.system('casapy --nologger -c '+SCRIPTPATH+'/fitsandregion2image.py '\
+        os.system('casapy --nogui -c '+SCRIPTPATH+'/fitsandregion2image.py '\
                   + mask_name + ' ' + casa_mask + ' ' + casaregion)
     else:
-        os.system('casapy --nologger -c '+SCRIPTPATH+'/fitsandregion2image.py '\
+        os.system('casapy --nogui -c '+SCRIPTPATH+'/fitsandregion2image.py '\
                   + mask_name + ' ' + casa_mask + ' ' + 'None')
 
     imlow = imlow + 'withmask'
@@ -235,7 +235,7 @@ for ms in mslist:
     modelim=pyrap.images.image(fits_model)
     modelim.saveas(casa_model)
 
-    #os.system('casapy --nologger -c '+SCRIPTPATH+'/fits2image.py '\
+    #os.system('casapy --nogui -c '+SCRIPTPATH+'/fits2image.py '\
     #            + fits_model + ' ' + casa_model)
     # ---------------------
     # create the low-res skymodel

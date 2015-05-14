@@ -1053,8 +1053,8 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
     #newsize = find_newsize(inputmask)
     #if newsize < imsize: # ok so we can use a smaller image size then
         ##make a new template
-        #os.system('casapy --nologger -c '+SCRIPTPATH+'/make_empty_image.py '+ str(mslist[0]) + ' ' + inputmask+'2' + ' ' + str(newsize) + ' ' +'1.5arcsec')
-        #os.system('casapy --nologger -c '+SCRIPTPATH+'/regrid_image.py '    + inputmask      + ' ' + inputmask+'2' + ' ' + inputmask+'3')
+        #os.system('casapy --nogui -c '+SCRIPTPATH+'/make_empty_image.py '+ str(mslist[0]) + ' ' + inputmask+'2' + ' ' + str(newsize) + ' ' +'1.5arcsec')
+        #os.system('casapy --nogui -c '+SCRIPTPATH+'/regrid_image.py '    + inputmask      + ' ' + inputmask+'2' + ' ' + inputmask+'3')
 
         ## reset the imsize and the mask
         #imsize    = newsize
@@ -1067,7 +1067,7 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
 
     imout = 'im'+ callnumber +'_cluster'+cluster+'nm'
 
-    os.system('casapy --nologger --logfile casapy-'+imout+'.log -c '+SCRIPTPATH+'/dde_weeren/a2256_hba/casapy_cleanv4.py ' + ms + ' ' + imout + ' ' + 'None' +\
+    os.system('casapy --nogui --logfile casapy-'+imout+'.log -c '+SCRIPTPATH+'/dde_weeren/a2256_hba/casapy_cleanv4.py ' + ms + ' ' + imout + ' ' + 'None' +\
                ' ' + cleandepth1 + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + mscale)
 
 
@@ -1107,11 +1107,11 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
             niter = numpy.int(niter*3.0) # increase niter, tune manually if needed (change back)
         else:
             niter = numpy.int(niter*3.0) # increase niter, tune manually if needed
-        os.system('casapy --nologger --logfile casapy-'+imout+'.log -c '+SCRIPTPATH+'/dde_weeren/a2256_hba/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask_sources+'field,'+region + \
+        os.system('casapy --nogui --logfile casapy-'+imout+'.log -c '+SCRIPTPATH+'/dde_weeren/a2256_hba/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask_sources+'field,'+region + \
                   ' ' + cleandepth2 + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + mscale)
 
     else:
-        os.system('casapy --nologger --logfile casapy-'+imout+'.log -c '+SCRIPTPATH+'/dde_weeren/a2256_hba/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask_sources+'field' + \
+        os.system('casapy --nogui --logfile casapy-'+imout+'.log -c '+SCRIPTPATH+'/dde_weeren/a2256_hba/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask_sources+'field' + \
                    ' ' + cleandepth2 + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + mscale)
 
     # convert to FITS
@@ -1227,7 +1227,7 @@ numpy.save('directions.npy', directions)
         #os.system('NDPPP ' + parset)
         #output_template_im = 'templatemask_' + source
         #print output_template_im
-        #os.system('casapy --nologger -c '+SCRIPTPATH+'/make_empty_image.py '+ tmpn + ' ' + output_template_im + ' ' + str(fieldsize[source_id]) + ' ' +'1.5arcsec')
+        #os.system('casapy --nogui -c '+SCRIPTPATH+'/make_empty_image.py '+ tmpn + ' ' + output_template_im + ' ' + str(fieldsize[source_id]) + ' ' +'1.5arcsec')
         #os.system('rm -rf ' + tmpn)
         ## now generate the mask
         #os.system(''+SCRIPTPATH+'/make_facet_mask.py ' + output_template_im +' ' + 'directions.npy' + ' ' + str(source_id) + ' ' + '1.5arcsec'  +' ' + '&')
@@ -1325,7 +1325,7 @@ for source in do_sources:
 
     # DO THE FFT
     # fix to ft_allbands due to async problem...
-    os.system('casapy --nologger -c '+SCRIPTPATH+'/ft_allbands.py' +' '+\
+    os.system('casapy --nogui -c '+SCRIPTPATH+'/ft_allbands.py' +' '+\
             'allbands.concat.shifted_'+source+'.ms' + ' ' + imout+'.model' + ' ' + str(nterms) +\
             ' ' + str(imsizef))
 
