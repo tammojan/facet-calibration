@@ -146,7 +146,7 @@ for ms in mslist:
  # ---------------------
  # subtract the cc
  parset = SCRIPTPATH+'/subtractall_highres_wsclean.parset'
- cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name instrument '
+ cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name instrument-ap-smoothed '
  cmd = cmd + ms + ' ' + parset + ' ' + skymodel + ' >' + ms + '.highressubbbslog' 
  print cmd
  
@@ -248,7 +248,7 @@ for ms in mslist:
  # ---------------------
  # subtract thelowres cc
  parset = SCRIPTPATH+'/subtractall_lowres_wsclean.parset'
- cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name instrument '
+ cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name instrument-ap-smoothed '
  cmd = cmd + ms + ' ' + parset + ' ' + skymodel + ' >' + ms + '.lowressubbbslog' 
  print cmd
  os.system(cmd)
