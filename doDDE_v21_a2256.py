@@ -35,6 +35,70 @@ import blank
 #    - 2. image that again using the same setting
 #    - 3. redo the subtract (will be slightly better....but solutions remain the same, just better noise) or just proceed to the next field?
 
+def run(c,proceed=False,quiet=False):
+    '''
+    Run command c, throwing an exception if the return value is non-zero
+    (which means that the command failed). Call this when you don't want
+    the script to proceed if c fails (which is usually the case).
+    '''
+
+    if not(quiet):
+        logging.debug('Running: '+c)
+    retval=os.system(c)
+    if retval!=0 and not(proceed):
+        raise Exception('FAILED to run '+c+' -- return value was '+str(retval))
+    return retval
+
+class bg:
+    '''
+    Simple wrapper class around Popen that lets you run a number of
+    processes in the background and then wait for them to end
+    successfully. The list of processes is maintained internally so
+    you don't have to manage it yourself: just start by creating a
+    class instance. By default (proceed==False) catches bad return
+    values and kills all other background processes.
+
+    Optionally you can set a value maxp on creating the instance. If
+    you do this then run will block if you attempt to have more than
+    this number of processes running concurrently.
+    '''
+    def __init__(self,quiet=False,pollint=1,proceed=False,maxp=None):
+        self.pl=[]
+        self.quiet=quiet
+        self.pollint=pollint
+        self.proceed=proceed
+        self.maxp=maxp
+
+    def run(self,c):
+        if self.maxp:
+            if len(self.pl)>=self.maxp:
+                # too many processes running already. Wait till one finishes
+                self.wait(queuelen=self.maxp-1)
+        p=subprocess.Popen('exec '+c,shell=True)
+        if not(self.quiet):
+            print 'Process',p.pid,'started'
+        self.pl.append(p)
+        return p.pid
+    def wait(self,queuelen=0):
+        pl=self.pl
+        while len(pl)>queuelen:
+            for p in pl:
+                retval=p.poll()
+                if retval is not None:
+                    pl.remove(p)
+                    if retval==0:
+                        if not(self.quiet):
+                            print 'Process ',str(p.pid),'ended OK'
+                    else:
+                        if not(self.proceed):
+                            for p2 in pl:
+                                p2.kill()
+                            raise Exception('Process '+str(p.pid)+' ended with return value '+str(retval))
+                        else:
+                            print 'WARNING: process',str(p.pid),'died with return value',retval
+            time.sleep(self.pollint)
+        self.pl=pl 
+        return
 
 def find_newsize(mask):
     """
@@ -75,7 +139,7 @@ def find_newsize(mask):
     return newsize
 
 
-def runbbs(mslist, skymodel, parset, parmdb, replacesource):
+def runbbs(mslist, skymodel, parset, parmdb, replacesource, maxcpu=None):
     """
     Run BBS on a list of MS.
     Input:
@@ -87,91 +151,19 @@ def runbbs(mslist, skymodel, parset, parmdb, replacesource):
           to be replaced or not
     """
     #NOTE WORK FROM MODEL_DATA (contains correct phase data from 10SB calibration)
+    b=bg(maxp=maxcpu)
     for ms in mslist:
         log      =  ms + '.bbslog'
         if replacesource:
-            cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
+            cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1'
         else:
-            cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
+            cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1'
         print cmd
-        os.system(cmd)
+        b.run(cmd)
     time.sleep(10)
 
-    done = 0
-    while(done < len(mslist)):
-        done = 0
-        for ms in mslist:
-            cmd = "grep 'bbs-reducer terminated successfully.' " + ms + ".bbslog"
-            output=Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
-            if 'INFO' in output:
-                done = done + 1
-                print ms, 'is done'
-        time.sleep(5)
+    b.wait()
     return
-
-
-def runbbs16(mslist, skymodel, parset, parmdb, replacesource):
-    """
-    Run BBS on a list of MS in blocks of 16. FIXME
-    Input:
-      * mslist - list of MS.
-      * skymodel
-      * parset
-      * parmdb
-      * replacesource - flag (True or False) to indicate if the parmdb has
-          to be replaced or not
-    """
-    #NOTE WORK FROM MODEL_DATA (contains correct phase data from 10SB calibration)
-
-    mslist1 = mslist[0:15]
-    mslist2 = mslist[15:len(mslist)]
-
-    # PART1
-    for ms in mslist1:
-        log      =  ms + '.bbslog'
-        if replacesource:
-            cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
-        else:
-            cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
-        print cmd
-        os.system(cmd)
-    time.sleep(10)
-
-    done = 0
-    while(done < len(mslist1)):
-        done = 0
-        for ms in mslist1:
-            cmd = "grep 'bbs-reducer terminated successfully.' " + ms + ".bbslog"
-            output=Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
-            if 'INFO' in output:
-                done = done + 1
-                print ms, 'is done'
-        time.sleep(5)
-
-
-    # PART2
-    for ms in mslist2:
-        log      =  ms + '.bbslog'
-        if replacesource:
-            cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
-        else:
-            cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
-        print cmd
-        os.system(cmd)
-    time.sleep(10)
-
-    done = 0
-    while(done < len(mslist2)):
-        done = 0
-        for ms in mslist2:
-            cmd = "grep 'bbs-reducer terminated successfully.' " + ms + ".bbslog"
-            output=Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
-            if 'INFO' in output:
-                done = done + 1
-                print ms, 'is done'
-        time.sleep(5)
-    return
-
 
 def create_subtract_parset_field_outlier(outputcolumn, TEC):
     """
@@ -214,10 +206,13 @@ def create_subtract_parset_field_outlier(outputcolumn, TEC):
     return bbs_parset
 
 
-def runbbs_diffskymodel_addback(mslist, parmdb, replacesource, direction, imsize, output_template_im, do_ap):
+def runbbs_diffskymodel_addback(mslist, parmdb, replacesource, direction, imsize, output_template_im, do_ap,maxcpu=None):
     """
     FIXME
     """
+
+    b=bg(maxp=maxcpu)
+
     for ms in mslist:
         log      =  ms + '.bbslog'
 
@@ -237,127 +232,24 @@ def runbbs_diffskymodel_addback(mslist, parmdb, replacesource, direction, imsize
         if len(callist) != 0: # otherwise do not have to add
             parset = create_add_parset_ms(callist, ms, do_ap)
             if replacesource:
-                cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
+                cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1'
             else:
-                cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
-            print cmd
-            os.system(cmd)
+                cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1'
+            b.run(cmd)
             time.sleep(10)  # otherwise add.parset is deleted (takes time for BBS to start up)
+
         else:
             print 'No source to add back, are you sure the DDE position is correct?'
-            os.system("taql 'update " + ms + " set ADDED_DATA_SOURCE=SUBTRACTED_DATA_ALL'")
+            run("taql 'update " + ms + " set ADDED_DATA_SOURCE=SUBTRACTED_DATA_ALL'")
 
-
-    time.sleep(10)
-    done = 0
-    while(done < len(mslist)):
-        done = 0
-        for ms in mslist:
-            cmd = "grep 'bbs-reducer terminated successfully.' " + ms + ".bbslog"
-            output=Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
-            if 'INFO' in output:
-                done = done + 1
-                print ms, 'is done'
-        time.sleep(5)
+    b.wait()
     return
-
-
-def runbbs_diffskymodel_addback16(mslist, parmdb, replacesource, direction, imsize, output_template_im, do_ap):
-    """
-    FIXME
-    """
-    mslist1 = mslist[0:16]
-    mslist2 = mslist[16:len(mslist)]
-    #part1
-    for ms in mslist1:
-        log      =  ms + '.bbslog'
-
-        #set skymodel # ~weeren does not work in numpy.load
-        #skymodel =  ms.split('.')[0] + '.skymodel'
-        skymodel = ms.split('.')[0] + '.skymodel'
-
-
-        # find sources to add back, make parset
-        #callist, callistarraysources = cal_return_slist(output_template_im +'.masktmp',skymodel, direction, imsize)
-        cmd = 'python ' + SCRIPTPATH + '/cal_return_slist.py '+ output_template_im +'.masktmp ' +skymodel +' "'+str(direction) +'" ' + str(imsize)
-        output = Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
-        callist = output.strip()
-        callistarraysources = callist.split(',')
-
-        if len(callist) != 0: # otherwise do not have to add
-            print 'Adding back for calibration:', callist
-            parset = create_add_parset_ms(callist, ms, do_ap)
-
-            if replacesource:
-                cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
-            else:
-                cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
-            print cmd
-            os.system(cmd)
-            time.sleep(10)  # otherwise add.parset is deleted (takes time for BBS to start up)
-        else:
-            print 'No source to add back, are you sure the DDE position is correct?'
-            os.system("taql 'update " + ms + " set ADDED_DATA_SOURCE=SUBTRACTED_DATA_ALL'")
-
-    time.sleep(10)
-    done = 0
-    while(done < len(mslist1)):
-        done = 0
-        for ms in mslist1:
-            cmd = "grep 'bbs-reducer terminated successfully.' " + ms + ".bbslog"
-            output=Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
-            if 'INFO' in output:
-                done = done + 1
-                print ms, 'is done'
-        time.sleep(5)
-
-    #part2
-    for ms in mslist2:
-        log      =  ms + '.bbslog'
-
-        #set skymodel # ~weeren does not work in numpy.load
-        skymodel =  ms.split('.')[0] + '.skymodel'
-
-        # find sources to add back, make parset
-        #callist, callistarraysources = cal_return_slist(output_template_im +'.masktmp',skymodel, direction, imsize)
-        cmd = 'python '+ SCRIPTPATH +'/cal_return_slist.py '+ output_template_im +'.masktmp ' +skymodel +' "'+str(direction) +'" ' + str(imsize)
-        output = Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
-        callist = output.strip()
-        callistarraysources = callist.split(',')
-
-        print 'Adding back for calibration:', callist
-
-        if len(callist) != 0: # otherwise do not have to add
-            parset = create_add_parset_ms(callist, ms, do_ap)
-            if replacesource:
-                cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
-            else:
-                cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
-            print cmd
-            os.system(cmd)
-            time.sleep(10)  # otherwise add.parset is deleted (takes time for BBS to start up)
-        else:
-            print 'No source to add back, are you sure the DDE position is correct?'
-            os.system("taql 'update " + ms + " set ADDED_DATA_SOURCE=SUBTRACTED_DATA_ALL'")
-
-    time.sleep(10)
-    done = 0
-    while(done < len(mslist2)):
-        done = 0
-        for ms in mslist2:
-            cmd = "grep 'bbs-reducer terminated successfully.' " + ms + ".bbslog"
-            output=Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
-            if 'INFO' in output:
-                done = done + 1
-                print ms, 'is done'
-        time.sleep(5)
-    return
-
 
 def runbbs_diffskymodel_addbackfield(mslist, parmdb, replacesource, direction, imsize, output_template_im, do_ap):
     """
     FIXME
     """
+    b=bg()
     for ms in mslist:
         log      =  ms + '.bbslog'
 
@@ -390,28 +282,18 @@ def runbbs_diffskymodel_addbackfield(mslist, parmdb, replacesource, direction, i
         if len(addback_sourcelist) != 0: # otherwise do not have to add
             parset = create_add_parset_field_ms(addback_sourcelist, ms, do_ap)
             if replacesource:
-                cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
+                cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1'
             else:
-                cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
+                cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1'
             print cmd
-            os.system(cmd)
+            b.run(cmd)
         else:
-            os.system("taql 'update " + ms + " set MODEL_DATA=ADDED_DATA_SOURCE'") # in case no sources are put back
+            run("taql 'update " + ms + " set MODEL_DATA=ADDED_DATA_SOURCE'") # in case no sources are put back
 
         time.sleep(10) # otherwise addfield.parset is deleted (takes time for BBS to start up)
 
-
     time.sleep(10)
-    done = 0
-    while(done < len(mslist)):
-        done = 0
-        for ms in mslist:
-            cmd = "grep 'bbs-reducer terminated successfully.' " + ms + ".bbslog"
-            output=Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
-            if 'INFO' in output:
-                done = done + 1
-                print ms, 'is done'
-        time.sleep(5)
+    b.wait()
     return
 
 
@@ -425,25 +307,15 @@ def runbbs_2(mslist, msparmdb, skymodel, parset, parmdb):
       * parset
       * parmdb
     """
+    b=bg()
     for ms_id, ms in enumerate(mslist):
         log      =  ms + '.bbslog'
-        cmd = 'calibrate-stand-alone --parmdb ' + msparmdb[ms_id]+'/'+parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
+        cmd = 'calibrate-stand-alone --parmdb ' + msparmdb[ms_id]+'/'+parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1'
         print cmd
-        os.system(cmd)
+        b.run(cmd)
     time.sleep(10)
 
-    done = 0
-    while(done < len(mslist)):
-        done = 0
-        for ms in mslist:
-            cmd = "grep 'bbs-reducer terminated successfully.' " + ms + ".bbslog"
-            output=Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
-            if 'INFO' in output:
-                done = done + 1
-                print ms, 'is done'
-        time.sleep(5)
-    return
-
+    b.wait()
 
 def create_phaseshift_parset_full(msin, msout, direction, column):
     """
@@ -1158,8 +1030,8 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
     newsize = find_newsize(inputmask)
     if newsize < imsize: # ok so we can use a smaller image size then
         #make a new template
-        os.system('casapy --nogui -c '+ SCRIPTPATH +'/make_empty_image.py '+ str(mslist[0]) + ' ' + inputmask+'2' + ' ' + str(newsize) + ' ' +'1.5arcsec')
-        os.system('casapy --nogui -c '+ SCRIPTPATH +'/regrid_image.py '    + inputmask      + ' ' + inputmask+'2' + ' ' + inputmask+'3')
+        run('casapy --nogui -c '+ SCRIPTPATH +'/make_empty_image.py '+ str(mslist[0]) + ' ' + inputmask+'2' + ' ' + str(newsize) + ' ' +'1.5arcsec')
+        run('casapy --nogui -c '+ SCRIPTPATH +'/regrid_image.py '    + inputmask      + ' ' + inputmask+'2' + ' ' + inputmask+'3')
 
         # reset the imsize and the mask
         imsize    = newsize
@@ -1172,16 +1044,16 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
 
     imout = 'im'+ callnumber +'_cluster'+cluster+'nm'
 
-    os.system('casapy --nogui -c ' + SCRIPTPATH + '/casapy_cleanv4.py ' + ms + ' ' + imout + ' ' + 'None' +
+    run('casapy --nogui -c ' + SCRIPTPATH + '/casapy_cleanv4.py ' + ms + ' ' + imout + ' ' + 'None' +
                ' ' + cleandepth1 + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + mscale)
 
 
     # make mask
     if nterms > 1:
-        os.system('python ' + SCRIPTPATH +'/makecleanmask_field.py --threshpix '+str(threshpix)+
+        run('python ' + SCRIPTPATH +'/makecleanmask_field.py --threshpix '+str(threshpix)+
                     ' --threshisl '+str(threshisl) +' --atrous_do '+ str(atrous_do) +' '   +imout +'.image.tt0')
     else:
-        os.system('python ' + SCRIPTPATH +'/makecleanmask_field.py --threshpix '+str(threshpix)+
+        run('python ' + SCRIPTPATH +'/makecleanmask_field.py --threshpix '+str(threshpix)+
                   ' --threshisl '+str(threshisl) +' --atrous_do '+ str(atrous_do) + ' '  + imout +'.image')
 
     mask_sources = imout+'.cleanmask'
@@ -1208,18 +1080,18 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
 
     if region != 'empty': # in that case we have a extra region file for the clean mask
         niter = niter*3 # increase niter, tune manually if needed
-        os.system('casapy --nogui -c ' + SCRIPTPATH +'/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask_sources+'field,'+region +
+        run('casapy --nogui -c ' + SCRIPTPATH +'/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask_sources+'field,'+region +
                   ' ' + cleandepth2 + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + mscale)
 
     else:
-        os.system('casapy --nogui -c '+ SCRIPTPATH + '/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask_sources+'field' +
+        run('casapy --nogui -c '+ SCRIPTPATH + '/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask_sources+'field' +
                    ' ' + cleandepth2 + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + mscale)
 
     # convert to FITS
     if nterms > 1:
-        os.system('image2fits in=' + imout +'.image.tt0' + ' ' + 'out='+ imout + '.fits')
+        run('image2fits in=' + imout +'.image.tt0' + ' ' + 'out='+ imout + '.fits')
     else:
-        os.system('image2fits in=' + imout +'.image'     + ' ' + 'out='+ imout + '.fits')
+        run('image2fits in=' + imout +'.image'     + ' ' + 'out='+ imout + '.fits')
 
     return imout, mask_sources+'field', imsize
 
@@ -1252,8 +1124,8 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl,
     newsize = find_newsize(inputmask)
     if newsize < imsize: # ok so we can use a smaller image size then
         #make a new template
-        os.system('casapy --nogui -c ' + SCRIPTPATH + '/make_empty_image.py '+ str(mslist[0]) + ' ' + inputmask+'2' + ' ' + str(newsize) + ' ' +'1.5arcsec')
-        os.system('casapy --nogui -c ' + SCRIPTPATH + '/regrid_image.py '    + inputmask      + ' ' + inputmask+'2' + ' ' + inputmask+'3')
+        run('casapy --nogui -c ' + SCRIPTPATH + '/make_empty_image.py '+ str(mslist[0]) + ' ' + inputmask+'2' + ' ' + str(newsize) + ' ' +'1.5arcsec')
+        run('casapy --nogui -c ' + SCRIPTPATH + '/regrid_image.py '    + inputmask      + ' ' + inputmask+'2' + ' ' + inputmask+'3')
 
         # reset the imsize and the mask
         imsize    = newsize
@@ -1288,7 +1160,7 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl,
     f.write('steps=[]\n')
     f.close()
     os.system('rm -rf ' + outms)
-    os.system('NDPPP ' + parsetname)
+    run('NDPPP ' + parsetname)
 
     if wideband:
         channelsout = numpy.int(numpy.ceil(numpy.float(len(mslist))/numpy.float(WScleanWBgroup)))
@@ -1305,7 +1177,7 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl,
         cmd3 = '-minuv-l '+ str(uvrange) +' -mgain 0.6 -fitbeam -datacolumn DATA -no-update-model-required ' + outms
 
     print cmd1+cmd2+cmd3
-    os.system(cmd1+cmd2+cmd3)
+    run(cmd1+cmd2+cmd3)
 
     # FIX for missing beam INFO in Wideband clean
     if wideband:
@@ -1323,7 +1195,7 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl,
             mask_image=imout+'-image.fits'
 
     # create the mask
-    os.system('python ' + SCRIPTPATH + '/makecleanmask_field_wsclean.py --threshpix '+str(threshpix)+
+    run('python ' + SCRIPTPATH + '/makecleanmask_field_wsclean.py --threshpix '+str(threshpix)+
               ' --threshisl '+str(threshisl) +' --atrous_do '+ str(atrous_do) +
               ' --casaregion  '+ region + ' '  + mask_image)
 
@@ -1335,10 +1207,10 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl,
 
     # Convert to casapy format and includ region file
     if region != 'empty':
-        os.system('casapy --nogui -c ' + SCRIPTPATH+'/fitsandregion2image.py '
+        run('casapy --nogui -c ' + SCRIPTPATH+'/fitsandregion2image.py '
                   + mask_name + ' ' + casa_mask + ' ' + region)
     else:
-        os.system('casapy --nogui -c ' + SCRIPTPATH+'/fitsandregion2image.py '
+        run('casapy --nogui -c ' + SCRIPTPATH+'/fitsandregion2image.py '
                   + mask_name + ' ' + casa_mask + ' ' + 'None')
 
     mask_sources = imout+'.casamask'
@@ -1376,7 +1248,7 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl,
                mask_sources+'field' + ' '+ outms
 
     print cmd1+cmd2+cmd3
-    os.system(cmd1+cmd2+cmd3)
+    run(cmd1+cmd2+cmd3)
 
     # convert from FITS to casapy format
     # os.system('casapy --nogui -c ' + SCRIPTPATH +'/fits2image.py ' +
@@ -1449,7 +1321,7 @@ def do_fieldFFT(ms, image, imsize, cellsize, wsclean, mslist,
         cmd3 = '-cleanborder 0 -mgain 0.85 -fitbeam -datacolumn DATA '+ ' ' + ms
 
     print cmd1+cmd2+cmd3
-    os.system(cmd1+cmd2+cmd3)
+    run(cmd1+cmd2+cmd3)
     return
 
 
@@ -1669,13 +1541,13 @@ if __name__ == "__main__":
 
             tmpn  = str(msavglist[0])
             parset = create_phaseshift_parset_formasks(mslist[0], tmpn, source, directions[source_id])
-            os.system('NDPPP ' + parset)
+            run('NDPPP ' + parset)
             output_template_im = 'templatemask_' + source
             logging.debug(output_template_im)
-            os.system('casapy --nogui -c ' + SCRIPTPATH + '/make_empty_image.py '+ tmpn + ' ' + output_template_im + ' ' + str(fieldsize[source_id]) + ' ' +'1.5arcsec')
+            run('casapy --nogui -c ' + SCRIPTPATH + '/make_empty_image.py '+ tmpn + ' ' + output_template_im + ' ' + str(fieldsize[source_id]) + ' ' +'1.5arcsec')
             os.system('rm -rf ' + tmpn)
             # now generate the mask
-            os.system(SCRIPTPATH + '/make_facet_mask.py ' + output_template_im +' ' + 'directions.npy' + ' ' + str(source_id) + ' ' + '1.5arcsec'  +' ' + '&')
+            run(SCRIPTPATH + '/make_facet_mask.py ' + output_template_im +' ' + 'directions.npy' + ' ' + str(source_id) + ' ' + '1.5arcsec'  +' ' + '&')
         sys.exit()
     ##################################
 
@@ -1754,7 +1626,7 @@ if __name__ == "__main__":
             logging.info('START: preSC')
             ## FIXME -- hard-wired CPU limit in what follows
             if len(mslist) > 32:
-                runbbs_diffskymodel_addback16(mslist, 'instrument_ap_smoothed', True, directions[source_id],imsizes[source_id],output_template_im, do_ap)
+                runbbs_diffskymodel_addback(mslist, 'instrument_ap_smoothed', True, directions[source_id],imsizes[source_id],output_template_im, do_ap, maxcpu=16)
             else:
                 runbbs_diffskymodel_addback(mslist, 'instrument_ap_smoothed', True, directions[source_id],imsizes[source_id],output_template_im, do_ap)
 
@@ -1763,7 +1635,7 @@ if __name__ == "__main__":
                 parset = create_phaseshift_parset(ms, msavglist[ms_id], source, directions[source_id],
                                               imsizes[source_id], dynamicrange[source_id], StefCal, numchanperms)
                 os.system('rm -rf ' + msavglist[ms_id])
-                os.system('NDPPP ' + parset)
+                run('NDPPP ' + parset)
 
 
         ### PHASESHIFT the FULL resolution dataset, for MODEL_DATA FFT subtract
@@ -1771,7 +1643,7 @@ if __name__ == "__main__":
                 parset = create_phaseshift_parset_full(allbandspath + 'allbands.concat.ms',
                                                    allbandspath + 'allbands.concat.shifted_'+source+'.ms',
                                                    directions[source_id],'DATA')
-                os.system('NDPPP ' + parset + '&') # run in background
+                run('NDPPP ' + parset + '&') # run in background
 
 
         ## END STEP 1
@@ -1810,8 +1682,7 @@ if __name__ == "__main__":
                           str(uvrange) + ' ' + 
                           str(peelskymodel[source_id]) + ' ' +
                           str(cellsize))
-                logging.debug(cmd)
-                os.system(cmd)
+                run(cmd)
             else:
                 cmd = ('python ' + SCRIPTPATH + '/' + parms["selfcal"] + ' ' + 
                           inputmslist + ' ' + 
@@ -1825,8 +1696,7 @@ if __name__ == "__main__":
                           clock + ' ' +
                           str(dynamicrange[source_id]) + ' ' + 
                           regionselfc[source_id])
-                logging.debug(cmd)
-                os.system(cmd)
+                run(cmd)
 
             logging.info('Finished selfcal DDE patch: '+ source)
 
@@ -1852,8 +1722,8 @@ if __name__ == "__main__":
             # maybe there are some issues with the frequency boundaries if you solve on averaged data
             for ms_id, ms in enumerate(mslist):
                 parmdb_master_outtmp  = ms+"/"+"instrument_master_" + source
-                os.system("taql 'update " + parmdb_master_outtmp + " set ENDX=1.e12'")
-                os.system("taql 'update " + parmdb_master_outtmp + " set STARTX=1.0'")
+                run("taql 'update " + parmdb_master_outtmp + " set ENDX=1.e12'")
+                run("taql 'update " + parmdb_master_outtmp + " set STARTX=1.0'")
 
             if outliersource[source_id] == 'False':
                 # normalize the solutions to 1.0, for outlier sources do not(!) normalize
@@ -1862,30 +1732,22 @@ if __name__ == "__main__":
                 logging.info('Normalized amps to 1.0, found mean amplitude value of ' + str(nvalue))
 
             # plot the solutions
+            b=bg()
             for ms in mslist:
                 parmdb_master_plot  = ms+"/"+"instrument_master_" + source
                 plotim_base         = ms.split('.')[0] + "_instrument_master_" + source
                 if TEC=='True':
-                    os.system(SCRIPTPATH + '/plot_solutions_all_stations_v2.py \
-                            -t -a -p --freq 150 ' + parmdb_master_plot + ' ' + plotim_base +'&')
+                    b.run(SCRIPTPATH + '/plot_solutions_all_stations_v2.py \
+                            -t -a -p --freq 150 ' + parmdb_master_plot + ' ' + plotim_base)
                 else:
-                    os.system(SCRIPTPATH + '/plot_solutions_all_stations_v2.py \
-                            -s -a -p --freq 150 ' + parmdb_master_plot + ' ' + plotim_base +'&')
+                    b.run(SCRIPTPATH + '/plot_solutions_all_stations_v2.py \
+                            -s -a -p --freq 150 ' + parmdb_master_plot + ' ' + plotim_base)
 
             logging.info('Updated frequency boundaries parmdb and normalized amps to 1.0')
             time.sleep(5)
-            # make new mslist for field averaged data
-            #msavglist = []
-            #for ms_id, ms in enumerate(mslist):
-            #    msavglist.append(ms.split('.')[0] + '.' + source + '.ms.avgfield')
-
 
             ######### check if all plot_solutions_all_stations_v2.py processes is finished
-            cmd = "ps -f -u " + username + " | grep plot_solutions_all_stations_v2.py | grep -v grep |wc -l"
-            output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
-            while output > 0 : # "grep -v grep" to prevent counting the grep command
-                time.sleep(2)
-                output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
+            b.wait()
             #########
 
 
@@ -1908,29 +1770,17 @@ if __name__ == "__main__":
                 for ms_id, ms in enumerate(mslist): # make msavglist for avgfield
                     msavglist.append(ms.split('.')[0] + '.' + source + '.ms.avgfield')
 
+                b=bg(maxp=2)
                 for ms_id, ms in enumerate(mslist):
                     parset = create_phaseshift_parset_field(ms, msavglist[ms_id], source,
                                                         directions[source_id], numchanperms)
 
-                    cmd = "ps -u " + username + " | grep NDPPP | wc -l"
-                    output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
-
-                    while output > 1 : # max 2 processes (max 2, instead of 3, because we also phaseshift)
-                        time.sleep(10)
-                        output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
-                        pid = (Popen('pidof NDPPP', shell=True, stdout=PIPE).communicate()[0])
-                        pid_list = pid.split(' ')
-                    # START NDPPP BECAUSE LESS/EQ 2 PROCESSES ARE RUNNING
                     os.system('rm -rf ' + msavglist[ms_id])
-                    os.system('NDPPP ' + parset + '&')
+                    b.run('NDPPP ' + parset)
 
                 # Check if all NDPPP processes are finished
-                output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
-                while output > 0 :
-                    time.sleep(10)
-                    output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
-                    pid = (Popen('pidof NDPPP', shell=True, stdout=PIPE).communicate()[0])
-                    pid_list = pid.split(' ')
+                b.wait()
+
                 ###########################################################################
             ## STEP 4a -- do facet ##
 
@@ -1965,7 +1815,7 @@ if __name__ == "__main__":
                     parset = create_phaseshift_parset_full(allbandspath + 'allbands.concat.ms',
                                                        allbandspath + 'allbands.concat.shifted_'+source+'.ms',
                                                        directions[source_id],'DATA')
-                    os.system('NDPPP ' + parset)
+                    run('NDPPP ' + parset)
                 if StartAtStep=='postFACET':
                     # imout won't be set, so guess it
                     imout='imfield0_cluster'+source
@@ -1974,22 +1824,12 @@ if __name__ == "__main__":
                 # BACKUP SUBTRACTED DATA IN CASE OF CRASH
                 ###########################################################################
                 # (NEW: run in parallel)
+                b=bg(maxp=4)
                 for ms_id, ms in enumerate(mslist):
-                    cmd = "ps -u " + username + " | grep taql | wc -l"
-                    output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
-
-                    while output > 3 : # max 4 processes
-                        time.sleep(10)
-                        output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
-
-                    # START taql BECAUSE LESS/EQ 2 PROCESSES ARE RUNNING
-                    os.system("taql 'update " + ms + " set CORRECTED_DATA=SUBTRACTED_DATA_ALL' &")
+                    b.run("taql 'update " + ms + " set CORRECTED_DATA=SUBTRACTED_DATA_ALL'")
 
                 # Check if all taql processes are finished
-                output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
-                while output > 0 :
-                    time.sleep(10)
-                    output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
+                b.wait()
                 logging.info('Backup SUBTRACTED_DATA_ALL: completed')
                 ###########################################################################
 
@@ -2005,7 +1845,7 @@ if __name__ == "__main__":
                                                    allbandspath + 'allbands.concat.shiftedback_'+source+'.ms',
                                                        pointingcenter,'MODEL_DATA')
 
-                os.system('NDPPP ' + parset)
+                run('NDPPP ' + parset)
                 os.system('rm -rf ' + allbandspath + 'allbands.concat.shifted_'+source+'.ms') # clean up
 
                 # Add MODEL_DATA (allbands.concat.shiftedback.ms) into ADDED_DATA_SOURCE from mslist
@@ -2018,10 +1858,10 @@ if __name__ == "__main__":
                 freq_tab2.close()
 
                 if (numchan1[0]) == (numchan2[0]*len(mslist)):
-                    os.system('python ' + SCRIPTPATH + '/copy_over_columns.py '+ msliststr +
+                    run('python ' + SCRIPTPATH + '/copy_over_columns.py '+ msliststr +
                               ' ' +allbandspath+'allbands.concat.shiftedback_'+source+'.ms'+' ' + 'ADDED_DATA_SOURCE')
                 else:
-                    os.system('python ' + SCRIPTPATH + '/copy_over_columns.py '+ mslistorigstr +
+                    run('python ' + SCRIPTPATH + '/copy_over_columns.py '+ mslistorigstr +
                               ' ' +allbandspath+'allbands.concat.shiftedback_'+source+'.ms'+' ' + 'ADDED_DATA_SOURCE')
 
                 os.system('rm -rf ' + allbandspath + 'allbands.concat.shiftedback_'+source+'.ms') # clean up
@@ -2030,11 +1870,11 @@ if __name__ == "__main__":
         else:  # do this because we are not going to add back field sources
             logging.info('Do not add field back for outlier source')
             for ms in mslist:
-                os.system("taql 'update " + ms + " set MODEL_DATA=ADDED_DATA_SOURCE'")
+                run("taql 'update " + ms + " set MODEL_DATA=ADDED_DATA_SOURCE'")
 
             # BACKUP SUBTRACTED DATA IN CASE OF CRASH
             for ms in mslist:
-                os.system("taql 'update " + ms + " set CORRECTED_DATA=SUBTRACTED_DATA_ALL'")
+                run("taql 'update " + ms + " set CORRECTED_DATA=SUBTRACTED_DATA_ALL'")
             logging.info('Backup SUBTRACTED_DATA_ALL for outliersource')
 
         if StartAtStep in ['preSC', 'doSC', 'postSC','preFACET','doFACET','postFACET']:
@@ -2056,7 +1896,7 @@ if __name__ == "__main__":
             for ms in mslist:
                 inputmslist = inputmslist + ' ' + ms
             #os.system('python ' + SCRIPTPATH + '/verify_subtract_v3.py ' + inputmslist + ' 0.3 ' + source)
-            os.system('python '+ SCRIPTPATH+'/verify_subtract_v5.py ' + inputmslist + ' 0.15 ' + source)
+            run('python '+ SCRIPTPATH+'/verify_subtract_v5.py ' + inputmslist + ' 0.15 ' + source)
 
         os.system('rm -rf *.ms.avgfield') # clean up as these are never used anymore  
         os.system('rm -rf *.ms.avgcheck') # clean up to remove clutter
