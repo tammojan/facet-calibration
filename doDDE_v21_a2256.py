@@ -74,7 +74,7 @@ class bg:
         if self.maxp:
             if len(self.pl)>=self.maxp:
                 # too many processes running already. Wait till one finishes
-                self.wait(queuelen=len(self.pl)-1)
+                self.wait(queuelen=maxp-1)
         p=subprocess.Popen('exec '+c,shell=True)
         if not(self.quiet):
             print 'Process',p.pid,'started'
