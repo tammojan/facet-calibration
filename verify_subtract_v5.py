@@ -156,7 +156,7 @@ for ms in msavglist:
 
     print maxval, ' ' + image
     print maxvalpre, ' ' + pre_sourcename
-    if  (maxval > res_val) or ((maxval*0.95) > maxvalpre) :
+    if  (maxval > res_val) or ((maxval*0.92) > maxvalpre) :
         stopcal = True
         print 'WARNING RESIDUAL TOO LARGE, STOPPING', maxval, res_val
         print 'WARNING RESIDUAL TOO LARGE, STOPPING, previous max in image', maxvalpre
