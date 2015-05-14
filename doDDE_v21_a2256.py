@@ -1622,7 +1622,7 @@ if __name__ == "__main__":
 
     freq_tab     = pt.table(mslist[0]  + '/SPECTRAL_WINDOW')
     numchanperms = freq_tab.getcol('NUM_CHAN')[0]
-    logging.info('Number of channels per ms is {:d}'.format(numchan_all))
+    logging.info('Number of channels per ms is {:d}'.format(numchanperms))
     freq_tab.close()
 
     freq_tab     = pt.table(allbandspath +'allbands.concat.ms/SPECTRAL_WINDOW')
