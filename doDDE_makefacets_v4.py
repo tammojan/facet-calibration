@@ -1372,7 +1372,7 @@ npix = int(maxsize_fieldimage*3600./resolution)
 dummy_image = 'empty_wide.image'
 
 ## make low_res full image
-cmd = 'casapy --nologger --nologfile  -c '+SCRIPTPATH+'/make_empty_image.py '+ tmpms + ' ' + dummy_image + ' '  + str(npixlow) + ' ' +slowresolution
+cmd = 'casapy --nogui --nologfile  -c '+SCRIPTPATH+'/make_empty_image.py '+ tmpms + ' ' + dummy_image + ' '  + str(npixlow) + ' ' +slowresolution
 if not os.path.exists(dummy_image):
     #os.system('rm -rf empty_wide.image')
     print "making image template: {n:d} pix at {s}/pix".format(n=npixlow, s=slowresolution)
@@ -1573,7 +1573,7 @@ sizelistfile = 'sizelist.npy'
 numpy.save(mslistfile, numpy.array(mslist))
 numpy.save(imagelistfile, numpy.array(imagelist))
 numpy.save(sizelistfile, numpy.array(sizelist))
-Imcmds = ['casapy --nologger --nologfile  -c '+SCRIPTPATH+'/make_empty_image_many.py '+ mslistfile + ' ' + imagelistfile + ' ' + sizelistfile + ' ' +sresolution ]
+Imcmds = ['casapy --nogui --nologfile  -c '+SCRIPTPATH+'/make_empty_image_many.py '+ mslistfile + ' ' + imagelistfile + ' ' + sizelistfile + ' ' +sresolution ]
 run_parallel(Imcmds, nthreads=1,logs='auto')
 
 ## clean up
@@ -1583,7 +1583,7 @@ for source_id,source in enumerate(sourcelist):
     tmpn  = ms.split('.')[0] +'_ndppp_avgphaseshift.'+source+'.parset'
     os.system('rm -rf '+tmpn)
 
-#mask_cmds = ["casapy --nologger --nologfile -c ~/para/scripts/dde_weeren/bootes_hba/make_mask_from_region.py templatemask0_{source}  peel_facet_{source}.rgn templatemask0_{source}.masktmp False".format(source=source) for source in sourcelist]
+#mask_cmds = ["casapy --nogui --nologfile -c ~/para/scripts/dde_weeren/bootes_hba/make_mask_from_region.py templatemask0_{source}  peel_facet_{source}.rgn templatemask0_{source}.masktmp False".format(source=source) for source in sourcelist]
 #run_parallel(mask_cmds, nthreads=1,logs='auto')
 
 for source_id,source in enumerate(sourcelist):

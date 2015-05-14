@@ -1475,7 +1475,17 @@ def image_size_from_mask(mask):
 ### END of FUNCTION DEFS, MAIN SCRIPT STARTS HERE#
 
 if __name__ == "__main__":
-
+    
+    ## Default configuration parameters.
+    # Do not modify them here.
+    # They can be changed in the setup code with:
+    # parms.update({"parm1":"value1"})
+    parms = {
+        "selfcal_stefcal": "selfcalv20.py",
+        "selfcal": "selfcalv19_ww_cep3.py"
+        }
+    
+    
     if len(sys.argv)<2:
         raise Exception('Give the path to the setup code for the facet')
 
@@ -1785,13 +1795,13 @@ if __name__ == "__main__":
             logging.info('Region file: '+ str(regionselfc[source_id]))
 
             if StefCal:
-                os.system('python ' + SCRIPTPATH + '/selfcalv20.py ' + inputmslist + ' ' + source + ' ' + atrous_do[source_id] + ' ' + str(imsizes[source_id]) + ' ' +
+                os.system('python ' + SCRIPTPATH + '/' + parms["selfcal_stefcal"] + ' ' + inputmslist + ' ' + source + ' ' + atrous_do[source_id] + ' ' + str(imsizes[source_id]) + ' ' +
                           str(nterms) + ' ' + str(cellsizetime_a[source_id]) + ' ' + str(cellsizetime_p[source_id]) + ' ' + TEC + ' ' + clock + ' ' +
                           str(dynamicrange[source_id]) + ' ' + regionselfc[source_id] + ' ' + str(uvrange) + ' ' + str(peelskymodel[source_id]) + ' ' +
                           str(cellsize))
 
             else:
-                os.system('python '+SCRIPTPATH+'/selfcalv19_ww_cep3.py ' + inputmslist + ' ' + source + ' ' + atrous_do[source_id] + ' ' + str(imsizes[source_id]) + ' ' +
+                os.system('python ' + SCRIPTPATH + '/' + parms["selfcal"] + ' ' + inputmslist + ' ' + source + ' ' + atrous_do[source_id] + ' ' + str(imsizes[source_id]) + ' ' +
                           str(nterms) + ' ' + str(cellsizetime_a[source_id]) + ' ' + str(cellsizetime_p[source_id]) + ' ' + TEC + ' ' + clock + ' ' +
                           str(dynamicrange[source_id]) + ' ' + regionselfc[source_id])
 

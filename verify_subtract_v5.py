@@ -102,7 +102,7 @@ for ms in msavglist:
         output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
 
     imout = 'im'+ '_residual_' + source + '_' + ms.split('.')[0]
-    os.system('casapy --nologger -c '+SCRIPTPATH+'/casapy_cleanv4_checksubtract.py ' +\
+    os.system('casapy --nogui -c '+SCRIPTPATH+'/casapy_cleanv4_checksubtract.py ' +\
                ms + ' ' + imout + ' ' + str(imsize)+ '&')
     time.sleep(20)
 
@@ -156,7 +156,7 @@ for ms in msavglist:
 
     print maxval, ' ' + image
     print maxvalpre, ' ' + pre_sourcename
-    if  (maxval > res_val) or ((maxval*0.95) > maxvalpre) :
+    if  (maxval > res_val) or ((maxval*0.92) > maxvalpre) :
         stopcal = True
         print 'WARNING RESIDUAL TOO LARGE, STOPPING', maxval, res_val
         print 'WARNING RESIDUAL TOO LARGE, STOPPING, previous max in image', maxvalpre
