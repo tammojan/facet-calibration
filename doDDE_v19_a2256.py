@@ -1090,9 +1090,7 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms
         channelsout =  1 # there is a factor of 5 averaging
         cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
         cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + '-cleanborder 0 -threshold '+ cleandepth1 + ' '
-        cmd3 = '-minuv-l '+ str(uvrange) \
-               +' -mgain 0.6 -fitbeam -casamask '+inputmask+' -datacolumn DATA -no-update-model-required -joinchannels -channelsout ' +\
-               str(channelsout) + ' '  + outms
+        cmd3 = '-minuv-l '+ str(uvrange) +' -mgain 0.6 -fitbeam -casamask '+inputmask+' -datacolumn DATA -no-update-model-required -joinchannels -channelsout ' + str(channelsout) + ' '  + outms
     else:
         cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
         cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' -cleanborder 0 -threshold '+ cleandepth1 + ' '
