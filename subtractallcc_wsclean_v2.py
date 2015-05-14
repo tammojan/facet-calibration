@@ -10,9 +10,17 @@ import pyrap.images
 
 username = pwd.getpwuid(os.getuid())[0]
 
+def run(c,proceed=False,quiet=False):
+    if not(quiet):
+        print 'Running:',c
+    retval=os.system(c)
+    if retval!=0 and not(proceed):
+        raise Exception('FAILED to run '+c+' -- return value was '+str(retval))
+    return retval
+
 def create_ndppp_parset(msin, msout):
     ndppp_parset = msin.split('.')[0] +'ndppp_lowresavg.parset'
-    os.system('rm -f ' + ndppp_parset)
+    run('rm -f ' + ndppp_parset)
 
     f=open(ndppp_parset, 'w')
     f.write('msin ="%s"\n' % msin)
@@ -84,9 +92,9 @@ if __name__=='__main__':
         hr_bbslog=ms + '.highressubbbslog'
 
         if cleanup:
-            os.system('rm -r '+imhigh+'*')
-            os.system('rm -r '+imlow+'*')
-            os.system('rm '+lr_bbslog+' '+hr_bbslog+' '+finalsky)
+            run('rm -r '+imhigh+'*')
+            run('rm -r '+imlow+'*')
+            run('rm '+lr_bbslog+' '+hr_bbslog+' '+finalsky)
 
         if os.path.isfile(imhigh+'-image.fits'):
             print 'High-resolution image exists, NOT remaking it'
@@ -97,10 +105,8 @@ if __name__=='__main__':
             cmd2 = '-scale ' + cellh + ' -weight briggs 0.0 -niter ' + str(niterh) + ' '
             cmd3 = '-maxuv-l 7e3 -mgain 0.65 -fitbeam -datacolumn CORRECTED_DATA -no-update-model-required ' + ms
 
-            print cmd1+cmd2+cmd3
-
             wsclean_wait()
-            os.system(cmd1+cmd2+cmd3)
+            run(cmd1+cmd2+cmd3)
 
 
     # create the mask
@@ -117,18 +123,17 @@ if __name__=='__main__':
                 cmd+='--casaregion  '+ casaregion +' '
             cmd+=imhigh + '-image.fits'
 
-            print cmd
-            os.system(cmd)
+            run(cmd)
 
             maskim=pyrap.images.image(mask_name)
             maskim.saveas(casa_mask)
 
         # include region file
             if casaregion != '':
-                os.system('casapy --nogui -c '+SCRIPTPATH+'/fitsandregion2image.py '\
+                run('casapy --nogui -c '+SCRIPTPATH+'/fitsandregion2image.py '\
                      + mask_name + ' ' + casa_mask + ' ' + casaregion)
             else:
-                os.system('casapy --nogui -c '+SCRIPTPATH+'/fitsandregion2image.py '\
+                run('casapy --nogui -c '+SCRIPTPATH+'/fitsandregion2image.py '\
                      + mask_name + ' ' + casa_mask + ' ' + 'None')
 
         imhigh = imhigh + 'withmask'
@@ -140,9 +145,8 @@ if __name__=='__main__':
             cmd2 = '-scale ' + cellh + ' -weight briggs 0.0 -niter ' + str(niterh) + ' '
             cmd3 = '-maxuv-l 7e3 -no-update-model-required -mgain 0.65 -fitbeam -datacolumn CORRECTED_DATA -casamask ' + casa_mask  + ' ' + ms
 
-            print cmd1+cmd2+cmd3
             wsclean_wait()
-            os.system(cmd1+cmd2+cmd3)
+            run(cmd1+cmd2+cmd3)
 
         fits_model = imhigh + '-model.fits'
         casa_model = imhigh + '.model'
@@ -156,7 +160,7 @@ if __name__=='__main__':
             modelim=pyrap.images.image(fits_model)
             modelim.saveas(casa_model)
 
-        #os.system('casapy --nogui -c '+SCRIPTPATH+'/fits2image.py '\
+        #run('casapy --nogui -c '+SCRIPTPATH+'/fits2image.py '\
         #            + fits_model + ' ' + casa_model)
 
         # ---------------------
@@ -165,7 +169,7 @@ if __name__=='__main__':
         if os.path.isfile(skymodel):
             print 'Skymodel exists, NOT remaking it'
         else:
-            os.system(SCRIPTPATH+'/casapy2bbs_one_patch_per_cc.py '  + casa_model + ' ' +  skymodel)
+            run(SCRIPTPATH+'/casapy2bbs_one_patch_per_cc.py '  + casa_model + ' ' +  skymodel)
 
         if os.path.isfile(hr_bbslog):
             print 'BBS log for subtraction exists, NOT re-doing subtraction. Be careful!'
@@ -175,9 +179,8 @@ if __name__=='__main__':
             parset = SCRIPTPATH+'/subtractall_highres_wsclean.parset'
             cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name instrument_ap_smoothed '
             cmd = cmd + ms + ' ' + parset + ' ' + skymodel + ' >' + hr_bbslog
-            print cmd
 
-            os.system(cmd)
+            run(cmd)
 
         # ---------------------
         # average down for lowres image
@@ -189,8 +192,8 @@ if __name__=='__main__':
 
             ndppp_parset = create_ndppp_parset(ms, msout)
 
-            os.system('rm -rf ' + msout)
-            os.system('NDPPP ' + ndppp_parset +' >'+ ms+'.NDPPPavelog')
+            run('rm -rf ' + msout)
+            run('NDPPP ' + ndppp_parset +' >'+ ms+'.NDPPPavelog')
 
         if os.path.isfile(imlow+'-image.fits'):
             print 'Low-resolution image exists, NOT remaking it'
@@ -201,10 +204,8 @@ if __name__=='__main__':
             cmd2 = '-scale ' + celll + ' -weight briggs 0.0 -niter ' + str(niterl) + ' '
             cmd3 = '-maxuv-l 2e3 -no-update-model-required -mgain 0.65 -fitbeam -datacolumn DATA ' + msout
 
-            print cmd1+cmd2+cmd3
-
         #########
-            os.system(cmd1+cmd2+cmd3)
+            run(cmd1+cmd2+cmd3)
 
         # ---------------------
         # create the lowres mask
@@ -219,7 +220,7 @@ if __name__=='__main__':
             if casaregion!='':
                 cmd+='--casaregion  '+ casaregion +' '
             cmd+=imlow + '-image.fits'
-            os.system(cmd)
+            run(cmd)
 
         # convert to CASA format
 
@@ -228,10 +229,10 @@ if __name__=='__main__':
 
         # include region file
             if casaregion != '':
-                os.system('casapy --nogui -c '+SCRIPTPATH+'/fitsandregion2image.py '\
+                run('casapy --nogui -c '+SCRIPTPATH+'/fitsandregion2image.py '\
                      + mask_name + ' ' + casa_mask + ' ' + casaregion)
             else:
-                os.system('casapy --nogui -c '+SCRIPTPATH+'/fitsandregion2image.py '\
+                run('casapy --nogui -c '+SCRIPTPATH+'/fitsandregion2image.py '\
                      + mask_name + ' ' + casa_mask + ' ' + 'None')
 
         imlow = imlow + 'withmask'
@@ -242,12 +243,10 @@ if __name__=='__main__':
             cmd2 = '-scale ' + celll + ' -weight briggs 0.0 -niter ' + str(niterl) + ' '
             cmd3 = '-maxuv-l 2e3 -no-update-model-required -mgain 0.65 -fitbeam -datacolumn DATA -casamask ' + casa_mask  + ' ' + msout
 
-            print cmd1+cmd2+cmd3
-
         ######### check that no wsclean is running
             wsclean_wait()
         #########
-            os.system(cmd1+cmd2+cmd3)
+            run(cmd1+cmd2+cmd3)
 
 
 
@@ -264,7 +263,7 @@ if __name__=='__main__':
             modelim=pyrap.images.image(fits_model)
             modelim.saveas(casa_model)
 
-        #os.system('casapy --nogui -c '+SCRIPTPATH+'/fits2image.py '\
+        #run('casapy --nogui -c '+SCRIPTPATH+'/fits2image.py '\
         #            + fits_model + ' ' + casa_model)
         # ---------------------
         # create the low-res skymodel
@@ -273,7 +272,7 @@ if __name__=='__main__':
         if os.path.isfile(skymodel):
             print 'Skymodel exists, NOT remaking it'
         else:
-            os.system(SCRIPTPATH+'/casapy2bbs_one_patch_per_cc.py '  + casa_model  + ' ' +  skymodel)
+            run(SCRIPTPATH+'/casapy2bbs_one_patch_per_cc.py '  + casa_model  + ' ' +  skymodel)
 
         # ---------------------
         # subtract thelowres cc
@@ -283,8 +282,7 @@ if __name__=='__main__':
             parset = SCRIPTPATH+'/subtractall_lowres_wsclean.parset'
             cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name instrument_ap_smoothed '
             cmd = cmd + ms + ' ' + parset + ' ' + skymodel + ' >' + lr_bbslog
-            print cmd
-            os.system(cmd)
+            run(cmd)
 
 
         # ---------------------
@@ -293,14 +291,14 @@ if __name__=='__main__':
         if os.path.isfile(finalsky):
             print 'Final sky model exists, NOT replacing it (why did you run this script, exactly?)'
         else:
-            os.system('cp ' + imhigh+ '.skymodel ' + finalsky)
-            os.system("grep -v '#' "+  imlow+ ".skymodel > tmp.sky")
-            os.system("cat tmp.sky >>" + finalsky)
+            run('cp ' + imhigh+ '.skymodel ' + finalsky)
+            run("grep -v '#' "+  imlow+ ".skymodel > tmp.sky")
+            run("cat tmp.sky >>" + finalsky)
 
             cmd = "sed -i 's/, , , /, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.5e8, [0.0]/g'"
-            os.system(cmd + ' ' + finalsky)
+            run(cmd + ' ' + finalsky)
 
             cmd = 'sed -i \"s/# (Name, Type, Patch, Ra, Dec, I, Q, U, V) = format/format = Name, Type, Patch, Ra, Dec, I, Q, U, V, MajorAxis, MinorAxis, Orientation, ReferenceFrequency=\'1.5e+08\', SpectralIndex=\'[]\'/g\"  '
-            os.system(cmd + ' ' + finalsky)
+            run(cmd + ' ' + finalsky)
 
         print 'MS',ms,'all done!'
