@@ -1849,7 +1849,7 @@ if __name__ == "__main__":
                 ###########################################################################
                 # (NEW: run in parallel)
                 b=bg(maxp=4)
-                for ms_id, ms in enumerate(mslist):
+                for ms in mslist:
                     b.run("taql 'update " + ms + " set CORRECTED_DATA=SUBTRACTED_DATA_ALL'")
 
                 # Check if all taql processes are finished
@@ -1893,13 +1893,23 @@ if __name__ == "__main__":
         #### OUTLIER CASE ####
         else:  # do this because we are not going to add back field sources
             logging.info('Do not add field back for outlier source')
+            
+            b=bg(maxp=4)
             for ms in mslist:
-                run("taql 'update " + ms + " set MODEL_DATA=ADDED_DATA_SOURCE'")
-
+                b.run("taql 'update " + ms + " set MODEL_DATA=ADDED_DATA_SOURCE'")
+            b.wait()
+            
             # BACKUP SUBTRACTED DATA IN CASE OF CRASH
+            ###########################################################################
+            b=bg(maxp=4)
             for ms in mslist:
-                run("taql 'update " + ms + " set CORRECTED_DATA=SUBTRACTED_DATA_ALL'")
+                b.run("taql 'update " + ms + " set CORRECTED_DATA=SUBTRACTED_DATA_ALL'")
+
+            # Check if all taql processes are finished
+            b.wait()
             logging.info('Backup SUBTRACTED_DATA_ALL for outliersource')
+            ###########################################################################            
+
 
         if StartAtStep in ['preSC', 'doSC', 'postSC','preFACET','doFACET','postFACET']:
             
