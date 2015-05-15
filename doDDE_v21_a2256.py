@@ -88,7 +88,7 @@ class bg:
                     pl.remove(p)
                     if retval==0:
                         if not(self.quiet):
-                            print 'Process ',str(p.pid),'ended OK'
+                            print 'Process',str(p.pid),'ended OK'
                     else:
                         if not(self.proceed):
                             for p2 in pl:
@@ -1616,7 +1616,7 @@ if __name__ == "__main__":
 
         #check if allbands.concat.shifted_'+source+'.ms' is present
         if os.path.isdir(allbandspath + 'allbands.concat.shifted_'+source+'.ms'):
-            logging.debug(allbandspath + 'allbands.concat.shifted_'+source+'.ms')
+            logging.info(allbandspath + 'allbands.concat.shifted_'+source+'.ms exists')
             if StartAtStep in ['preSC']:
                 #raise Exception('delete measurement set and then restart')
                 os.system('rm -rf ' + allbandspath +'allbands.concat.shifted_'+source+'.ms')

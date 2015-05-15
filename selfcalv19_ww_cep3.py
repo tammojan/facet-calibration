@@ -818,7 +818,7 @@ def do_selfcal(mslist,cluster,atrous_do,imsize,nterms,cellsizetime_a,cellsizetim
     skymodel = imout+'.skymodel'
     parset   = create_scalarphase_parset(cellsizetime_p, TEC, clock, group, FFT, uvrange)
 
-    runbbs(mslist, skymodel, parset, 'instrument', False, TEC)
+    runbbs(mslist, skymodel, parset, 'instrument', False, TEC, clusterdesc, dbserver, dbuser, dbname)
     #NOTE WORK FROM MODEL_DATA (contains correct phase data from 10SB calibration)
     ######################################
 
@@ -840,7 +840,7 @@ def do_selfcal(mslist,cluster,atrous_do,imsize,nterms,cellsizetime_a,cellsizetim
     skymodel = imout+'.skymodel'
     parset   = create_scalarphase_parset(cellsizetime_p, TEC, clock, group, FFT, uvrange)
 
-    runbbs(mslist, skymodel, parset, 'instrument', False, TEC) #NOTE WORK FROM MODEL_DATA (contains correct phase data from 10SB calibration)
+    runbbs(mslist, skymodel, parset, 'instrument', False, TEC,clusterdesc, dbserver, dbuser, dbname) #NOTE WORK FROM MODEL_DATA (contains correct phase data from 10SB calibration)
     ######################################
 
 
@@ -859,12 +859,12 @@ def do_selfcal(mslist,cluster,atrous_do,imsize,nterms,cellsizetime_a,cellsizetim
     skymodel = imout+'.skymodel'
     parset   = create_scalarphase_parset_p(cellsizetime_p, TEC, clock, group, FFT, uvrange)
     # solve +apply phases
-    runbbs(mslist, skymodel, parset, 'instrument_phase0', False, TEC)
+    runbbs(mslist, skymodel, parset, 'instrument_phase0', False, TEC, clusterdesc, dbserver, dbuser, dbname)
 
     # solve amps
     parmdb = 'instrument_amps0'
     parset = create_amponly_parset(cellsizetime_a, FFT, uvrange)
-    runbbs(mslist, skymodel, parset, parmdb, False, False)
+    runbbs(mslist, skymodel, parset, parmdb, False, False, clusterdesc, dbserver, dbuser, dbname)
 
     for ms in mslist:
         # remove outliers from the solutions
@@ -875,9 +875,9 @@ def do_selfcal(mslist,cluster,atrous_do,imsize,nterms,cellsizetime_a,cellsizetim
 
     # apply amps
     if smooth:
-        runbbs(mslist, skymodel,SCRIPTPATH+'/apply_amplitudeonly.parset', parmdb+'_smoothed', True, False)
+        runbbs(mslist, skymodel,SCRIPTPATH+'/apply_amplitudeonly.parset', parmdb+'_smoothed', True, False, clusterdesc, dbserver, dbuser, dbname)
     else:
-        runbbs(mslist, skymodel,SCRIPTPATH+'/apply_amplitudeonly.parset', parmdb, True, False)
+        runbbs(mslist, skymodel,SCRIPTPATH+'/apply_amplitudeonly.parset', parmdb, True, False, clusterdesc, dbserver, dbuser, dbname)
 
     ### MAKE IMAGE 3 ###
     imout,mask = make_image(mslist, cluster, '3', 10, 10, nterms, atrous_do, imsize)
@@ -908,12 +908,12 @@ def do_selfcal(mslist,cluster,atrous_do,imsize,nterms,cellsizetime_a,cellsizetim
     # phase only cal
     skymodel = imout+'.skymodel'
     parset   = create_scalarphase_parset_p(cellsizetime_p, TEC, clock, group, FFT, uvrange)
-    runbbs(mslist, skymodel, parset, 'instrument_phase1', False, TEC)
+    runbbs(mslist, skymodel, parset, 'instrument_phase1', False, TEC, clusterdesc, dbserver, dbuser, dbname)
 
     # solve amps
     parmdb   = 'instrument_amps1'
     parset = create_amponly_parset(cellsizetime_a, FFT, uvrange)
-    runbbs(mslist, skymodel, parset,parmdb, False, False)
+    runbbs(mslist, skymodel, parset,parmdb, False, False, clusterdesc, dbserver, dbuser, dbname)
 
     for ms in mslist:
         # remove outliers from the solutions
@@ -924,9 +924,9 @@ def do_selfcal(mslist,cluster,atrous_do,imsize,nterms,cellsizetime_a,cellsizetim
 
     # apply amps
     if smooth:
-        runbbs(mslist, skymodel,SCRIPTPATH+'/apply_amplitudeonly.parset',parmdb+'_smoothed', True, False)
+        runbbs(mslist, skymodel,SCRIPTPATH+'/apply_amplitudeonly.parset',parmdb+'_smoothed', True, False, clusterdesc, dbserver, dbuser, dbname)
     else:
-        runbbs(mslist, skymodel,SCRIPTPATH+'/apply_amplitudeonly.parset',parmdb, True, False)
+        runbbs(mslist, skymodel,SCRIPTPATH+'/apply_amplitudeonly.parset',parmdb, True, False, clusterdesc, dbserver, dbuser, dbname)
 
     ### MAKE IMAGE 4 ###
     imout,mask = make_image(mslist, cluster, '4', 10, 10, nterms, atrous_do, imsize)
