@@ -1366,6 +1366,9 @@ if __name__ == "__main__":
     execfile(sys.argv[1])
     print 'script path is',SCRIPTPATH
 
+    #### HARCODED, CLOCK FITTING IS ALWAYS DISABLED ####
+    clock = "False"
+
     try:
         StartAtStep
     except NameError:
@@ -1550,8 +1553,7 @@ if __name__ == "__main__":
     #  nterms = 3
     #if len(mslist) < 20:
 
-    #### HARCODED, CLOCK FITTING IS ALWAYS DISABLED ####
-    clock = "False"
+    
 
     if len(mslist) > WScleanWBgroup:
         nterms = 2
