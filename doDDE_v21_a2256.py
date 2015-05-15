@@ -1581,7 +1581,8 @@ if __name__ == "__main__":
         if StartAtStep in ['preSC', 'doSC', 'postSC','preFACET','doFACET']:
             # remove selfcal images #
             logging.info("removing any existing facet images")
-            os.system("rm -rf imfield*_cluster"+source+"*")
+            os.system("rm -rf imfield*_cluster"+source+"-*")
+            os.system("rm -rf imfield*_cluster"+source+"nm-*")
         if StartAtStep in ['preSC', 'doSC', 'postSC','preFACET']:
             logging.info("removing any existing facet imaging average MS")
             os.system("rm -rf *."+source+".ms.avgfield*")
