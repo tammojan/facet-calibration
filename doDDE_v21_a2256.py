@@ -1519,7 +1519,7 @@ if __name__ == "__main__":
     if not os.path.isdir(allbands):
         logging.info(allbands+' does not exist, will try to make it')
         f=open('allbands.NDPPP','w')
-        f.write('msin='+str(mslistorig)+'\nmsin.datacolumn = DATA\nmsin.missingdata=True\nmsin.orderms=False\nmsout=allbands.concat.ms\nsteps=[]\n')
+        f.write('msin='+str(mslistorig)+'\nmsin.datacolumn = DATA\nmsin.missingdata=True\nmsin.orderms=False\nmsout='+ allbands +'\nsteps=[]\n')
         f.close()
         run('NDPPP allbands.NDPPP')
 
