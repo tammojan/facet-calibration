@@ -978,7 +978,7 @@ def do_selfcal(mslist,cluster,atrous_do,imsize,nterms,cellsizetime_a,cellsizetim
             create_merged_parmdb(ms, ms+'/'+parmdb_a, ms+'/'+parmdb_p, ms+'/'+dummyparmdb,ms+'/'+parmdbout,cellsizetime_a,cellsizetime_p)
 
 
-if __name__="__main__":
+if __name__=="__main__":
 
     el=len(sys.argv)
 
