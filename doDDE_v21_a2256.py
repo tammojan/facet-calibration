@@ -390,6 +390,8 @@ def create_phaseshift_parset(msin, msout, source, direction, imsize, dynamicrang
                     f.write('avg1.freqstep = %s\n' % str(numchanperms/5))
                     # we have a large image  2048 is more or less max expected
                     # divide by 5 because that allows datasets with 3 channels per SB (i.e., 30 channels per ms)
+        else:
+            f.write('avg1.freqstep = 20\n')
     else:
         if dynamicrange != 'HD':
             print 'dynamicrange ', dynamicrange
