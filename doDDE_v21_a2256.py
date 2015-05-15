@@ -1400,10 +1400,18 @@ if __name__ == "__main__":
     except NameError:
         allbandspath = os.getcwd() + '/'
 
+    try:
+        clusterdesc
+    except NameError:
+        print 'No cluster description specified, using default in selfcal script'
+        clusterdesc='default'
+        dbserver='dummy'
+        dbname='dummy'
+        dbuser='dummy'
+
     if StefCal:
         TEC = "False" # cannot fit for TEC in StefCal
         print 'Overwriting TEC user input, TEC will be False when using StefCal'
-
 
     print 'StartAtStep is',StartAtStep
 
@@ -1495,6 +1503,14 @@ if __name__ == "__main__":
     numchanperms = freq_tab.getcol('NUM_CHAN')[0]
     logging.info('Number of channels per ms is {:d}'.format(numchanperms))
     freq_tab.close()
+
+    allbands=allbandspath +'allbands.concat.ms'
+    if not os.path.isdir(allbands):
+        logging.info(allbands+' does not exist, will try to make it')
+        f=open('allbands.NDPPP','w')
+        f.write('msin='+str(mslistorig)+'\nmsin.datacolumn = DATA\nmsin.missingdata=True\nmsin.orderms=False\nmsout=allbands.concat.ms\nsteps=[]\n')
+        f.close()
+        run('NDPPP allbands.NDPPP')
 
     freq_tab     = pt.table(allbandspath +'allbands.concat.ms/SPECTRAL_WINDOW')
     numchan_all = freq_tab.getcol('NUM_CHAN')[0]
@@ -1597,10 +1613,6 @@ if __name__ == "__main__":
             else:
                 logging.info('...but continuing because we are redoing selfcal')
 
-        if not os.path.isdir(allbandspath + 'allbands.concat.ms'):
-            logging.debug(allbandspath + 'allbands.concat.ms does not exist')
-            raise Exception('make measurement set and then restart')
-
         dummyskymodel   = SCRIPTPATH + '/dummy.skymodel' ## update every time again with new source, not used, just a dummy for correct
 
         msavglist = []
@@ -1695,7 +1707,8 @@ if __name__ == "__main__":
                           TEC + ' ' + 
                           clock + ' ' +
                           str(dynamicrange[source_id]) + ' ' + 
-                          regionselfc[source_id])
+                          regionselfc[source_id] + ' ' + clusterdesc + ' ' +
+                          dbserver + ' '+ dbuser + ' '+  dbname )
                 run(cmd)
 
             logging.info('Finished selfcal DDE patch: '+ source)
