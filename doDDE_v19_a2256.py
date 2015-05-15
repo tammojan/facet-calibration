@@ -40,6 +40,15 @@ except NameError:
     BlankField=False
     print 'BlankField not set, defaulting to',BlankField
 
+try:
+    clusterdesc
+except NameError:
+    print 'No cluster description specified, using default in selfcal script'
+    clusterdesc='default'
+    dbserver='dummy'
+    dbname='dummy'
+    dbuser='dummy'
+
 print 'StartAtStep is',StartAtStep
 
 logging.basicConfig(filename='dde.log',level=logging.DEBUG, format='%(asctime)s -  %(message)s', datefmt='%Y-%d-%m %H:%M:%S')
@@ -1435,7 +1444,7 @@ for source in do_sources:
 
         os.system('python '+SCRIPTPATH+'/selfcalv19_ww_cep3.py ' + inputmslist + ' ' + source + ' ' + atrous_do[source_id] + ' ' + str(imsizes[source_id]) + ' ' + \
                          str(nterms) + ' ' + str(cellsizetime_a[source_id]) + ' ' + str(cellsizetime_p[source_id]) + ' ' + TEC + ' ' + clock + ' ' + \
-                         str(dynamicrange[source_id]) + ' ' + regionselfc[source_id])
+                         str(dynamicrange[source_id]) + ' ' + regionselfc[source_id] + ' ' + clusterdesc + ' ' + dbserver + ' '+ dbuser + ' '+  dbname)
 
 
 
