@@ -74,7 +74,7 @@ class bg:
             if len(self.pl)>=self.maxp:
                 # too many processes running already. Wait till one finishes
                 self.wait(queuelen=self.maxp-1)
-        p=subprocess.Popen('exec '+c,shell=True)
+        p=Popen('exec '+c,shell=True)
         if not(self.quiet):
             print 'Process',p.pid,'started'
         self.pl.append(p)
@@ -1413,6 +1413,17 @@ if __name__ == "__main__":
         TEC = "False" # cannot fit for TEC in StefCal
         print 'Overwriting TEC user input, TEC will be False when using StefCal'
 
+    # fixme: add appropriate check for stefcal...
+    dummyparmdb=None
+    if TEC=='True':
+        if clock=='True':
+            dummyparmdb = 'instrument_template_TECclock'
+        else:
+            dummyparmdb = 'instrument_template_Gain_TEC_CSphase'
+    if dummyparmdb is not(None):
+        if not(os.path.isdir(dummyparmdb)):
+            raise Exception('parmdb template %s does not exist' % dummyparmdb)
+    
     print 'StartAtStep is',StartAtStep
 
     ## Logger configuration
@@ -1431,8 +1442,8 @@ if __name__ == "__main__":
     logger.addHandler(fh)
     logging.info('\n')
 
-    os.system('cp ' + SCRIPTPATH + '/coordinates_mode.py .')
-    os.system('cp ' + SCRIPTPATH + '/blank.py .')
+#    os.system('cp ' + SCRIPTPATH + '/coordinates_mode.py .')
+#    os.system('cp ' + SCRIPTPATH + '/blank.py .')
     os.system('cp ' + SCRIPTPATH + '/ftw.xml .')
     os.system('cp ' + SCRIPTPATH + '/task_ftw.py .')
 
