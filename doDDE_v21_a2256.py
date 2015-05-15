@@ -1409,6 +1409,11 @@ if __name__ == "__main__":
         dbname='dummy'
         dbuser='dummy'
 
+    try:
+        clock
+    except NameError:
+        clock='False'
+
     if StefCal:
         TEC = "False" # cannot fit for TEC in StefCal
         print 'Overwriting TEC user input, TEC will be False when using StefCal'
