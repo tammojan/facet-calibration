@@ -10,7 +10,6 @@ import pyrap.tables as pt
 import uuid
 pi = numpy.pi
 import pwd
-username = pwd.getpwuid(os.getuid())[0]
 
 # location of this script - all scripts/parsets it uses are contained in subdirectory 'use'
 SCRIPTPATH = os.path.dirname(os.path.abspath(__file__))
@@ -24,7 +23,6 @@ SCRIPTPATH = os.path.dirname(os.path.abspath(__file__))
 # v19
 # - change ndppp job submit for better control over jobs running
 # - add hardcoded groups (get_group)
-
 
 def create_merged_parmdb_spline(parmdb_a,parmdb_p, parmdb_t, parmdb_out,cellsizetime_a, cellsizetime_b):
 
@@ -87,7 +85,6 @@ def create_merged_parmdb_spline(parmdb_a,parmdb_p, parmdb_t, parmdb_out,cellsize
     pdbnew.flush()
     #lofar.expion.parmdbmain.store_parms(parmdb_out, parms_t, create_new = True)
     return
-
 
 def create_merged_parmdb(ms, parmdb_a,parmdb_p, parmdb_t, parmdb_out,cellsizetime_a, cellsizetime_b):
 
@@ -188,8 +185,6 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
     # ONLY average for small FOV, otherwise timesmearing is a problem
     #average data
     if average:
-
-
         processes = set()
         max_processes = 2
 
@@ -273,7 +268,7 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
         if cluster == 'a2256': ## special case for a2256
             niter = niter*15 # clean very deep here
 
-        os.system('casapy --nogui --logfile casapy-'+imout+'.log -c '+SCRIPTPATH+'/casapy_cleanv4.py ' + ms + ' ' + imout + ' ' + 'None' +\
+        os.system('casapy --nologger --logfile casapy-'+imout+'.log -c '+SCRIPTPATH+'/casapy_cleanv4.py ' + ms + ' ' + imout + ' ' + 'None' +\
                 ' ' + '1mJy' + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + mscale)
         # make mask
         if nterms > 1:
@@ -292,10 +287,10 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
 
     if region != 'empty' : ## special cases
         niter = niter*3
-        os.system('casapy --nogui --logfile casapy-'+imout+'.log -c '+SCRIPTPATH+'/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask+','+region + \
+        os.system('casapy --nologger --logfile casapy-'+imout+'.log -c '+SCRIPTPATH+'/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask+','+region + \
                   ' ' + '1mJy' + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + mscale)
     else:
-        os.system('casapy --nogui --logfile casapy-'+imout+'.log -c '+SCRIPTPATH+'/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask + \
+        os.system('casapy --nologger --logfile casapy-'+imout+'.log -c '+SCRIPTPATH+'/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask + \
                   ' ' + '1mJy' + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + mscale)
 
     # convert to FITS
@@ -314,7 +309,7 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
 
     return imout,mask
 
-def runbbs(mslist, skymodel, parset, parmdb, applycal, TEC):
+def runbbs(mslist, skymodel, parset, parmdb, applycal, TEC, clusterdesc, db, dbuser, dbname):
     #NOTE WORK FROM MODEL_DATA (contains correct phase data from 10SB calibration)
     #NOTE WORK FROM DATA  if TEC
 
@@ -323,12 +318,29 @@ def runbbs(mslist, skymodel, parset, parmdb, applycal, TEC):
         key = str(uuid.uuid4())
         key = key[0:12]
 
-        # postgres db settings
-        clusterdesc = '/home/jsm/elais-n1/new_pipeline/stacpolly.clusterdesc'
-        db = 'head'
-        dbuser = 'jsm'
-        dbname = 'jsm'
 
+        if clusterdesc=='default':
+        # allow 'default' which gives the old behaviour, for now
+            username = pwd.getpwuid(os.getuid())[0]
+            cdparset='/home/'+username+'/pgsql-setup.txt'
+            if os.path.isfile(cdparset):
+                print 'Getting pgsql setup from',cdparset
+                lines=[line.strip() for line in open(cdparset)]
+                clusterdesc=lines[0]
+                db=lines[1]
+                dbuser=lines[2]
+                dbname=lines[3]
+
+            elif 'para' in os.uname()[1]:
+                clusterdesc = '/home/wwilliams/para/paranew.clusterdesc'
+                db = 'kolkje'
+                dbuser = 'shimwell'
+                dbname = 'shimwell'
+            else:
+                clusterdesc = '/home/williams/clusterdesc/cep3.clusterdesc'
+                db = 'ldb002.offline.lofar'
+                dbuser = 'postgres'
+                dbname = username
 
         if len(mslist) == 10000:  # 34 does not work now!!!!!!
             # this is a very special case for a full run, manually here to run with 3 solver controls
@@ -482,7 +494,6 @@ def create_scalarphase_parset(timestep, TEC, clock, groups, FFT, uvrange):
     f.close()
     return bbs_parset
 
-
 def create_scalarphase_parset_p(timestep, TEC, clock, groups, FFT, uvrange):
     bbs_parset = 'scalarphase_p.parset'
     os.system('rm -f ' + bbs_parset)
@@ -557,7 +568,6 @@ def create_scalarphase_parset_p(timestep, TEC, clock, groups, FFT, uvrange):
     f.close()
     return bbs_parset
 
-
 def create_amponly_parset(timestep, FFT, uvrange):
     bbs_parset = 'amplitudeonly.parset'
     os.system('rm -f ' + bbs_parset)
@@ -596,7 +606,6 @@ def create_amponly_parset(timestep, FFT, uvrange):
 
     f.close()
     return bbs_parset
-
 
 def create_scalarphase_parset_p2(timestep, TEC, clock, groups, FFT, uvrange):
     bbs_parset = 'scalarphase_p2.parset'
@@ -670,7 +679,6 @@ def create_scalarphase_parset_p2(timestep, TEC, clock, groups, FFT, uvrange):
     f.close()
     return bbs_parset
 
-
 def get_group(thismslist):
     nms = len(thismslist)
 
@@ -717,21 +725,7 @@ def get_group(thismslist):
     return group
 
 
-if __name__ == "__main__":
-    el=len(sys.argv)
-
-    mslist    = sys.argv[1:el-10]
-    cluster   = str(sys.argv[el-10])
-    atrous_do = str(sys.argv[el-9])
-    imsize    = numpy.int(sys.argv[el-8])
-
-    nterms                  = numpy.int(sys.argv[el-7])  # only 1 to 3 is supported !!
-    cellsizetime_a          = numpy.int(sys.argv[el-6])
-    cellsizetime_p          = numpy.int(sys.argv[el-5])
-    TECi                    = str(sys.argv[el-4])
-    clocki                  = str(sys.argv[el-3])
-    HRi                     = str(sys.argv[el-2])
-    region                  = str(sys.argv[el-1])
+def do_selfcal(mslist,cluster,atrous_do,imsize,nterms,cellsizetime_a,cellsizetime_p,TECi,clocki,HRi,region,clusterdesc,dbserver,dbuser,dbname):
 
     TEC  = False
     FFT  = False
@@ -801,8 +795,8 @@ if __name__ == "__main__":
     merge_parmdb = True
     phasors      = False   # if true only solve for amps on long timescales
     smooth       = False # seems that smooth does not help the selfcal (various reasons for that)
-                        # 1. boundaries of flagged vs non-flagged data are sharp (should not be smoothed)
-                        # 2. there sre some strong ampl various at low elevations
+                         # 1. boundaries of flagged vs non-flagged data are sharp (should not be smoothed)
+                         # 2. there sre some strong ampl various at low elevations
     smooth       = True # sometimes almost 0.0 amplitude, causes ripples
     phasezero    = True # reset phases from ap calibration
 
@@ -817,14 +811,14 @@ if __name__ == "__main__":
     # create skymodel for BBS
     os.system(SCRIPTPATH+'/casapy2bbs.py -m '+ mask + ' ' +'-t ' + str(nterms)+ ' ' + imout+'.model ' +  imout+'.skymodel')
     if FFT:
-        os.system('casapy --nogui -c '+SCRIPTPATH+'/ft_v2.py ' + msinputlist + ' ' + imout+'.model' \
-                + ' ' + str(nterms) + ' '+ str(wplanes))
+        os.system('casapy --nologger -c '+SCRIPTPATH+'/ft_v2.py ' + msinputlist + ' ' + imout+'.model' \
+                  + ' ' + str(nterms) + ' '+ str(wplanes))
 
     # phase only calibrate
     skymodel = imout+'.skymodel'
     parset   = create_scalarphase_parset(cellsizetime_p, TEC, clock, group, FFT, uvrange)
 
-    runbbs(mslist, skymodel, parset, 'instrument', False, TEC)
+    runbbs(mslist, skymodel, parset, 'instrument', False, TEC, clusterdesc, dbserver, dbuser, dbname)
     #NOTE WORK FROM MODEL_DATA (contains correct phase data from 10SB calibration)
     ######################################
 
@@ -838,15 +832,15 @@ if __name__ == "__main__":
     # create skymodel for BBS
     os.system(SCRIPTPATH+'/casapy2bbs.py -m '+ mask + ' ' +'-t ' + str(nterms)+ ' ' + imout+'.model ' +  imout+'.skymodel')
     if FFT:
-        os.system('casapy --nogui -c '+SCRIPTPATH+'/ft_v2.py ' + msinputlist + ' ' + imout+'.model' \
-                + ' ' + str(nterms) + ' '+ str(wplanes))
+        os.system('casapy --nologger -c '+SCRIPTPATH+'/ft_v2.py ' + msinputlist + ' ' + imout+'.model' \
+                  + ' ' + str(nterms) + ' '+ str(wplanes))
 
 
     # phase only calibrate
     skymodel = imout+'.skymodel'
     parset   = create_scalarphase_parset(cellsizetime_p, TEC, clock, group, FFT, uvrange)
 
-    runbbs(mslist, skymodel, parset, 'instrument', False, TEC) #NOTE WORK FROM MODEL_DATA (contains correct phase data from 10SB calibration)
+    runbbs(mslist, skymodel, parset, 'instrument', False, TEC,clusterdesc, dbserver, dbuser, dbname) #NOTE WORK FROM MODEL_DATA (contains correct phase data from 10SB calibration)
     ######################################
 
 
@@ -859,18 +853,18 @@ if __name__ == "__main__":
     ### CALIBRATE WITH BBS PHASE+AMP 1 ###
     os.system(SCRIPTPATH+'/casapy2bbs.py -m '+ mask + ' ' +'-t ' + str(nterms)+ ' ' + imout+'.model ' +  imout+'.skymodel')
     if FFT:
-        os.system('casapy --nogui -c '+SCRIPTPATH+'/ft_v2.py ' + msinputlist + ' ' + imout+'.model' \
-                + ' ' + str(nterms) + ' '+ str(wplanes))
+        os.system('casapy --nologger -c '+SCRIPTPATH+'/ft_v2.py ' + msinputlist + ' ' + imout+'.model' \
+                  + ' ' + str(nterms) + ' '+ str(wplanes))
 
     skymodel = imout+'.skymodel'
     parset   = create_scalarphase_parset_p(cellsizetime_p, TEC, clock, group, FFT, uvrange)
     # solve +apply phases
-    runbbs(mslist, skymodel, parset, 'instrument_phase0', False, TEC)
+    runbbs(mslist, skymodel, parset, 'instrument_phase0', False, TEC, clusterdesc, dbserver, dbuser, dbname)
 
     # solve amps
     parmdb = 'instrument_amps0'
     parset = create_amponly_parset(cellsizetime_a, FFT, uvrange)
-    runbbs(mslist, skymodel, parset, parmdb, False, False)
+    runbbs(mslist, skymodel, parset, parmdb, False, False, clusterdesc, dbserver, dbuser, dbname)
 
     for ms in mslist:
         # remove outliers from the solutions
@@ -881,9 +875,9 @@ if __name__ == "__main__":
 
     # apply amps
     if smooth:
-        runbbs(mslist, skymodel,SCRIPTPATH+'/apply_amplitudeonly.parset', parmdb+'_smoothed', True, False)
+        runbbs(mslist, skymodel,SCRIPTPATH+'/apply_amplitudeonly.parset', parmdb+'_smoothed', True, False, clusterdesc, dbserver, dbuser, dbname)
     else:
-        runbbs(mslist, skymodel,SCRIPTPATH+'/apply_amplitudeonly.parset', parmdb, True, False)
+        runbbs(mslist, skymodel,SCRIPTPATH+'/apply_amplitudeonly.parset', parmdb, True, False, clusterdesc, dbserver, dbuser, dbname)
 
     ### MAKE IMAGE 3 ###
     imout,mask = make_image(mslist, cluster, '3', 10, 10, nterms, atrous_do, imsize)
@@ -894,8 +888,8 @@ if __name__ == "__main__":
     # make model
     os.system(SCRIPTPATH+'/casapy2bbs.py -m '+ mask + ' ' +'-t ' + str(nterms)+ ' ' + imout+'.model ' +  imout+'.skymodel')
     if FFT:
-        os.system('casapy --nogui -c '+SCRIPTPATH+'/ft_v2.py ' + msinputlist + ' ' + imout+'.model' \
-                + ' ' + str(nterms) + ' '+ str(wplanes))
+        os.system('casapy --nologger -c '+SCRIPTPATH+'/ft_v2.py ' + msinputlist + ' ' + imout+'.model' \
+                  + ' ' + str(nterms) + ' '+ str(wplanes))
 
     #parmdb keep from previous step
     skymodel = imout+'.skymodel'
@@ -914,12 +908,12 @@ if __name__ == "__main__":
     # phase only cal
     skymodel = imout+'.skymodel'
     parset   = create_scalarphase_parset_p(cellsizetime_p, TEC, clock, group, FFT, uvrange)
-    runbbs(mslist, skymodel, parset, 'instrument_phase1', False, TEC)
+    runbbs(mslist, skymodel, parset, 'instrument_phase1', False, TEC, clusterdesc, dbserver, dbuser, dbname)
 
     # solve amps
     parmdb   = 'instrument_amps1'
     parset = create_amponly_parset(cellsizetime_a, FFT, uvrange)
-    runbbs(mslist, skymodel, parset,parmdb, False, False)
+    runbbs(mslist, skymodel, parset,parmdb, False, False, clusterdesc, dbserver, dbuser, dbname)
 
     for ms in mslist:
         # remove outliers from the solutions
@@ -930,9 +924,9 @@ if __name__ == "__main__":
 
     # apply amps
     if smooth:
-        runbbs(mslist, skymodel,SCRIPTPATH+'/apply_amplitudeonly.parset',parmdb+'_smoothed', True, False)
+        runbbs(mslist, skymodel,SCRIPTPATH+'/apply_amplitudeonly.parset',parmdb+'_smoothed', True, False, clusterdesc, dbserver, dbuser, dbname)
     else:
-        runbbs(mslist, skymodel,SCRIPTPATH+'/apply_amplitudeonly.parset',parmdb, True, False)
+        runbbs(mslist, skymodel,SCRIPTPATH+'/apply_amplitudeonly.parset',parmdb, True, False, clusterdesc, dbserver, dbuser, dbname)
 
     ### MAKE IMAGE 4 ###
     imout,mask = make_image(mslist, cluster, '4', 10, 10, nterms, atrous_do, imsize)
@@ -942,18 +936,69 @@ if __name__ == "__main__":
     skymodelf= 'im_cluster'+cluster+ '.final.skymodel'
     os.system(SCRIPTPATH+'/casapy2bbs.py -m '+ mask + ' ' +'-t ' + str(nterms)+ ' ' + imout+'.model ' +  skymodelf)
     if FFT:
-        os.system('casapy --nogui -c '+SCRIPTPATH+'/ft_v2.py ' + msinputlist + ' ' + imout+'.model' \
-                + ' ' + str(nterms) + ' '+ str(wplanes))
+        os.system('casapy --nologger -c '+SCRIPTPATH+'/ft_v2.py ' + msinputlist + ' ' + imout+'.model' \
+                  + ' ' + str(nterms) + ' '+ str(wplanes))
 
     ### CREATED MERGED PARMDB SCALARPHASE+AMPS ###
+    ### INCLUDES SPLINE INTERPOLARION OF AMPS ###
     if merge_parmdb:
+
+        if phasors:
+            dummyparset = SCRIPTPATH+'/scalarphase+amp.parset'
+        else:
+            if TEC:
+                dummyparset = SCRIPTPATH+'/scalarphase+ap+TEC.parset'
+            else:
+                dummyparset = SCRIPTPATH+'/scalarphase+ap.parset'
+
+        if TEC:
+            if clock:
+                dummyparmdb = 'instrument_template_TECclock'
+            else:
+                dummyparmdb = 'instrument_template_Gain_TEC_CSphase'
+
+        #if not os.path.isdir(dummyparmdb):
+            #runbbs([mslist[0]], skymodel,dummyparset, dummyparmdb, True, False)
+        # TO SPEED THINGS UP, hard coded for BOOTES - i.e. the above has already been run
         for ms in mslist:
-            command = "python {path}/merge_parmdb.py -t {t} {ms}".format(
-                t="instrument_template_Gain_TEC_CSphase", ms=ms, path=SCRIPTPATH)
-            print command
-            os.system(command)
-            # Copy the instrument_template_Gain_TEC_CSphase
-            os.system("rm -rf {ms}/instrument_template".format(ms=ms))
-            os.system("cp -r instrument_template_Gain_TEC_CSphase {ms}/instrument_template".format(ms=ms))
-            print "Template copied"
-        
+            os.system('rm -rf ' + ms +'/' + dummyparmdb)
+            os.system('cp -r ' + dummyparmdb + ' ' +  ms + '/instrument_template')
+
+        if smooth:
+            parmdb_a    = 'instrument_amps1_smoothed'  # last/best ampplitude(+phase) parmdb
+        else:
+            parmdb_a    = 'instrument_amps1'  # last/best ampplitude(+phase) parmdb
+        parmdb_p    = 'instrument_phase1'          # last/best CommonScalarPhase parmdb
+        parmdbout   = 'instrument_merged'
+
+        #reset in case of instrument_template_TECclock
+        dummyparmdb = 'instrument_template'
+
+        for ms in mslist:
+            create_merged_parmdb(ms, ms+'/'+parmdb_a, ms+'/'+parmdb_p, ms+'/'+dummyparmdb,ms+'/'+parmdbout,cellsizetime_a,cellsizetime_p)
+
+
+if __name__=="__main__":
+
+    el=len(sys.argv)
+
+    # arguments are mslist, cluster, atrous_do, imsize, nterms, cellsizetime_a, cellsizetime_p, TECi, clocki, HRi, region, clusterdesc, dbserver, dbuser, dbname
+
+    mslist    = sys.argv[1:el-14]
+    cluster   = str(sys.argv[-14])
+    atrous_do = str(sys.argv[-13])
+    imsize    = numpy.int(sys.argv[-12])
+
+    nterms                  = numpy.int(sys.argv[-11])  # only 1 to 3 is supported !!
+    cellsizetime_a          = numpy.int(sys.argv[-10])
+    cellsizetime_p          = numpy.int(sys.argv[-9])
+    TECi                    = str(sys.argv[-8])
+    clocki                  = str(sys.argv[-7])
+    HRi                     = str(sys.argv[-6])
+    region                  = str(sys.argv[-5])
+    clusterdesc = sys.argv[-4]
+    dbserver=sys.argv[-3]
+    dbuser=sys.argv[-2]
+    dbname=sys.argv[-1]
+
+    do_selfcal(mslist,cluster,atrous_do,imsize,nterms,cellsizetime_a,cellsizetime_p,TECi,clocki,HRi,region,clusterdesc,dbserver,dbuser,dbname)
