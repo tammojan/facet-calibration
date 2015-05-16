@@ -74,7 +74,7 @@ class bg:
             if len(self.pl)>=self.maxp:
                 # too many processes running already. Wait till one finishes
                 self.wait(queuelen=self.maxp-1)
-        p=subprocess.Popen('exec '+c,shell=True)
+        p=Popen('exec '+c,shell=True)
         if not(self.quiet):
             print 'Process',p.pid,'started'
         self.pl.append(p)
@@ -88,7 +88,7 @@ class bg:
                     pl.remove(p)
                     if retval==0:
                         if not(self.quiet):
-                            print 'Process ',str(p.pid),'ended OK'
+                            print 'Process',str(p.pid),'ended OK'
                     else:
                         if not(self.proceed):
                             for p2 in pl:
@@ -390,6 +390,8 @@ def create_phaseshift_parset(msin, msout, source, direction, imsize, dynamicrang
                     f.write('avg1.freqstep = %s\n' % str(numchanperms/5))
                     # we have a large image  2048 is more or less max expected
                     # divide by 5 because that allows datasets with 3 channels per SB (i.e., 30 channels per ms)
+        else:
+            f.write('avg1.freqstep = %s\n' % str(numchanperms))
     else:
         if dynamicrange != 'HD':
             print 'dynamicrange ', dynamicrange
@@ -1364,11 +1366,18 @@ if __name__ == "__main__":
     execfile(sys.argv[1])
     print 'script path is',SCRIPTPATH
 
+    #### HARCODED, CLOCK FITTING IS ALWAYS DISABLED ####
+    clock = "False"
+
     try:
         StartAtStep
     except NameError:
         print 'No starting step specified, begin at the beginning'
         StartAtStep='preSC'
+
+    if (len(do_sources) > 1) and (StartAtStep != 'preSC'):
+       print 'For StartAtStep "' + StartAtStep + '" can only do a single source direction'
+       raise Exception('do_sources not compatible with StartAtStep')
 
     try:
         WSCleanRobust
@@ -1400,11 +1409,35 @@ if __name__ == "__main__":
     except NameError:
         allbandspath = os.getcwd() + '/'
 
+    try:
+        clusterdesc
+    except NameError:
+        print 'No cluster description specified, using default in selfcal script'
+        clusterdesc='default'
+        dbserver='dummy'
+        dbname='dummy'
+        dbuser='dummy'
+
+    try:
+        clock
+    except NameError:
+        clock='False'
+
     if StefCal:
         TEC = "False" # cannot fit for TEC in StefCal
         print 'Overwriting TEC user input, TEC will be False when using StefCal'
 
-
+    # fixme: add appropriate check for stefcal...
+    dummyparmdb=None
+    if TEC=='True':
+        if clock=='True':
+            dummyparmdb = 'instrument_template_TECclock'
+        else:
+            dummyparmdb = 'instrument_template_Gain_TEC_CSphase'
+    if dummyparmdb is not(None):
+        if not(os.path.isdir(dummyparmdb)):
+            raise Exception('parmdb template %s does not exist' % dummyparmdb)
+    
     print 'StartAtStep is',StartAtStep
 
     ## Logger configuration
@@ -1423,8 +1456,8 @@ if __name__ == "__main__":
     logger.addHandler(fh)
     logging.info('\n')
 
-    os.system('cp ' + SCRIPTPATH + '/coordinates_mode.py .')
-    os.system('cp ' + SCRIPTPATH + '/blank.py .')
+#    os.system('cp ' + SCRIPTPATH + '/coordinates_mode.py .')
+#    os.system('cp ' + SCRIPTPATH + '/blank.py .')
     os.system('cp ' + SCRIPTPATH + '/ftw.xml .')
     os.system('cp ' + SCRIPTPATH + '/task_ftw.py .')
 
@@ -1496,6 +1529,14 @@ if __name__ == "__main__":
     logging.info('Number of channels per ms is {:d}'.format(numchanperms))
     freq_tab.close()
 
+    allbands=allbandspath +'allbands.concat.ms'
+    if not os.path.isdir(allbands):
+        logging.info(allbands+' does not exist, will try to make it')
+        f=open('allbands.NDPPP','w')
+        f.write('msin='+str(mslistorig)+'\nmsin.datacolumn = DATA\nmsin.missingdata=True\nmsin.orderms=False\nmsout='+ allbands +'\nsteps=[]\n')
+        f.close()
+        run('NDPPP allbands.NDPPP')
+
     freq_tab     = pt.table(allbandspath +'allbands.concat.ms/SPECTRAL_WINDOW')
     numchan_all = freq_tab.getcol('NUM_CHAN')[0]
     logging.info('Number of channels allbands.concat.ms is {:d}'.format(numchan_all))
@@ -1516,8 +1557,7 @@ if __name__ == "__main__":
     #  nterms = 3
     #if len(mslist) < 20:
 
-    #### HARCODED, CLOCK FITTING IS ALWAYS DISABLED ####
-    clock = "False"
+    
 
     if len(mslist) > WScleanWBgroup:
         nterms = 2
@@ -1589,17 +1629,13 @@ if __name__ == "__main__":
 
         #check if allbands.concat.shifted_'+source+'.ms' is present
         if os.path.isdir(allbandspath + 'allbands.concat.shifted_'+source+'.ms'):
-            logging.debug(allbandspath + 'allbands.concat.shifted_'+source+'.ms')
+            logging.info(allbandspath + 'allbands.concat.shifted_'+source+'.ms exists')
             if StartAtStep in ['preSC']:
                 #raise Exception('delete measurement set and then restart')
                 os.system('rm -rf ' + allbandspath +'allbands.concat.shifted_'+source+'.ms')
                 logging.info('removing')
             else:
                 logging.info('...but continuing because we are redoing selfcal')
-
-        if not os.path.isdir(allbandspath + 'allbands.concat.ms'):
-            logging.debug(allbandspath + 'allbands.concat.ms does not exist')
-            raise Exception('make measurement set and then restart')
 
         dummyskymodel   = SCRIPTPATH + '/dummy.skymodel' ## update every time again with new source, not used, just a dummy for correct
 
@@ -1695,7 +1731,8 @@ if __name__ == "__main__":
                           TEC + ' ' + 
                           clock + ' ' +
                           str(dynamicrange[source_id]) + ' ' + 
-                          regionselfc[source_id])
+                          regionselfc[source_id] + ' ' + clusterdesc + ' ' +
+                          dbserver + ' '+ dbuser + ' '+  dbname )
                 run(cmd)
 
             logging.info('Finished selfcal DDE patch: '+ source)
@@ -1825,7 +1862,7 @@ if __name__ == "__main__":
                 ###########################################################################
                 # (NEW: run in parallel)
                 b=bg(maxp=4)
-                for ms_id, ms in enumerate(mslist):
+                for ms in mslist:
                     b.run("taql 'update " + ms + " set CORRECTED_DATA=SUBTRACTED_DATA_ALL'")
 
                 # Check if all taql processes are finished
@@ -1869,13 +1906,23 @@ if __name__ == "__main__":
         #### OUTLIER CASE ####
         else:  # do this because we are not going to add back field sources
             logging.info('Do not add field back for outlier source')
+            
+            b=bg(maxp=4)
             for ms in mslist:
-                run("taql 'update " + ms + " set MODEL_DATA=ADDED_DATA_SOURCE'")
-
+                b.run("taql 'update " + ms + " set MODEL_DATA=ADDED_DATA_SOURCE'")
+            b.wait()
+            
             # BACKUP SUBTRACTED DATA IN CASE OF CRASH
+            ###########################################################################
+            b=bg(maxp=4)
             for ms in mslist:
-                run("taql 'update " + ms + " set CORRECTED_DATA=SUBTRACTED_DATA_ALL'")
+                b.run("taql 'update " + ms + " set CORRECTED_DATA=SUBTRACTED_DATA_ALL'")
+
+            # Check if all taql processes are finished
+            b.wait()
             logging.info('Backup SUBTRACTED_DATA_ALL for outliersource')
+            ###########################################################################            
+
 
         if StartAtStep in ['preSC', 'doSC', 'postSC','preFACET','doFACET','postFACET']:
             
