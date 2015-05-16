@@ -1375,6 +1375,10 @@ if __name__ == "__main__":
         print 'No starting step specified, begin at the beginning'
         StartAtStep='preSC'
 
+    if (len(do_sources) > 1) and (StartAtStep != 'preSC'):
+       print 'For StartAtStep "' + StartAtStep + '" can only do a single source direction'
+       raise Exception('do_sources not compatible with StartAtStep')
+
     try:
         WSCleanRobust
     except NameError:
