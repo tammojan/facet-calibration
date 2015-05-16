@@ -2,12 +2,16 @@
 # -*- coding: utf-8 -*-
 
 import sys
+import pyrap.tables as pt
 import os
+import lofar.parmdb
 import numpy as numpy
 import math
 #import lofar.expion.parmdbmain
 import scipy
 import scipy.signal
+#import matplotlib.pyplot as plt
+
 
 def median_smooth(ampl, half_window):
 
@@ -53,6 +57,7 @@ def median_window_filter(ampl, half_window, threshold):
         idx = max(0, ndata-2-i)
         sol[ndata+half_window+i] = ampl[idx]
 
+
     #fix oct 2012
     median_array  = scipy.signal.medfilt(sol,half_window*2-1)
 
@@ -77,15 +82,20 @@ def median_window_filter(ampl, half_window, threshold):
         if abs(sol[i] - median) > (threshold * q):
             sol_flag[i] = True
 
+        idx = numpy.where(sol == 0.0) # to remove 1.0 amplitudes
+        #print idx
+        #print 'sol', sol
+        sol[idx] = True
+
     mask = sol_flag[half_window:half_window + ndata]
 
     for i in range(len(mask)):
         if mask[i]:
-            ampl_tot_copy[i] = median_array[half_window+i] # fixed 2012
+           ampl_tot_copy[i] = median_array[half_window+i] # fixed 2012
     return ampl_tot_copy
 
 
-msname                   = str(sys.argv[1])
+msname                   = str(sys.argv[1])                     
 instrument_name          = str(sys.argv[2])
 instrument_name_smoothed = str(sys.argv[3])  # msname +'.instrument_smoothed'
 
@@ -107,18 +117,15 @@ output_phasezero = True  # if True the phases will be set to zero (for amplitude
              # if False the phases will be left untouched
 #######################################
 
-import pyrap.tables as pt
-anttab     = pt.table(msname + '/ANTENNA')
-antenna_list    = anttab.getcol('NAME')
-anttab.close()
-
-import lofar.parmdb
 pdb = lofar.parmdb.parmdb(instrument_name)
 parms = pdb.getValuesGrid('*')
 
 key_names = parms.keys()
 print key_names
 
+anttab     = pt.table(msname + '/ANTENNA')
+antenna_list    = anttab.getcol('NAME')
+anttab.close()
 
 print 'Stations available:', antenna_list
 window = 4
@@ -128,47 +135,32 @@ for pol in pol_list:
         print 'smoothing [antenna, polarization]:', antenna, pol
 
         #amp = numpy.copy(parms[gain + ':' + pol + ':Ampl:'+ antenna]['values'][:, 0])
-
+   
         real = numpy.copy(parms[gain + ':' + pol + ':Real:'+ antenna]['values'][:, 0])
         imag = numpy.copy(parms[gain + ':' + pol + ':Imag:'+ antenna]['values'][:, 0])
-
+     
         phase = numpy.arctan2(imag,real)
         amp   = numpy.sqrt(imag**2 + real**2)
 
+        
+        window_window = numpy.int(len(amp)/3.)
 
+        amp = numpy.log10(amp)
+       
+        amp = median_window_filter(amp,window,6)  
+        amp = median_window_filter(amp,window,6)         
+        amp = median_window_filter(amp,7,6) # window of 7
+        amp = median_window_filter(amp,4,6) # window of 4
+        amp = median_window_filter(amp,3,6) # window of 3
+        
+        amp = 10**amp
 
-
-        amp = median_window_filter(amp,100,6)
-        amp = 1./amp
-        amp = median_window_filter(amp,100,6)
-        amp = 1./amp
-
-
-        amp = median_window_filter(amp,window*3,6)
-        amp = 1./amp
-        amp = median_window_filter(amp,window*3,6)
-        amp = 1./amp
-
-
-        amp = median_window_filter(amp,window,5)
-        amp = 1./amp
-        amp = median_window_filter(amp,window,5)
-        amp = 1./amp
-
-
-        #amp = median_smooth(amp, 100)
-
-
-        #parms[gain + ':' + pol + ':Ampl:'+ antenna]['values'][:, 0] = amp
         parms[gain + ':' + pol + ':Real:'+ antenna]['values'][:, 0] = amp*numpy.cos(phase)
         parms[gain + ':' + pol + ':Imag:'+ antenna]['values'][:, 0] = amp*numpy.sin(phase)
 
 print 'writing the new database:', instrument_name_smoothed
 print 'check your results with: parmdbplot.py', instrument_name_smoothed
 print 'compare with: parmdbplot.py', instrument_name
-
-#lofar.expion.parmdbmain.store_parms(instrument_name_smoothed, parms,
-#                                    create_new=True)
 
 pdbnew = lofar.parmdb.parmdb(instrument_name_smoothed, create=True)
 pdbnew.addValues(parms)
