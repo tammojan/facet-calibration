@@ -961,7 +961,7 @@ def do_selfcal(mslist,cluster,atrous_do,imsize,nterms,cellsizetime_a,cellsizetim
             #runbbs([mslist[0]], skymodel,dummyparset, dummyparmdb, True, False)
         # TO SPEED THINGS UP, hard coded for BOOTES - i.e. the above has already been run
         for ms in mslist:
-            os.system('rm -rf ' + ms +'/' + dummyparmdb)
+            os.system('rm -rf ' + ms +'/instrument_template')
             os.system('cp -r ' + dummyparmdb + ' ' +  ms + '/instrument_template')
 
         if smooth:
