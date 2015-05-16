@@ -33,6 +33,11 @@ WSCleanRobust = -0.5 # Briggs robust factor for facet imaging
 BlankField    = False # experimental, False is the default
 StefCal       = False # experimental, not working at the moment
 freqstep      = 30
+clusterdesc = '/home/jsm/elais-n1/new_pipeline/stacpolly.clusterdesc'
+dbserver = 'head'
+dbuser = 'jsm'
+dbname = 'jsm'
+
 
 StartAtStep  = "preSC"
 
