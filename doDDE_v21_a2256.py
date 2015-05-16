@@ -1,11 +1,9 @@
 import matplotlib
-#matplotlib.use('GTK')
 import numpy
 import os
 import sys
 from scipy import interpolate
 import time
-#import subprocess
 from subprocess import Popen, PIPE
 import pyrap.tables as pt
 import pyrap.images
@@ -14,10 +12,10 @@ import logging
 from numpy import pi
 from coordinates_mode import *
 import blank
+from facet_utilities import run, bg
+from verify_subtract_v5 import do_verify_subtract
 
 # check high-DR
-
-
 
 # TO DO
 # - HIGH-DYNAMIC RANGE (need to adjust merger/join parmdb, solution smoohting is ok)
@@ -34,71 +32,6 @@ import blank
 #    - 1. ADD back skymodel using "master solutions", then CORRECT using "master solutions"
 #    - 2. image that again using the same setting
 #    - 3. redo the subtract (will be slightly better....but solutions remain the same, just better noise) or just proceed to the next field?
-
-def run(c,proceed=False,quiet=False):
-    '''
-    Run command c, throwing an exception if the return value is non-zero
-    (which means that the command failed). Call this when you don't want
-    the script to proceed if c fails (which is usually the case).
-    '''
-
-    if not(quiet):
-        logging.debug('Running: '+c)
-    retval=os.system(c)
-    if retval!=0 and not(proceed):
-        raise Exception('FAILED to run '+c+' -- return value was '+str(retval))
-    return retval
-
-class bg:
-    '''
-    Simple wrapper class around Popen that lets you run a number of
-    processes in the background and then wait for them to end
-    successfully. The list of processes is maintained internally so
-    you don't have to manage it yourself: just start by creating a
-    class instance. By default (proceed==False) catches bad return
-    values and kills all other background processes.
-
-    Optionally you can set a value maxp on creating the instance. If
-    you do this then run will block if you attempt to have more than
-    this number of processes running concurrently.
-    '''
-    def __init__(self,quiet=False,pollint=1,proceed=False,maxp=None):
-        self.pl=[]
-        self.quiet=quiet
-        self.pollint=pollint
-        self.proceed=proceed
-        self.maxp=maxp
-
-    def run(self,c):
-        if self.maxp:
-            if len(self.pl)>=self.maxp:
-                # too many processes running already. Wait till one finishes
-                self.wait(queuelen=self.maxp-1)
-        p=Popen('exec '+c,shell=True)
-        if not(self.quiet):
-            print 'Process',p.pid,'started'
-        self.pl.append(p)
-        return p.pid
-    def wait(self,queuelen=0):
-        pl=self.pl
-        while len(pl)>queuelen:
-            for p in pl:
-                retval=p.poll()
-                if retval is not None:
-                    pl.remove(p)
-                    if retval==0:
-                        if not(self.quiet):
-                            print 'Process',str(p.pid),'ended OK'
-                    else:
-                        if not(self.proceed):
-                            for p2 in pl:
-                                p2.kill()
-                            raise Exception('Process '+str(p.pid)+' ended with return value '+str(retval))
-                        else:
-                            print 'WARNING: process',str(p.pid),'died with return value',retval
-            time.sleep(self.pollint)
-        self.pl=pl 
-        return
 
 def find_newsize(mask):
     """
@@ -1111,8 +1044,6 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl,
 
     niter   = numpy.int(5000 * (numpy.sqrt(numpy.float(len(mslist)))))
     cellsizeim = str(cellsize) +'arcsec'
-    #wsclean =  '/home/rvweeren/software/WSClean/wsclean-1.6+MORESANE+MASKS4/build/wsclean'
-    #wsclean = '/home/rvweeren/software/WSClean/wsclean-1.7/build/wsclean'
 
     depth =  1e-3*0.7 / (numpy.sqrt(numpy.float(len(mslist))))
     cleandepth1 = str(depth*1.5) #+ 'mJy'
@@ -1207,7 +1138,7 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl,
     maskim=pyrap.images.image(mask_name)
     maskim.saveas(casa_mask)
 
-    # Convert to casapy format and includ region file
+    # include region file
     if region != 'empty':
         run('casapy --nogui -c ' + SCRIPTPATH+'/fitsandregion2image.py '
                   + mask_name + ' ' + casa_mask + ' ' + region)
@@ -1445,7 +1376,7 @@ if __name__ == "__main__":
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)   
     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%d-%m %H:%M:%S')
-    # Log to STDIN
+    # Log to STDOUT
     ch = logging.StreamHandler()
     ch.setFormatter(formatter)
     logger.addHandler(ch)
@@ -1720,20 +1651,23 @@ if __name__ == "__main__":
                           str(cellsize))
                 run(cmd)
             else:
-                cmd = ('python ' + SCRIPTPATH + '/' + parms["selfcal"] + ' ' + 
-                          inputmslist + ' ' + 
-                          source + ' ' + 
-                          atrous_do[source_id] + ' ' + 
-                          str(imsizes[source_id]) + ' ' +
-                          str(nterms) + ' ' + 
-                          str(cellsizetime_a[source_id]) + ' ' + 
-                          str(cellsizetime_p[source_id]) + ' ' + 
-                          TEC + ' ' + 
-                          clock + ' ' +
-                          str(dynamicrange[source_id]) + ' ' + 
-                          regionselfc[source_id] + ' ' + clusterdesc + ' ' +
-                          dbserver + ' '+ dbuser + ' '+  dbname )
-                run(cmd)
+                ## EXPERIMENTAL! ##
+                from selfcalv19_ww_cep3 import do_selfcal
+                do_selfcal(msavglist,source,bool(atrous_do[source_id]),imsizes[source_id],nterms,cellsizetime_a[source_id],cellsizetime_p[source_id],TEC,clock,dynamicrange[source_id],regionselfc[source_id],clusterdesc,dbserver,dbuser,dbname)
+#                cmd = ('python ' + SCRIPTPATH + '/' + parms["selfcal"] + ' ' + 
+#                          inputmslist + ' ' + 
+#                          source + ' ' + 
+#                          atrous_do[source_id] + ' ' + 
+#                          str(imsizes[source_id]) + ' ' +
+#                          str(nterms) + ' ' + 
+#                          str(cellsizetime_a[source_id]) + ' ' + 
+#                          str(cellsizetime_p[source_id]) + ' ' + 
+#                          TEC + ' ' + 
+#                          clock + ' ' +
+#                          str(dynamicrange[source_id]) + ' ' + 
+#                          regionselfc[source_id] + ' ' + clusterdesc + ' ' +
+#                          dbserver + ' '+ dbuser + ' '+  dbname )
+#                run(cmd)
 
             logging.info('Finished selfcal DDE patch: '+ source)
 
@@ -1943,7 +1877,8 @@ if __name__ == "__main__":
             for ms in mslist:
                 inputmslist = inputmslist + ' ' + ms
             #os.system('python ' + SCRIPTPATH + '/verify_subtract_v3.py ' + inputmslist + ' 0.3 ' + source)
-            run('python '+ SCRIPTPATH+'/verify_subtract_v5.py ' + inputmslist + ' 0.15 ' + source)
+            #run('python '+ SCRIPTPATH+'/verify_subtract_v5.py ' + inputmslist + ' 0.15 ' + source)
+            do_verify_subtract(mslist,0.15,source)
 
         os.system('rm -rf *.ms.avgfield') # clean up as these are never used anymore  
         os.system('rm -rf *.ms.avgcheck') # clean up to remove clutter

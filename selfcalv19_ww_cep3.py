@@ -1,5 +1,5 @@
 import matplotlib
-matplotlib.use('GTK')
+#matplotlib.use('GTK')
 import numpy
 import os
 import sys
@@ -10,6 +10,7 @@ import pyrap.tables as pt
 import uuid
 pi = numpy.pi
 import pwd
+from facet_utilities import run,bg
 
 # location of this script - all scripts/parsets it uses are contained in subdirectory 'use'
 SCRIPTPATH = os.path.dirname(os.path.abspath(__file__))
@@ -173,7 +174,7 @@ def create_merged_parmdb(ms, parmdb_a,parmdb_p, parmdb_t, parmdb_out,cellsizetim
 
 
 
-def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous_do, imsize):
+def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous_do, imsize, region):
 
     do_mask = True
     niter   = 1000 # 7500 causes nasty clean artifacts
@@ -185,9 +186,7 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
     # ONLY average for small FOV, otherwise timesmearing is a problem
     #average data
     if average:
-        processes = set()
-        max_processes = 2
-
+        b=bg(maxp=2)
         for ms in (mslist):
             ndppp_parset = ms + '_NDPPP.parset'
             ndppplog = ndppp_parset.replace('.parset','.log')
@@ -205,38 +204,12 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
             f.write('avg.timestep = 12\n')      # is the default
             f.close()
 
-            #cmd = "ps -u "+ username+ " | grep NDPPP | wc -l"
-            #output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
 
-            #while output > 2 :
-              #time.sleep(10)
-              #output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
-
-              #pid = (Popen('pgrep NDPPP', shell=True, stdout=PIPE).communicate()[0])
-              ##print pid
-              #pid_list = pid.split()
-              #for pidnr in pid_list:
-                ##print 'PID', pidnr
-                #os.system('kill -s CONT ' + str(pidnr))
-
-            ndpppcmd = 'NDPPP ' + ndppp_parset
-            #print ndpppcmd
+            ndpppcmd = 'NDPPP ' + ndppp_parset+ ' >'+ndppplog+' 2>&1'
+            b.run(ndpppcmd)
             #os.system (ndpppcmd)
 
-            with open(ndppplog,'w') as f:
-                print 'exec: {cmd} > {log}'.format(cmd=ndpppcmd, log=ndppplog)
-                p = Popen(ndpppcmd.split(), stdout=f, stderr=STDOUT)
-                processes.add(p)
-                pid=p.pid
-
-            if len(processes) >= max_processes:
-                os.wait()
-                processes.difference_update([p for p in processes if p.poll() is not None])
-
-        for p in processes:
-            if p.poll() is None:
-                p.wait()
-
+        b.wait()
 
 
 
@@ -268,14 +241,14 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
         if cluster == 'a2256': ## special case for a2256
             niter = niter*15 # clean very deep here
 
-        os.system('casapy --nologger --logfile casapy-'+imout+'.log -c '+SCRIPTPATH+'/casapy_cleanv4.py ' + ms + ' ' + imout + ' ' + 'None' +\
+        run('casapy --nologger --logfile casapy-'+imout+'.log -c '+SCRIPTPATH+'/casapy_cleanv4.py ' + ms + ' ' + imout + ' ' + 'None' +\
                 ' ' + '1mJy' + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + mscale)
         # make mask
         if nterms > 1:
-            os.system('python '+SCRIPTPATH+'/makecleanmask.py --threshpix '+str(threshpix)+\
+            run('python '+SCRIPTPATH+'/makecleanmask.py --threshpix '+str(threshpix)+\
                       ' --threshisl '+str(threshisl) +' --atrous_do '+ str(atrous_do) +' '   +imout +'.image.tt0')
         else:
-            os.system('python '+SCRIPTPATH+'/makecleanmask.py --threshpix '+str(threshpix)+\
+            run('python '+SCRIPTPATH+'/makecleanmask.py --threshpix '+str(threshpix)+\
                     ' --threshisl '+str(threshisl) +' --atrous_do '+ str(atrous_do) + ' '  + imout +'.image')
 
         # clean image with manual mask
@@ -287,17 +260,17 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
 
     if region != 'empty' : ## special cases
         niter = niter*3
-        os.system('casapy --nologger --logfile casapy-'+imout+'.log -c '+SCRIPTPATH+'/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask+','+region + \
+        run('casapy --nologger --logfile casapy-'+imout+'.log -c '+SCRIPTPATH+'/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask+','+region + \
                   ' ' + '1mJy' + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + mscale)
     else:
-        os.system('casapy --nologger --logfile casapy-'+imout+'.log -c '+SCRIPTPATH+'/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask + \
+        run('casapy --nologger --logfile casapy-'+imout+'.log -c '+SCRIPTPATH+'/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask + \
                   ' ' + '1mJy' + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + mscale)
 
     # convert to FITS
     if nterms > 1:
-        os.system('image2fits in=' + imout +'.image.tt0' + ' ' + 'out='+ imout + '.fits')
+        run('image2fits in=' + imout +'.image.tt0' + ' ' + 'out='+ imout + '.fits')
     else:
-        os.system('image2fits in=' + imout +'.image'     + ' ' + 'out='+ imout + '.fits')
+        run('image2fits in=' + imout +'.image'     + ' ' + 'out='+ imout + '.fits')
 
     if not os.path.exists(imout+'.fits'):
         raise Exception('Imaging Error: '+imout+'.fits does not exist' )
@@ -345,18 +318,18 @@ def runbbs(mslist, skymodel, parset, parmdb, applycal, TEC, clusterdesc, db, dbu
         if len(mslist) == 10000:  # 34 does not work now!!!!!!
             # this is a very special case for a full run, manually here to run with 3 solver controls
             vdslist = ''
-            os.system('makevds '+clusterdesc+' ' + ms)
+            run('makevds '+clusterdesc+' ' + ms)
             vdslist = vdslist + ms + '.vds '
 
 
         else:
             vdslist = ''
             for ms in mslist:
-                os.system('makevds '+clusterdesc+' ' + ms)
+                run('makevds '+clusterdesc+' ' + ms)
                 vdslist = vdslist + ms + '.vds '
             gds = 'tec.gds'
             print vdslist
-            os.system('combinevds ' + gds + ' '+ vdslist)
+            run('combinevds ' + gds + ' '+ vdslist)
 
             cmd1= 'calibrate -f --key ' + key + ' --cluster-desc '+clusterdesc +' --instrument-name ' + parmdb + ' '
             cmd2= '--db '+db + ' --db-user '+ dbuser + ' '+ ' --db-name '+ dbname + ' ' + gds + ' ' + parset + ' ' + skymodel + ' ' + '. > ' + gds + '.bbslog'
@@ -366,8 +339,7 @@ def runbbs(mslist, skymodel, parset, parmdb, applycal, TEC, clusterdesc, db, dbu
             done = 0
             while (ntries < 10)  and (done < 1):
                 print 'calibrate try ', ntries
-                print bbscmd
-                os.system(bbscmd)
+                run(bbscmd)
 
                 #done = 0
                 #while(done < 1):
@@ -393,28 +365,19 @@ def runbbs(mslist, skymodel, parset, parmdb, applycal, TEC, clusterdesc, db, dbu
 
     else:
         # Normal calibrate for amplitude
+        b=bg()
         for ms in mslist:
             log      =  ms + '.bbslog'
             if applycal:
-                cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
-                #cmd = 'calibrate-stand-alone -t 4 --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + '&'
+                cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1'
+                #cmd = 'calibrate-stand-alone -t 4 --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log
             else:
-                cmd = 'calibrate-stand-alone -f --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1 &'
-                #cmd = 'calibrate-stand-alone -t 4 -f --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + '&'
-            print cmd
-            os.system(cmd)
+                cmd = 'calibrate-stand-alone -f --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1'
+                #cmd = 'calibrate-stand-alone -t 4 -f --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log
+            b.run(cmd)
         time.sleep(10)
 
-        done = 0
-        while(done < len(mslist)):
-            done = 0
-            for ms in mslist:
-                cmd = "grep 'bbs-reducer terminated successfully.' " + ms + ".bbslog"
-                output=Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
-                if 'INFO' in output:
-                    done = done + 1
-                    print ms, 'is done'
-            time.sleep(5)
+        b.wait()
 
     return
 
@@ -766,6 +729,7 @@ def do_selfcal(mslist,cluster,atrous_do,imsize,nterms,cellsizetime_a,cellsizetim
     print 'source', cluster
     print 'atrous_do', atrous_do
     print 'imsize', imsize
+    print 'TEC is',TEC,'and clock is',clock
 
     msinputlist = ''
     for m in mslist:
@@ -803,15 +767,15 @@ def do_selfcal(mslist,cluster,atrous_do,imsize,nterms,cellsizetime_a,cellsizetim
 
 
     #### MAKE IMAGE 0 ###
-    imout,mask = make_image(mslist, cluster, '0', 10, 6, nterms, atrous_do, imsize)
+    imout,mask = make_image(mslist, cluster, '0', 10, 6, nterms, atrous_do, imsize, region)
 
     #####################
 
     ### CALIBRATE WITH BBS PHASE ONLY 1 ###
     # create skymodel for BBS
-    os.system(SCRIPTPATH+'/casapy2bbs.py -m '+ mask + ' ' +'-t ' + str(nterms)+ ' ' + imout+'.model ' +  imout+'.skymodel')
+    run(SCRIPTPATH+'/casapy2bbs.py -m '+ mask + ' ' +'-t ' + str(nterms)+ ' ' + imout+'.model ' +  imout+'.skymodel')
     if FFT:
-        os.system('casapy --nologger -c '+SCRIPTPATH+'/ft_v2.py ' + msinputlist + ' ' + imout+'.model' \
+        run('casapy --nologger -c '+SCRIPTPATH+'/ft_v2.py ' + msinputlist + ' ' + imout+'.model' \
                   + ' ' + str(nterms) + ' '+ str(wplanes))
 
     # phase only calibrate
@@ -824,15 +788,15 @@ def do_selfcal(mslist,cluster,atrous_do,imsize,nterms,cellsizetime_a,cellsizetim
 
 
     ### MAKE IMAGE 1 ###
-    imout,mask = make_image(mslist, cluster, '1', 15, 15, nterms, atrous_do, imsize)
+    imout,mask = make_image(mslist, cluster, '1', 15, 15, nterms, atrous_do, imsize, region)
     ####################
 
 
     ### CALIBRATE WITH BBS PHASE ONLY 2 ###
     # create skymodel for BBS
-    os.system(SCRIPTPATH+'/casapy2bbs.py -m '+ mask + ' ' +'-t ' + str(nterms)+ ' ' + imout+'.model ' +  imout+'.skymodel')
+    run(SCRIPTPATH+'/casapy2bbs.py -m '+ mask + ' ' +'-t ' + str(nterms)+ ' ' + imout+'.model ' +  imout+'.skymodel')
     if FFT:
-        os.system('casapy --nologger -c '+SCRIPTPATH+'/ft_v2.py ' + msinputlist + ' ' + imout+'.model' \
+        run('casapy --nologger -c '+SCRIPTPATH+'/ft_v2.py ' + msinputlist + ' ' + imout+'.model' \
                   + ' ' + str(nterms) + ' '+ str(wplanes))
 
 
@@ -845,15 +809,15 @@ def do_selfcal(mslist,cluster,atrous_do,imsize,nterms,cellsizetime_a,cellsizetim
 
 
     ### MAKE IMAGE 2 ###
-    imout,mask = make_image(mslist, cluster, '2', 15, 15, nterms, atrous_do, imsize)
+    imout,mask = make_image(mslist, cluster, '2', 15, 15, nterms, atrous_do, imsize, region)
     ####################
 
 
 
     ### CALIBRATE WITH BBS PHASE+AMP 1 ###
-    os.system(SCRIPTPATH+'/casapy2bbs.py -m '+ mask + ' ' +'-t ' + str(nterms)+ ' ' + imout+'.model ' +  imout+'.skymodel')
+    run(SCRIPTPATH+'/casapy2bbs.py -m '+ mask + ' ' +'-t ' + str(nterms)+ ' ' + imout+'.model ' +  imout+'.skymodel')
     if FFT:
-        os.system('casapy --nologger -c '+SCRIPTPATH+'/ft_v2.py ' + msinputlist + ' ' + imout+'.model' \
+        run('casapy --nologger -c '+SCRIPTPATH+'/ft_v2.py ' + msinputlist + ' ' + imout+'.model' \
                   + ' ' + str(nterms) + ' '+ str(wplanes))
 
     skymodel = imout+'.skymodel'
@@ -869,9 +833,9 @@ def do_selfcal(mslist,cluster,atrous_do,imsize,nterms,cellsizetime_a,cellsizetim
     for ms in mslist:
         # remove outliers from the solutions
         if phasors:
-            os.system('python '+SCRIPTPATH+'/smoothcal_rx42.py ' + ms + ' ' + ms+'/'+parmdb + ' ' + ms+'/'+parmdb+'_smoothed'+' > '+ms+'_'+parmdb+'_smoothed.log')
+            run('python '+SCRIPTPATH+'/smoothcal_rx42.py ' + ms + ' ' + ms+'/'+parmdb + ' ' + ms+'/'+parmdb+'_smoothed'+' > '+ms+'_'+parmdb+'_smoothed.log')
         else:
-            os.system('python '+SCRIPTPATH+'/smoothcal_a2256_nophasors.py ' + ms + ' ' + ms+'/'+parmdb + ' ' + ms+'/'+parmdb+'_smoothed'+' > '+ms+'_'+parmdb+'_smoothed.log')
+            run('python '+SCRIPTPATH+'/smoothcal_a2256_nophasors.py ' + ms + ' ' + ms+'/'+parmdb + ' ' + ms+'/'+parmdb+'_smoothed'+' > '+ms+'_'+parmdb+'_smoothed.log')
 
     # apply amps
     if smooth:
@@ -880,15 +844,15 @@ def do_selfcal(mslist,cluster,atrous_do,imsize,nterms,cellsizetime_a,cellsizetim
         runbbs(mslist, skymodel,SCRIPTPATH+'/apply_amplitudeonly.parset', parmdb, True, False, clusterdesc, dbserver, dbuser, dbname)
 
     ### MAKE IMAGE 3 ###
-    imout,mask = make_image(mslist, cluster, '3', 10, 10, nterms, atrous_do, imsize)
+    imout,mask = make_image(mslist, cluster, '3', 10, 10, nterms, atrous_do, imsize, region)
 
 
 
     #### CALIBRATE  BBS PHASE+AMP 2 ###
     # make model
-    os.system(SCRIPTPATH+'/casapy2bbs.py -m '+ mask + ' ' +'-t ' + str(nterms)+ ' ' + imout+'.model ' +  imout+'.skymodel')
+    run(SCRIPTPATH+'/casapy2bbs.py -m '+ mask + ' ' +'-t ' + str(nterms)+ ' ' + imout+'.model ' +  imout+'.skymodel')
     if FFT:
-        os.system('casapy --nologger -c '+SCRIPTPATH+'/ft_v2.py ' + msinputlist + ' ' + imout+'.model' \
+        run('casapy --nologger -c '+SCRIPTPATH+'/ft_v2.py ' + msinputlist + ' ' + imout+'.model' \
                   + ' ' + str(nterms) + ' '+ str(wplanes))
 
     #parmdb keep from previous step
@@ -900,7 +864,7 @@ def do_selfcal(mslist,cluster,atrous_do,imsize,nterms,cellsizetime_a,cellsizetim
         inputparmdb  = parmdb +'_smoothed'
         outputparmdb = parmdb +'_smoothed_phasezero'
         for ms in mslist:
-            os.system('python '+SCRIPTPATH+'/setphasezero.py ' + ms + ' ' + ms+'/'+inputparmdb +' ' + ms+'/'+outputparmdb)
+            run('python '+SCRIPTPATH+'/setphasezero.py ' + ms + ' ' + ms+'/'+inputparmdb +' ' + ms+'/'+outputparmdb)
     else:
         outputparmdb = parmdb +'_smoothed'
 
@@ -918,9 +882,9 @@ def do_selfcal(mslist,cluster,atrous_do,imsize,nterms,cellsizetime_a,cellsizetim
     for ms in mslist:
         # remove outliers from the solutions
         if phasors:
-            os.system('python '+SCRIPTPATH+'/smoothcal_rx42.py ' + ms + ' ' + ms+'/'+parmdb + ' ' + ms+'/'+parmdb+'_smoothed'+' > '+ms+'_'+parmdb+'_smoothed.log')
+            run('python '+SCRIPTPATH+'/smoothcal_rx42.py ' + ms + ' ' + ms+'/'+parmdb + ' ' + ms+'/'+parmdb+'_smoothed'+' > '+ms+'_'+parmdb+'_smoothed.log')
         else:
-            os.system('python '+SCRIPTPATH+'/smoothcal_a2256_nophasors.py ' + ms + ' ' + ms+'/'+parmdb + ' ' + ms+'/'+parmdb+'_smoothed'+' > '+ms+'_'+parmdb+'_smoothed.log')
+            run('python '+SCRIPTPATH+'/smoothcal_a2256_nophasors.py ' + ms + ' ' + ms+'/'+parmdb + ' ' + ms+'/'+parmdb+'_smoothed'+' > '+ms+'_'+parmdb+'_smoothed.log')
 
     # apply amps
     if smooth:
@@ -929,14 +893,14 @@ def do_selfcal(mslist,cluster,atrous_do,imsize,nterms,cellsizetime_a,cellsizetim
         runbbs(mslist, skymodel,SCRIPTPATH+'/apply_amplitudeonly.parset',parmdb, True, False, clusterdesc, dbserver, dbuser, dbname)
 
     ### MAKE IMAGE 4 ###
-    imout,mask = make_image(mslist, cluster, '4', 10, 10, nterms, atrous_do, imsize)
+    imout,mask = make_image(mslist, cluster, '4', 10, 10, nterms, atrous_do, imsize, region)
 
 
     ### CREATE FINAL MODEL ###
     skymodelf= 'im_cluster'+cluster+ '.final.skymodel'
-    os.system(SCRIPTPATH+'/casapy2bbs.py -m '+ mask + ' ' +'-t ' + str(nterms)+ ' ' + imout+'.model ' +  skymodelf)
+    run(SCRIPTPATH+'/casapy2bbs.py -m '+ mask + ' ' +'-t ' + str(nterms)+ ' ' + imout+'.model ' +  skymodelf)
     if FFT:
-        os.system('casapy --nologger -c '+SCRIPTPATH+'/ft_v2.py ' + msinputlist + ' ' + imout+'.model' \
+        run('casapy --nologger -c '+SCRIPTPATH+'/ft_v2.py ' + msinputlist + ' ' + imout+'.model' \
                   + ' ' + str(nterms) + ' '+ str(wplanes))
 
     ### CREATED MERGED PARMDB SCALARPHASE+AMPS ###

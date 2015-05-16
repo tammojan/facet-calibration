@@ -11,11 +11,9 @@ import pyrap.images
 import lofar.parmdb
 from coordinates_mode import *
 import pwd
+from facet_utilities import run, bg
 
-# location of this script - note this script should be in subdirectory 'use'
-#SCRIPTPATH = os.path.dirname(sys.argv[0])
 SCRIPTPATH = os.path.dirname(os.path.abspath(__file__))
-
 
 pi = numpy.pi
 
@@ -42,124 +40,100 @@ def create_phaseshift_parset_field(msin, msout):
     f.close()
     return ndppp_parset
 
+def do_verify_subtract(mslist,res_val,source):
+    ''' main function for verify_subtract '''
+
+    msavglist = []
+    for ms_id, ms in enumerate(mslist):
+        msavglist.append(ms.split('.')[0] + '.' + source + '.ms.avgcheck')
 
 
-el=len(sys.argv)
-#print el
+    username = pwd.getpwuid(os.getuid())[0]
 
-mslist    = sys.argv[1:el-2]
-res_val   = numpy.float(str(sys.argv[el-2]))
-source    = str(sys.argv[el-1])
+    ###########################################################################
+    # NDPPP phase shift, less averaging (NEW: run 2 in parallel)
+    b=bg(maxp=2)
+    for ms_id, ms in enumerate(mslist):
+        parset = create_phaseshift_parset_field(ms, msavglist[ms_id])
 
-msavglist = []
-for ms_id, ms in enumerate(mslist):
-    msavglist.append(ms.split('.')[0] + '.' + source + '.ms.avgcheck')
+        ncmd='NDPPP ' + parset+' &>'+ms.split('.')[0] +'.ndppp_avgphaseshift_check.log'
+        print 'Running',ncmd
+        b.run(ncmd)
 
-
-username = pwd.getpwuid(os.getuid())[0]
-
-
-
-
-
-###########################################################################
-# NDPPP phase shift, less averaging (NEW: run 2 in parallel)
-for ms_id, ms in enumerate(mslist):
-    parset = create_phaseshift_parset_field(ms, msavglist[ms_id])
-
-    cmd = "ps -u " + username + " | grep NDPPP | wc -l"
-    output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
-    while output > 1 : # max 2 processes (max 2, instead of 3, because we also phaseshift)
-        time.sleep(10)
-        output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
-
-    # START NDPPP BECAUSE LESS/EQ 2 PROCESSES ARE RUNNING
-    ncmd='NDPPP ' + parset+' &>'+ms.split('.')[0] +'.ndppp_avgphaseshift_check.log &'
-    print 'Running',ncmd
-    os.system(ncmd)
-
-# Check if all NDPPP processes are finished
-output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
-while output > 0 :
-    time.sleep(10)
-    output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
-###########################################################################
+    # Check if all NDPPP processes are finished
+    b.wait()
+    ###########################################################################
 
 
-imsize = 2048
+    imsize = 2048
 
 
-###########################################################################
-# IMAGE IN PARALLEL
-for ms in msavglist:
+    ###########################################################################
+    # IMAGE IN PARALLEL
+    b=bg(maxp=8)
+    for ms in msavglist:
 
-    #cmd = "ps -fuww "+ username +" | grep 'casapy_cleanv4_checksubtract.py' | wc -l"
-    cmd = "ps -fu "+ username +" | grep 'python -W ignore' | wc -l"
-    output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
-
-    while output > ((8*2)+2) : # max 8 in parallel
-        time.sleep(10)
-        output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
-
-    imout = 'im'+ '_residual_' + source + '_' + ms.split('.')[0]
-    os.system('casapy --nogui -c '+SCRIPTPATH+'/casapy_cleanv4_checksubtract.py ' +\
-               ms + ' ' + imout + ' ' + str(imsize)+ '&')
-    time.sleep(20)
+        imout = 'im'+ '_residual_' + source + '_' + ms.split('.')[0]
+        b.run('casapy --nogui -c '+SCRIPTPATH+'/casapy_cleanv4_checksubtract.py ' +\
+                   ms + ' ' + imout + ' ' + str(imsize))
+        time.sleep(20)
 
 
-# Check if all NDPPP processes are finished
-time.sleep(20)
-output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
-while output > 2 : # because this generates two procceses matching the "cmd", see line below
-    #weeren    2855  1102  0 03:57 pts/1    00:00:00 /bin/sh -c ps -fu weeren | grep 'python -W ignore'
-    #weeren    2857  2855  0 03:57 pts/1    00:00:00 grep python -W ignore
-    time.sleep(10)
-    output=numpy.int(Popen(cmd, shell=True, stdout=PIPE).communicate()[0])
-###########################################################################
+    # Check if all NDPPP processes are finished
+    b.wait()
 
-
-#conver the images to FITS format
-for ms in msavglist:
-    imout = 'im'+ '_residual_' + source + '_' + ms.split('.')[0]
-    os.system('image2fits in=' + imout +'.image'     + ' ' + 'out='+ imout + '.fits')
+    #conver the images to FITS format
+    for ms in msavglist:
+        imout = 'im'+ '_residual_' + source + '_' + ms.split('.')[0]
+        run('image2fits in=' + imout +'.image'     + ' ' + 'out='+ imout + '.fits')
 
 
 
 
 
 
-stopcal = False
-for ms in msavglist:
+    stopcal = False
+    for ms in msavglist:
 
 
-    # find the source which was done before the current one
-    findim   = 'im'+ '_residual_' + '*' + '_' + ms.split('.')[0] + '.image'
-    cmd      = 'ls -dt1 ' + findim
-    output   = Popen(cmd, shell=True, stdout=PIPE).communicate()[0].split()
-    pre_sourcename = 'empty'
-    if len(output) > 1:
-        pre_sourcename = output[1]
-        #print 'Previous image was', pre_sourcename
+        # find the source which was done before the current one
+        findim   = 'im'+ '_residual_' + '*' + '_' + ms.split('.')[0] + '.image'
+        cmd      = 'ls -dt1 ' + findim
+        output   = Popen(cmd, shell=True, stdout=PIPE).communicate()[0].split()
+        pre_sourcename = 'empty'
+        if len(output) > 1:
+            pre_sourcename = output[1]
+            #print 'Previous image was', pre_sourcename
 
-    image = 'im'+ '_residual_' + source + '_' + ms.split('.')[0] + '.image'
+        image = 'im'+ '_residual_' + source + '_' + ms.split('.')[0] + '.image'
 
-    img    = pyrap.images.image(image)
-    pixels = numpy.copy(img.getdata())
-    maxval = numpy.copy(numpy.max(pixels))
+        img    = pyrap.images.image(image)
+        pixels = numpy.copy(img.getdata())
+        maxval = numpy.copy(numpy.max(pixels))
 
-    maxvalpre = 1e9
-    if pre_sourcename != 'empty' :
-        imgpre    = pyrap.images.image(pre_sourcename)
-        pixelspre = numpy.copy(imgpre.getdata())
-        maxvalpre = numpy.copy(numpy.max(pixelspre))
+        maxvalpre = 1e9
+        if pre_sourcename != 'empty' :
+            imgpre    = pyrap.images.image(pre_sourcename)
+            pixelspre = numpy.copy(imgpre.getdata())
+            maxvalpre = numpy.copy(numpy.max(pixelspre))
 
 
-    print maxval, ' ' + image
-    print maxvalpre, ' ' + pre_sourcename
-    if  (maxval > res_val) or ((maxval*0.92) > maxvalpre) :
-        stopcal = True
-        print 'WARNING RESIDUAL TOO LARGE, STOPPING', maxval, res_val
-        print 'WARNING RESIDUAL TOO LARGE, STOPPING, previous max in image', maxvalpre
+        print maxval, ' ' + image
+        print maxvalpre, ' ' + pre_sourcename
+        if  (maxval > res_val) or ((maxval*0.92) > maxvalpre) :
+            stopcal = True
+            print 'WARNING RESIDUAL TOO LARGE, STOPPING', maxval, res_val
+            print 'WARNING RESIDUAL TOO LARGE, STOPPING, previous max in image', maxvalpre
 
-while(stopcal):
-    time.sleep(100)
+    while(stopcal):
+        time.sleep(100)
+
+
+if __name__=='__main__':
+
+    mslist    = sys.argv[1:-2]
+    res_val   = numpy.float(str(sys.argv[-2]))
+    source    = str(sys.argv[-1])
+
+    do_verify_subtract(mslist,res_val,source)
+
