@@ -944,11 +944,9 @@ def do_selfcal(mslist,cluster,atrous_do,imsize,nterms,cellsizetime_a,cellsizetim
 
 if __name__=="__main__":
 
-    el=len(sys.argv)
-
     # arguments are mslist, cluster, atrous_do, imsize, nterms, cellsizetime_a, cellsizetime_p, TECi, clocki, HRi, region, clusterdesc, dbserver, dbuser, dbname
 
-    mslist    = sys.argv[1:el-14]
+    mslist    = sys.argv[1:-14]
     cluster   = str(sys.argv[-14])
     atrous_do = str(sys.argv[-13])
     imsize    = numpy.int(sys.argv[-12])
