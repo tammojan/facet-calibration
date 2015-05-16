@@ -32,7 +32,7 @@ if __name__ == '__main__':
 
     image_name = args[0]
 
-    mask_name  = image_name.split('-image.fits')[0] + '.fitsmask'
+    mask_name  = image_name.split('-image')[0] + '.fitsmask'
 
 
     print '\n\n\n'
