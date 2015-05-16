@@ -43,4 +43,4 @@ StartAtStep  = "preSC"
 
 # for wideband clean set WScleanWBgroup below (must be smaller then len(mslist))
 # for the -best- results use WScleanWBgroup=1, note this slows down the imaging considerably
-WScleanWBgroup= 1 # number of bocks over which the spectral index is assumed to be constant, used in Wideband clean
+#WScleanWBgroup= 1 # number of bocks over which the spectral index is assumed to be constant, used in Wideband clean
