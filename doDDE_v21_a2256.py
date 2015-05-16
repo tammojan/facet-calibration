@@ -1708,11 +1708,9 @@ if __name__ == "__main__":
                 parmdb_master_plot  = ms+"/"+"instrument_master_" + source
                 plotim_base         = ms.split('.')[0] + "_instrument_master_" + source
                 if TEC=='True':
-                    b.run(SCRIPTPATH + '/plot_solutions_all_stations_v2.py \
-                            -t -a -p --freq 150 ' + parmdb_master_plot + ' ' + plotim_base)
+                    b.run(SCRIPTPATH + '/plot_solutions_all_stations_v2.py -t -a -p --freq 150 ' + parmdb_master_plot + ' ' + plotim_base)
                 else:
-                    b.run(SCRIPTPATH + '/plot_solutions_all_stations_v2.py \
-                            -s -a -p --freq 150 ' + parmdb_master_plot + ' ' + plotim_base)
+                    b.run(SCRIPTPATH + '/plot_solutions_all_stations_v2.py -s -a -p --freq 150 ' + parmdb_master_plot + ' ' + plotim_base)
 
             logging.info('Updated frequency boundaries parmdb and normalized amps to 1.0')
             time.sleep(5)
@@ -1873,10 +1871,9 @@ if __name__ == "__main__":
                 logging.info('Subtracted facet model from data for DDE : ' + source)
 
             # CHECK IF THE SUBTRACT WORKED OK by making dirty low-res images
-            inputmslist = ''
-            for ms in mslist:
-                inputmslist = inputmslist + ' ' + ms
-            #os.system('python ' + SCRIPTPATH + '/verify_subtract_v3.py ' + inputmslist + ' 0.3 ' + source)
+            #inputmslist = ''
+            #for ms in mslist:
+            #    inputmslist = inputmslist + ' ' + ms
             #run('python '+ SCRIPTPATH+'/verify_subtract_v5.py ' + inputmslist + ' 0.15 ' + source)
             do_verify_subtract(mslist,0.15,source)
 
