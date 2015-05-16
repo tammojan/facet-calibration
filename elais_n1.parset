@@ -20,7 +20,7 @@ BANDS = range(170,210,10)
 NAME = "L138658_T2"
 RES = "3ch10s"
 
-do_sources=['s1']
+do_sources=['s2']
 
 nterms        = 1      # automatically adjusted if needed
 cellsize      = 1.5    # still hardcoded in a few places, do not change for now
@@ -29,12 +29,12 @@ clock         = "False" # gives problems with phase continuity automatically set
 makemasks     = False # not used anymore, keep to False
 do_ap         = True # normally this should be True, correct with instrument_ap_smoothed
 uvrange       = 5.0 # wavelength
-WSCleanRobust = -0.25 # Briggs robust factor for facet imaging
+WSCleanRobust = -0.5 # Briggs robust factor for facet imaging
 BlankField    = False # experimental, False is the default
 StefCal       = False # experimental, not working at the moment
 freqstep      = 30
 
-StartAtStep  = "doFACET"
+StartAtStep  = "preSC"
 
 # for wideband clean set WScleanWBgroup below (must be smaller then len(mslist))
 # for the -best- results use WScleanWBgroup=1, note this slows down the imaging considerably
