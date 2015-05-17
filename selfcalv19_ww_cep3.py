@@ -192,6 +192,7 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
             ndppplog = ndppp_parset.replace('.parset','.log')
             os.system('rm -f ' + ndppp_parset)
             output = ms + '.tmpavg'
+            os.system('rm -rf ' + output)
             f=open(ndppp_parset, 'w')
             f.write('msin = %s\n' % ms)
             f.write('msin.datacolumn = CORRECTED_DATA\n')
