@@ -1586,7 +1586,7 @@ if __name__ == "__main__":
 
         logging.info("Selfcal direction: "+selfcaldir)
         logging.info("facetmask: "+str(facetsize))
-
+        logging.info("Doing outliersource: " + str(outliersource[source_id]))
 
         ## STEP 1: prep for SC ##
         if StartAtStep in ['preSC']:
