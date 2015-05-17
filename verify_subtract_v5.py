@@ -56,7 +56,8 @@ def do_verify_subtract(mslist,res_val,source):
     for ms_id, ms in enumerate(mslist):
         parset = create_phaseshift_parset_field(ms, msavglist[ms_id])
 
-        ncmd='NDPPP ' + parset+' &>'+ms.split('.')[0] +'.ndppp_avgphaseshift_check.log'
+        #ncmd='NDPPP ' + parset+' &>'+ms.split('.')[0] +'.ndppp_avgphaseshift_check.log'
+        ncmd='NDPPP ' + parset+' >'+ms.split('.')[0] +'.ndppp_avgphaseshift_check.log' + ' 2>&1'
         print 'Running',ncmd
         b.run(ncmd)
 
