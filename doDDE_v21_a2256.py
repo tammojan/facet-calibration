@@ -1356,6 +1356,10 @@ if __name__ == "__main__":
         failthreshold
     except NameError:
         failthreshold=0.15
+    try:
+        numcpu_taql
+    except NameError:
+        numcpu_taql=4
 
     if StefCal:
         TEC = "False" # cannot fit for TEC in StefCal
@@ -1806,7 +1810,7 @@ if __name__ == "__main__":
                 # BACKUP SUBTRACTED DATA IN CASE OF CRASH
                 ###########################################################################
                 # (NEW: run in parallel)
-                b=bg(maxp=4)
+                b=bg(maxp=numcpu_taql)
                 for ms in mslist:
                     b.run("taql 'update " + ms + " set CORRECTED_DATA=SUBTRACTED_DATA_ALL'")
 
@@ -1852,14 +1856,14 @@ if __name__ == "__main__":
         else:  # do this because we are not going to add back field sources
             logging.info('Do not add field back for outlier source')
             
-            b=bg(maxp=4)
+            b=bg(maxp=numcpu_taql)
             for ms in mslist:
                 b.run("taql 'update " + ms + " set MODEL_DATA=ADDED_DATA_SOURCE'")
             b.wait()
             
             # BACKUP SUBTRACTED DATA IN CASE OF CRASH
             ###########################################################################
-            b=bg(maxp=4)
+            b=bg(maxp=numcpu_taql)
             for ms in mslist:
                 b.run("taql 'update " + ms + " set CORRECTED_DATA=SUBTRACTED_DATA_ALL'")
 
