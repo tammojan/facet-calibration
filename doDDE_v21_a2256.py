@@ -1389,7 +1389,7 @@ if __name__ == "__main__":
     # Start
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)   
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%d-%m %H:%M:%S')
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
     # Log to STDOUT
     ch = logging.StreamHandler()
     ch.setFormatter(formatter)
