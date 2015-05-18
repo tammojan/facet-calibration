@@ -31,6 +31,24 @@ from numpy import pi
 #    - 2. image that again using the same setting
 #    - 3. redo the subtract (will be slightly better....but solutions remain the same, just better noise) or just proceed to the next field?
 
+def verify_timegrid(parmdb, ms):
+    import lofar.parmdb
+    anttab     = pt.table(ms + '/ANTENNA')
+    antenna_list    = anttab.getcol('NAME')
+    anttab.close()
+    t = pt.table(ms)
+    ms_ntime = len(numpy.unique(t.getcol('TIME')))
+    t.close()
+    pdb = lofar.parmdb.parmdb(parmdb)
+    parms = pdb.getValuesGrid("*")
+    parmdb_ntime = len(parms['CommonScalarPhase:'+ antenna_list[0]]['values'][:, 0]) # CommonScalarPhase should always exist
+    #print 'number of timesamples ' + ms + ' :', ms_ntime
+    if ms_ntime != parmdb_ntime:
+      print 'number of timesamples ' + ms + ' :', ms_ntime
+      print 'number of timesamples ' + parmdb + ' :', parmdb_ntime
+      raise Exception('Number of timescales of the parmdb template does not match with the ms')
+    return
+
 def find_newsize(mask):
     """
     FIXME
@@ -1376,6 +1394,7 @@ if __name__ == "__main__":
         if not(os.path.isdir(dummyparmdb)):
             raise Exception('parmdb template %s does not exist' % dummyparmdb)
 
+
     print 'importing local modules....'
 
     if SCRIPTPATH not in sys.path:
@@ -1450,7 +1469,6 @@ if __name__ == "__main__":
     mslist= [ms for ms in mslistorig if  os.path.isdir(ms)]
     msliststr = ' '.join(mslist)
 
-
     #mslistorigstr = ''
     #for ms in mslistorig:
     #  mslistorigstr =  mslistorigstr + ' ' + ms
@@ -1495,6 +1513,9 @@ if __name__ == "__main__":
         logging.error('Used a total numbers of ' + str(len(mslistorig)) + ' blocks with ' + str(numchanperms) + ' channels per block')
         logging.error('Number of channels allbands.concat.ms is {:d}'.format(numchan_all))
         raise Exception('#channels in allbands.concat.ms does not match with what is expected from mslistorig (from parameter BANDS)')
+
+    # check that the number of timesamples in dummyparmdb matches that of a ms in mslist (take mslist[0])
+    verify_timegrid(dummyparmdb, mslist[0])
 
     #if len(mslist) == 1:
     #  TEC    = "False" # no TEC fitting for one (channel) dataset
