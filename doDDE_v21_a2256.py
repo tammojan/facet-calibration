@@ -1354,6 +1354,11 @@ if __name__ == "__main__":
     except NameError:
         clock='False'
 
+    try:
+        failthreshold
+    except NameError:
+        failthreshold=0.15
+
     if StefCal:
         TEC = "False" # cannot fit for TEC in StefCal
         print 'Overwriting TEC user input, TEC will be False when using StefCal'
@@ -1874,8 +1879,8 @@ if __name__ == "__main__":
             #inputmslist = ''
             #for ms in mslist:
             #    inputmslist = inputmslist + ' ' + ms
-            #run('python '+ SCRIPTPATH+'/verify_subtract_v5.py ' + inputmslist + ' 0.15 ' + source)
-            do_verify_subtract(mslist,0.15,source)
+            #run('python '+ SCRIPTPATH+'/verify_subtract_v5.py ' + inputmslist + ' '+str(failthreshold)+' ' + source)
+            do_verify_subtract(mslist,failthreshold,source)
 
         os.system('rm -rf *.ms.avgfield') # clean up as these are never used anymore  
         os.system('rm -rf *.ms.avgcheck') # clean up to remove clutter
