@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import matplotlib
 import numpy
 import os
@@ -10,10 +12,6 @@ import pyrap.images
 import pwd
 import logging
 from numpy import pi
-from coordinates_mode import *
-import blank
-from facet_utilities import run, bg
-from verify_subtract_v5 import do_verify_subtract
 
 # check high-DR
 
@@ -1297,7 +1295,7 @@ if __name__ == "__main__":
     execfile(sys.argv[1])
     print 'script path is',SCRIPTPATH
 
-    #### HARCODED, CLOCK FITTING IS ALWAYS DISABLED ####
+    #### HARDCODED, CLOCK FITTING IS ALWAYS DISABLED ####
     clock = "False"
 
     try:
@@ -1373,6 +1371,17 @@ if __name__ == "__main__":
     if dummyparmdb is not(None):
         if not(os.path.isdir(dummyparmdb)):
             raise Exception('parmdb template %s does not exist' % dummyparmdb)
+
+    print 'importing local modules....'
+
+    if SCRIPTPATH not in sys.path:
+        sys.path.append(SCRIPTPATH)
+    from coordinates_mode import *
+    import blank
+    from facet_utilities import run, bg
+    from verify_subtract_v5 import do_verify_subtract
+    if not(StefCal):
+        from selfcalv19_ww_cep3 import do_selfcal
     
     print 'StartAtStep is',StartAtStep
 
@@ -1657,8 +1666,7 @@ if __name__ == "__main__":
                 run(cmd)
             else:
                 ## EXPERIMENTAL! ##
-                from selfcalv19_ww_cep3 import do_selfcal
-                do_selfcal(msavglist,source,bool(atrous_do[source_id]),imsizes[source_id],nterms,cellsizetime_a[source_id],cellsizetime_p[source_id],TEC,clock,dynamicrange[source_id],regionselfc[source_id],clusterdesc,dbserver,dbuser,dbname)
+                do_selfcal(msavglist,source,bool(atrous_do[source_id]),imsizes[source_id],nterms,cellsizetime_a[source_id],cellsizetime_p[source_id],TEC,clock,dynamicrange[source_id],regionselfc[source_id],clusterdesc,dbserver,dbuser,dbname,SCRIPTPATH)
 #                cmd = ('python ' + SCRIPTPATH + '/' + parms["selfcal"] + ' ' + 
 #                          inputmslist + ' ' + 
 #                          source + ' ' + 

@@ -14,7 +14,6 @@ import logging
 from facet_utilities import run,bg
 
 # location of this script - all scripts/parsets it uses are contained in subdirectory 'use'
-SCRIPTPATH = os.path.dirname(os.path.abspath(__file__))
 
 # to run casa when not logged in
 # Step 0. Run in screen
@@ -175,7 +174,7 @@ def create_merged_parmdb(ms, parmdb_a,parmdb_p, parmdb_t, parmdb_out,cellsizetim
 
 
 
-def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous_do, imsize, region):
+def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous_do, imsize, region, SCRIPTPATH):
 
     do_mask = True
     niter   = 1000 # 7500 causes nasty clean artifacts
@@ -690,7 +689,7 @@ def get_group(thismslist):
     return group
 
 
-def do_selfcal(mslist,cluster,atrous_do,imsize,nterms,cellsizetime_a,cellsizetime_p,TECi,clocki,HRi,region,clusterdesc,dbserver,dbuser,dbname):
+def do_selfcal(mslist,cluster,atrous_do,imsize,nterms,cellsizetime_a,cellsizetime_p,TECi,clocki,HRi,region,clusterdesc,dbserver,dbuser,dbname,SCRIPTPATH):
 
     TEC  = False
     FFT  = False
@@ -770,7 +769,7 @@ def do_selfcal(mslist,cluster,atrous_do,imsize,nterms,cellsizetime_a,cellsizetim
 
     #### MAKE IMAGE 0 ###
     logging.info('Make image 0')
-    imout,mask = make_image(mslist, cluster, '0', 10, 6, nterms, atrous_do, imsize, region)
+    imout,mask = make_image(mslist, cluster, '0', 10, 6, nterms, atrous_do, imsize, region, SCRIPTPATH)
 
     #####################
 
@@ -792,7 +791,7 @@ def do_selfcal(mslist,cluster,atrous_do,imsize,nterms,cellsizetime_a,cellsizetim
 
     ### MAKE IMAGE 1 ###
     logging.info('Make image 1')
-    imout,mask = make_image(mslist, cluster, '1', 15, 15, nterms, atrous_do, imsize, region)
+    imout,mask = make_image(mslist, cluster, '1', 15, 15, nterms, atrous_do, imsize, region, SCRIPTPATH)
     ####################
 
 
@@ -814,7 +813,7 @@ def do_selfcal(mslist,cluster,atrous_do,imsize,nterms,cellsizetime_a,cellsizetim
 
     ### MAKE IMAGE 2 ###
     logging.info('Make image 2')
-    imout,mask = make_image(mslist, cluster, '2', 15, 15, nterms, atrous_do, imsize, region)
+    imout,mask = make_image(mslist, cluster, '2', 15, 15, nterms, atrous_do, imsize, region, SCRIPTPATH)
     ####################
 
 
@@ -850,7 +849,7 @@ def do_selfcal(mslist,cluster,atrous_do,imsize,nterms,cellsizetime_a,cellsizetim
 
     ### MAKE IMAGE 3 ###
     logging.info('Make image 3')
-    imout,mask = make_image(mslist, cluster, '3', 10, 10, nterms, atrous_do, imsize, region)
+    imout,mask = make_image(mslist, cluster, '3', 10, 10, nterms, atrous_do, imsize, region, SCRIPTPATH)
 
 
 
@@ -900,7 +899,7 @@ def do_selfcal(mslist,cluster,atrous_do,imsize,nterms,cellsizetime_a,cellsizetim
 
     ### MAKE IMAGE 4 ###
     logging.info('Make image 4')
-    imout,mask = make_image(mslist, cluster, '4', 10, 10, nterms, atrous_do, imsize, region)
+    imout,mask = make_image(mslist, cluster, '4', 10, 10, nterms, atrous_do, imsize, region, SCRIPTPATH)
 
 
     ### CREATE FINAL MODEL ###
@@ -972,4 +971,6 @@ if __name__=="__main__":
     dbuser=sys.argv[-2]
     dbname=sys.argv[-1]
 
-    do_selfcal(mslist,cluster,atrous_do,imsize,nterms,cellsizetime_a,cellsizetime_p,TECi,clocki,HRi,region,clusterdesc,dbserver,dbuser,dbname)
+    SCRIPTPATH = os.path.dirname(os.path.abspath(__file__))
+
+    do_selfcal(mslist,cluster,atrous_do,imsize,nterms,cellsizetime_a,cellsizetime_p,TECi,clocki,HRi,region,clusterdesc,dbserver,dbuser,dbname,SCRIPTPATH)
