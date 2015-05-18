@@ -10,6 +10,7 @@ import pyrap.tables as pt
 import uuid
 pi = numpy.pi
 import pwd
+import logging
 from facet_utilities import run,bg
 
 # location of this script - all scripts/parsets it uses are contained in subdirectory 'use'
@@ -768,6 +769,7 @@ def do_selfcal(mslist,cluster,atrous_do,imsize,nterms,cellsizetime_a,cellsizetim
 
 
     #### MAKE IMAGE 0 ###
+    logging.info('Make image 0')
     imout,mask = make_image(mslist, cluster, '0', 10, 6, nterms, atrous_do, imsize, region)
 
     #####################
@@ -789,6 +791,7 @@ def do_selfcal(mslist,cluster,atrous_do,imsize,nterms,cellsizetime_a,cellsizetim
 
 
     ### MAKE IMAGE 1 ###
+    logging.info('Make image 1')
     imout,mask = make_image(mslist, cluster, '1', 15, 15, nterms, atrous_do, imsize, region)
     ####################
 
@@ -810,6 +813,7 @@ def do_selfcal(mslist,cluster,atrous_do,imsize,nterms,cellsizetime_a,cellsizetim
 
 
     ### MAKE IMAGE 2 ###
+    logging.info('Make image 2')
     imout,mask = make_image(mslist, cluster, '2', 15, 15, nterms, atrous_do, imsize, region)
     ####################
 
@@ -845,6 +849,7 @@ def do_selfcal(mslist,cluster,atrous_do,imsize,nterms,cellsizetime_a,cellsizetim
         runbbs(mslist, skymodel,SCRIPTPATH+'/apply_amplitudeonly.parset', parmdb, True, False, clusterdesc, dbserver, dbuser, dbname)
 
     ### MAKE IMAGE 3 ###
+    logging.info('Make image 3')
     imout,mask = make_image(mslist, cluster, '3', 10, 10, nterms, atrous_do, imsize, region)
 
 
@@ -894,10 +899,13 @@ def do_selfcal(mslist,cluster,atrous_do,imsize,nterms,cellsizetime_a,cellsizetim
         runbbs(mslist, skymodel,SCRIPTPATH+'/apply_amplitudeonly.parset',parmdb, True, False, clusterdesc, dbserver, dbuser, dbname)
 
     ### MAKE IMAGE 4 ###
+    logging.info('Make image 4')
     imout,mask = make_image(mslist, cluster, '4', 10, 10, nterms, atrous_do, imsize, region)
 
 
     ### CREATE FINAL MODEL ###
+    logging.info('Create final model')
+
     skymodelf= 'im_cluster'+cluster+ '.final.skymodel'
     run(SCRIPTPATH+'/casapy2bbs.py -m '+ mask + ' ' +'-t ' + str(nterms)+ ' ' + imout+'.model ' +  skymodelf)
     if FFT:
@@ -907,7 +915,7 @@ def do_selfcal(mslist,cluster,atrous_do,imsize,nterms,cellsizetime_a,cellsizetim
     ### CREATED MERGED PARMDB SCALARPHASE+AMPS ###
     ### INCLUDES SPLINE INTERPOLARION OF AMPS ###
     if merge_parmdb:
-
+        logging.info('Merge parmdb')
         if phasors:
             dummyparset = SCRIPTPATH+'/scalarphase+amp.parset'
         else:
