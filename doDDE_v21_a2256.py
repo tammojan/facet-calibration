@@ -1888,7 +1888,7 @@ if __name__ == "__main__":
             #for ms in mslist:
             #    inputmslist = inputmslist + ' ' + ms
             #run('python '+ SCRIPTPATH+'/verify_subtract_v5.py ' + inputmslist + ' '+str(failthreshold)+' ' + source)
-            do_verify_subtract(mslist,failthreshold,source)
+            do_verify_subtract(mslist, failthreshold, source, numchanperms=numchanperms)
 
         os.system('rm -rf *.ms.avgfield') # clean up as these are never used anymore  
         os.system('rm -rf *.ms.avgcheck') # clean up to remove clutter

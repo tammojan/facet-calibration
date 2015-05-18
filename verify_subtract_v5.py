@@ -17,7 +17,7 @@ SCRIPTPATH = os.path.dirname(os.path.abspath(__file__))
 
 pi = numpy.pi
 
-def create_phaseshift_parset_field(msin, msout):
+def create_phaseshift_parset_field(msin, msout, numchanperms=20):
     ndppp_parset = msin.split('.')[0] +'ndppp_avgphaseshift_check.parset'
     os.system('rm -f ' + ndppp_parset)
     os.system('rm -rf ' + msout)
@@ -35,12 +35,12 @@ def create_phaseshift_parset_field(msin, msout):
     f.write('uv.uvmmax=2500.0\n')
     #f.write('uv.uvmmin=20.0\n')
     f.write('avg1.type = squash\n')
-    f.write('avg1.freqstep = 20\n')
+    f.write('avg1.freqstep = %i\n'%numchanperms)
     f.write('avg1.timestep = 6\n')
     f.close()
     return ndppp_parset
 
-def do_verify_subtract(mslist,res_val,source):
+def do_verify_subtract(mslist, res_val, source, numchanperms=20):
     ''' main function for verify_subtract '''
 
     msavglist = []
@@ -54,7 +54,7 @@ def do_verify_subtract(mslist,res_val,source):
     # NDPPP phase shift, less averaging (NEW: run 2 in parallel)
     b=bg(maxp=2)
     for ms_id, ms in enumerate(mslist):
-        parset = create_phaseshift_parset_field(ms, msavglist[ms_id])
+        parset = create_phaseshift_parset_field(ms, msavglist[ms_id], numchanperms=numchanperms)
 
         #ncmd='NDPPP ' + parset+' &>'+ms.split('.')[0] +'.ndppp_avgphaseshift_check.log'
         ncmd='NDPPP ' + parset+' >'+ms.split('.')[0] +'.ndppp_avgphaseshift_check.log' + ' 2>&1'
