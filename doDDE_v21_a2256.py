@@ -1392,7 +1392,7 @@ if __name__ == "__main__":
             dummyparmdb = 'instrument_template_Gain_TEC_CSphase'
     if StefCal:
         dummyparmdb = 'instrument_template_Gain_CSphase'  
-    if dummyparmdb is not(None):
+    if dummyparmdb is not None:
         if not(os.path.isdir(dummyparmdb)):
             raise Exception('parmdb template %s does not exist' % dummyparmdb)
 
@@ -1766,9 +1766,10 @@ if __name__ == "__main__":
                 logging.info('START: preFACET')
                 ## STEP 3: prep for facet ##
                 parmdb_master_out="instrument_master_" + source
-                runbbs_diffskymodel_addbackfield(mslist, 'instrument_ap_smoothed', True,  directions[source_id],imsizes[source_id], output_template_im, do_ap)
                 logging.info('Adding back rest of the field for DDE facet ' + source)
+                runbbs_diffskymodel_addbackfield(mslist, 'instrument_ap_smoothed', True,  directions[source_id],imsizes[source_id], output_template_im, do_ap)
 
+                logging.info('Correct field with self-cal instrument table')
                 if TEC=='True':
                     runbbs(mslist, dummyskymodel, SCRIPTPATH + '/correctfield2+TEC.parset',parmdb_master_out+'_norm', False)
                 else:
