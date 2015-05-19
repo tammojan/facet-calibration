@@ -1390,6 +1390,8 @@ if __name__ == "__main__":
             dummyparmdb = 'instrument_template_TECclock'
         else:
             dummyparmdb = 'instrument_template_Gain_TEC_CSphase'
+    if StefCal:
+        dummyparmdb = 'instrument_template_Gain_CSphase'  
     if dummyparmdb is not(None):
         if not(os.path.isdir(dummyparmdb)):
             raise Exception('parmdb template %s does not exist' % dummyparmdb)
