@@ -1405,6 +1405,7 @@ if __name__ == "__main__":
     import blank
     from facet_utilities import run, bg
     from verify_subtract_v5 import do_verify_subtract
+    from padfits import padfits
     if not(StefCal):
         from selfcalv19_ww_cep3 import do_selfcal
     
@@ -1850,9 +1851,11 @@ if __name__ == "__main__":
                 logging.info('Backup SUBTRACTED_DATA_ALL: completed')
                 ###########################################################################
 
+                imout_p=imout+'-padded'
+                imsize_p=padfits(imout+'-model.fits',imout_p+'-model.fits')
 
                 # DO THE FFT
-                do_fieldFFT(allbandspath + 'allbands.concat.shifted_'+source+'.ms',imout, imsizef, cellsize, wsclean,
+                do_fieldFFT(allbandspath + 'allbands.concat.shifted_'+source+'.ms',imout_p, imsize_p, cellsize, wsclean,
                          msavglist, WSCleanRobust, WScleanWBgroup, numchanperms)
                 logging.info('FFTed model of DDE facet: ' + source)
 
