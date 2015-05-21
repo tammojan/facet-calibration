@@ -25,9 +25,9 @@ class executable_args(LOFARnodeTCP):
     Basic script for running an executable with arguments.
     """
 
-    def run(self, infile, executable, args, kwargs, work_dir, parsetasfile, args_format, environment):
+    def run(self, infile, executable, args, kwargs, work_dir='/tmp', parsetasfile=False, args_format='', environment=''):
         """
-        This function contains all the needed functionality
+        This method contains all the needed functionality
         """
         # Debugging info
         self.logger.debug("infile            = %s" % infile)
@@ -62,13 +62,28 @@ class executable_args(LOFARnodeTCP):
                     else:
                         raise
 
+            argsformat = args_format['args_format']
             if not parsetasfile:
-                if args_format == 'gnu':
+                if argsformat == 'gnu':
                     for k, v in kwargs.items():
                         args.append('--' + k + '=' + v)
-                if args_format == 'lofar':
+                if argsformat == 'lofar':
                     for k, v in kwargs.items():
                         args.append(k + '=' + v)
+                if argsformat == 'argparse':
+                    for k, v in kwargs.items():
+                        args.append('--' + k + ' ' + v)
+                if argsformat == 'wsclean':
+                    for k, v in kwargs.items():
+                        multargs = v.split(' ')
+                        if multargs:
+                            multargs.reverse()
+                            for item in multargs:
+                                args.insert(0, item)
+                        else:
+                            args.insert(0, v)
+                        args.insert(0, '-'+ k)
+
             else:
                 nodeparset = Parset()
                 parsetname = os.path.join(work_dir, os.path.basename(infile) + '.parset')

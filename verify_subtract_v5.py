@@ -12,6 +12,8 @@ import lofar.parmdb
 from coordinates_mode import *
 import pwd
 from facet_utilities import run, bg
+import glob
+import logging
 
 SCRIPTPATH = os.path.dirname(os.path.abspath(__file__))
 
@@ -89,46 +91,43 @@ def do_verify_subtract(mslist, res_val, source, numchanperms=20):
         run('image2fits in=' + imout +'.image'     + ' ' + 'out='+ imout + '.fits')
 
 
-
-
-
-
     stopcal = False
     for ms in msavglist:
 
 
         # find the source which was done before the current one
-        findim   = 'im'+ '_residual_' + '*' + '_' + ms.split('.')[0] + '.image'
-        cmd      = 'ls -dt1 ' + findim
-        output   = Popen(cmd, shell=True, stdout=PIPE).communicate()[0].split()
-        pre_sourcename = 'empty'
-        if len(output) > 1:
-            pre_sourcename = output[1]
+        g=sorted(glob.glob('im_residual_*_' + ms.split('.')[0] + '.image'),key=os.path.getmtime,reverse=True)
+        if len(g) > 1:
+            pre_sourcename = g[1]
             #print 'Previous image was', pre_sourcename
+        else:
+            pre_sourcename=None
 
         image = 'im'+ '_residual_' + source + '_' + ms.split('.')[0] + '.image'
 
         img    = pyrap.images.image(image)
         pixels = numpy.copy(img.getdata())
-        maxval = numpy.copy(numpy.max(pixels))
+        maxval = numpy.max(pixels)
+        minval = numpy.min(pixels)
 
         maxvalpre = 1e9
-        if pre_sourcename != 'empty' :
+        minvalpre = -maxvalpre
+        if pre_sourcename is not None:
             imgpre    = pyrap.images.image(pre_sourcename)
             pixelspre = numpy.copy(imgpre.getdata())
-            maxvalpre = numpy.copy(numpy.max(pixelspre))
+            maxvalpre = numpy.max(pixelspre)
+            minvalpre = numpy.min(pixelspre)
 
-
-        print maxval, ' ' + image
-        print maxvalpre, ' ' + pre_sourcename
+        logging.info('verify_subtract: For %s max, min residual were %f, %f' % (image,maxval,minval))
+        print maxval, minval, ' ' + image
+        if pre_sourcename is not None:
+            print maxvalpre, minvalpre, ' ' + pre_sourcename
         if  (maxval > res_val) or ((maxval*0.92) > maxvalpre) :
             stopcal = True
             print 'WARNING RESIDUAL TOO LARGE, STOPPING', maxval, res_val
             print 'WARNING RESIDUAL TOO LARGE, STOPPING, previous max in image', maxvalpre
 
-    while(stopcal):
-        time.sleep(100)
-
+    return stopcal
 
 if __name__=='__main__':
 
@@ -136,5 +135,8 @@ if __name__=='__main__':
     res_val   = numpy.float(str(sys.argv[-2]))
     source    = str(sys.argv[-1])
 
-    do_verify_subtract(mslist,res_val,source)
+    stop=do_verify_subtract(mslist,res_val,source)
 
+    # reproduce old behaviour on the command line                 
+    while(stop):
+        time.sleep(100)

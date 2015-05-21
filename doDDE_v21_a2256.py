@@ -11,6 +11,7 @@ import pyrap.tables as pt
 import pyrap.images
 import pwd
 import logging
+import glob
 from numpy import pi
 
 # check high-DR
@@ -30,6 +31,24 @@ from numpy import pi
 #    - 1. ADD back skymodel using "master solutions", then CORRECT using "master solutions"
 #    - 2. image that again using the same setting
 #    - 3. redo the subtract (will be slightly better....but solutions remain the same, just better noise) or just proceed to the next field?
+
+def verify_timegrid(parmdb, ms):
+    import lofar.parmdb
+    anttab     = pt.table(ms + '/ANTENNA')
+    antenna_list    = anttab.getcol('NAME')
+    anttab.close()
+    t = pt.table(ms)
+    ms_ntime = len(numpy.unique(t.getcol('TIME')))
+    t.close()
+    pdb = lofar.parmdb.parmdb(parmdb)
+    parms = pdb.getValuesGrid("*")
+    parmdb_ntime = len(parms['CommonScalarPhase:'+ antenna_list[0]]['values'][:, 0]) # CommonScalarPhase should always exist
+    #print 'number of timesamples ' + ms + ' :', ms_ntime
+    if ms_ntime != parmdb_ntime:
+      print 'number of timesamples ' + ms + ' :', ms_ntime
+      print 'number of timesamples ' + parmdb + ' :', parmdb_ntime
+      raise Exception('Number of timescales of the parmdb template does not match with the ms')
+    return
 
 def find_newsize(mask):
     """
@@ -1356,6 +1375,10 @@ if __name__ == "__main__":
         failthreshold
     except NameError:
         failthreshold=0.15
+    try:
+        numcpu_taql
+    except NameError:
+        numcpu_taql=4
 
     if StefCal:
         TEC = "False" # cannot fit for TEC in StefCal
@@ -1368,9 +1391,12 @@ if __name__ == "__main__":
             dummyparmdb = 'instrument_template_TECclock'
         else:
             dummyparmdb = 'instrument_template_Gain_TEC_CSphase'
-    if dummyparmdb is not(None):
+    if StefCal:
+        dummyparmdb = 'instrument_template_Gain_CSphase'  
+    if dummyparmdb is not None:
         if not(os.path.isdir(dummyparmdb)):
             raise Exception('parmdb template %s does not exist' % dummyparmdb)
+
 
     print 'importing local modules....'
 
@@ -1380,6 +1406,7 @@ if __name__ == "__main__":
     import blank
     from facet_utilities import run, bg
     from verify_subtract_v5 import do_verify_subtract
+    from padfits import padfits
     if not(StefCal):
         from selfcalv19_ww_cep3 import do_selfcal
     
@@ -1446,7 +1473,6 @@ if __name__ == "__main__":
     mslist= [ms for ms in mslistorig if  os.path.isdir(ms)]
     msliststr = ' '.join(mslist)
 
-
     #mslistorigstr = ''
     #for ms in mslistorig:
     #  mslistorigstr =  mslistorigstr + ' ' + ms
@@ -1474,6 +1500,13 @@ if __name__ == "__main__":
     logging.info('Number of channels per ms is {:d}'.format(numchanperms))
     freq_tab.close()
 
+    # check if skymodels are present
+    for ms in mslist:
+        skymodel=ms.split('.')[0]+'.skymodel'
+        if not(os.path.isfile(skymodel)):
+            raise Exception('Skymodel '+skymodel+' is missing.')
+
+    # check for allbands.concat.ms
     allbands=allbandspath +'allbands.concat.ms'
     if not os.path.isdir(allbands):
         logging.info(allbands+' does not exist, will try to make it')
@@ -1491,6 +1524,9 @@ if __name__ == "__main__":
         logging.error('Used a total numbers of ' + str(len(mslistorig)) + ' blocks with ' + str(numchanperms) + ' channels per block')
         logging.error('Number of channels allbands.concat.ms is {:d}'.format(numchan_all))
         raise Exception('#channels in allbands.concat.ms does not match with what is expected from mslistorig (from parameter BANDS)')
+
+    # check that the number of timesamples in dummyparmdb matches that of a ms in mslist (take mslist[0])
+    verify_timegrid(dummyparmdb, mslist[0])
 
     #if len(mslist) == 1:
     #  TEC    = "False" # no TEC fitting for one (channel) dataset
@@ -1739,9 +1775,10 @@ if __name__ == "__main__":
                 logging.info('START: preFACET')
                 ## STEP 3: prep for facet ##
                 parmdb_master_out="instrument_master_" + source
-                runbbs_diffskymodel_addbackfield(mslist, 'instrument_ap_smoothed', True,  directions[source_id],imsizes[source_id], output_template_im, do_ap)
                 logging.info('Adding back rest of the field for DDE facet ' + source)
+                runbbs_diffskymodel_addbackfield(mslist, 'instrument_ap_smoothed', True,  directions[source_id],imsizes[source_id], output_template_im, do_ap)
 
+                logging.info('Correct field with self-cal instrument table')
                 if TEC=='True':
                     runbbs(mslist, dummyskymodel, SCRIPTPATH + '/correctfield2+TEC.parset',parmdb_master_out+'_norm', False)
                 else:
@@ -1806,7 +1843,7 @@ if __name__ == "__main__":
                 # BACKUP SUBTRACTED DATA IN CASE OF CRASH
                 ###########################################################################
                 # (NEW: run in parallel)
-                b=bg(maxp=4)
+                b=bg(maxp=numcpu_taql)
                 for ms in mslist:
                     b.run("taql 'update " + ms + " set CORRECTED_DATA=SUBTRACTED_DATA_ALL'")
 
@@ -1815,9 +1852,17 @@ if __name__ == "__main__":
                 logging.info('Backup SUBTRACTED_DATA_ALL: completed')
                 ###########################################################################
 
+                # PAD MODEL IMAGES
+                imout_p=imout+'-padded'  
+                if len(mslist) > WScleanWBgroup: # WIDEBAND case
+                    for modim in glob.glob(imout + '-' + '*' + '-model.fits'):
+                        imsize_p=padfits(modim,modim.replace(imout,imout_p))
+                else: # NON-WIDEBAND case
+                    imsize_p=padfits(imout+'-model.fits',imout_p+'-model.fits')
+                logging.info('Padded model images to prevent aliasing')
 
                 # DO THE FFT
-                do_fieldFFT(allbandspath + 'allbands.concat.shifted_'+source+'.ms',imout, imsizef, cellsize, wsclean,
+                do_fieldFFT(allbandspath + 'allbands.concat.shifted_'+source+'.ms',imout_p, imsize_p, cellsize, wsclean,
                          msavglist, WSCleanRobust, WScleanWBgroup, numchanperms)
                 logging.info('FFTed model of DDE facet: ' + source)
 
@@ -1852,14 +1897,14 @@ if __name__ == "__main__":
         else:  # do this because we are not going to add back field sources
             logging.info('Do not add field back for outlier source')
             
-            b=bg(maxp=4)
+            b=bg(maxp=numcpu_taql)
             for ms in mslist:
                 b.run("taql 'update " + ms + " set MODEL_DATA=ADDED_DATA_SOURCE'")
             b.wait()
             
             # BACKUP SUBTRACTED DATA IN CASE OF CRASH
             ###########################################################################
-            b=bg(maxp=4)
+            b=bg(maxp=numcpu_taql)
             for ms in mslist:
                 b.run("taql 'update " + ms + " set CORRECTED_DATA=SUBTRACTED_DATA_ALL'")
 
@@ -1888,7 +1933,9 @@ if __name__ == "__main__":
             #for ms in mslist:
             #    inputmslist = inputmslist + ' ' + ms
             #run('python '+ SCRIPTPATH+'/verify_subtract_v5.py ' + inputmslist + ' '+str(failthreshold)+' ' + source)
-            do_verify_subtract(mslist, failthreshold, source, numchanperms=numchanperms)
+            stopcal=do_verify_subtract(mslist, failthreshold, source, numchanperms=numchanperms)
+            if stopcal:
+                raw_input('Pausing: hit control-C to stop or enter to continue')
 
         os.system('rm -rf *.ms.avgfield') # clean up as these are never used anymore  
         os.system('rm -rf *.ms.avgcheck') # clean up to remove clutter
