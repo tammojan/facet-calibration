@@ -1852,6 +1852,7 @@ if __name__ == "__main__":
                 logging.info('Backup SUBTRACTED_DATA_ALL: completed')
                 ###########################################################################
 
+                # PAD MODEL IMAGES
                 imout_p=imout+'-padded'  
                 if len(mslist) > WScleanWBgroup: # WIDEBAND case
                     for modim in glob.glob(imout + '-' + '*' + '-model.fits'):
