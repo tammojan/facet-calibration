@@ -11,6 +11,7 @@ import pyrap.tables as pt
 import pyrap.images
 import pwd
 import logging
+import glob
 from numpy import pi
 
 # check high-DR
@@ -1561,7 +1562,7 @@ if __name__ == "__main__":
 
             tmpn  = str(msavglist[0])
             parset = create_phaseshift_parset_formasks(mslist[0], tmpn, source, directions[source_id])
-            run('NDPPP ' + parset)
+            rufn('NDPPP ' + parset)
             output_template_im = 'templatemask_' + source
             logging.debug(output_template_im)
             run('casapy --nogui -c ' + SCRIPTPATH + '/make_empty_image.py '+ tmpn + ' ' + output_template_im + ' ' + str(fieldsize[source_id]) + ' ' +'1.5arcsec')
@@ -1851,8 +1852,13 @@ if __name__ == "__main__":
                 logging.info('Backup SUBTRACTED_DATA_ALL: completed')
                 ###########################################################################
 
-                imout_p=imout+'-padded'
-                imsize_p=padfits(imout+'-model.fits',imout_p+'-model.fits')
+                imout_p=imout+'-padded'  
+                if len(mslist) > WScleanWBgroup: # WIDEBAND case
+                    for modim in glob.glob(imout + '-' + '*' + '-model.fits'):
+                        imsize_p=padfits(modim,modim.replace(imout,imout_p))
+                else: # NON-WIDEBAND case
+                    imsize_p=padfits(imout+'-model.fits',imout_p+'-model.fits')
+                logging.info('Padded model images to prevent aliasing')
 
                 # DO THE FFT
                 do_fieldFFT(allbandspath + 'allbands.concat.shifted_'+source+'.ms',imout_p, imsize_p, cellsize, wsclean,
