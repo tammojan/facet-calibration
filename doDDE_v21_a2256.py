@@ -1865,7 +1865,7 @@ if __name__ == "__main__":
                 # PAD MODEL IMAGES
                 imout_p=imout+'-padded'  
                 if len(mslist) > WScleanWBgroup: # WIDEBAND case
-                    for modim in glob.glob(imout + '-' + '*' + '-model.fits'):
+                    for modim in (glob.glob(imout + '-0*-model.fits')+glob.glob(imout + '-MFS-model.fits')):
                         imsize_p=padfits(modim,modim.replace(imout,imout_p))
                 else: # NON-WIDEBAND case
                     imsize_p=padfits(imout+'-model.fits',imout_p+'-model.fits')
