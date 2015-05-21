@@ -56,10 +56,17 @@ docs/_build/
 # PyBuilder
 target/
 
-# Vim temp files
+# Editors
+.*.s[a-w][a-z]
+*.un~
+Session.vim
+.netrwhist
 *~
-*.swp
-*.swo
+*.kate-swp
+
+# OS-specific
+.DS_Store
+.directory
 
 # Configuration files
 logging.conf
