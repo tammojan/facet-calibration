@@ -20,7 +20,7 @@ def run(c,proceed=False,quiet=False):
 
 def create_ndppp_parset(msin, msout):
     ndppp_parset = msin.split('.')[0] +'ndppp_lowresavg.parset'
-    run('rm -f ' + ndppp_parset)
+    os.system('rm -f ' + ndppp_parset)
 
     f=open(ndppp_parset, 'w')
     f.write('msin ="%s"\n' % msin)
@@ -92,9 +92,9 @@ if __name__=='__main__':
         hr_bbslog=ms + '.highressubbbslog'
 
         if cleanup:
-            run('rm -r '+imhigh+'*')
-            run('rm -r '+imlow+'*')
-            run('rm '+lr_bbslog+' '+hr_bbslog+' '+finalsky)
+            os.system('rm -r '+imhigh+'*')
+            os.system('rm -r '+imlow+'*')
+            os.system('rm '+lr_bbslog+' '+hr_bbslog+' '+finalsky)
 
         if os.path.isfile(imhigh+'-image.fits'):
             print 'High-resolution image exists, NOT remaking it'
@@ -192,7 +192,7 @@ if __name__=='__main__':
 
             ndppp_parset = create_ndppp_parset(ms, msout)
 
-            run('rm -rf ' + msout)
+            os.system('rm -rf ' + msout)
             run('NDPPP ' + ndppp_parset +' >'+ ms+'.NDPPPavelog')
 
         if os.path.isfile(imlow+'-image.fits'):
