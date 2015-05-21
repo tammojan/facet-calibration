@@ -1562,7 +1562,7 @@ if __name__ == "__main__":
 
             tmpn  = str(msavglist[0])
             parset = create_phaseshift_parset_formasks(mslist[0], tmpn, source, directions[source_id])
-            rufn('NDPPP ' + parset)
+            run('NDPPP ' + parset)
             output_template_im = 'templatemask_' + source
             logging.debug(output_template_im)
             run('casapy --nogui -c ' + SCRIPTPATH + '/make_empty_image.py '+ tmpn + ' ' + output_template_im + ' ' + str(fieldsize[source_id]) + ' ' +'1.5arcsec')
