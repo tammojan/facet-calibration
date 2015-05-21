@@ -60,3 +60,6 @@ target/
 *~
 *.swp
 *.swo
+
+# Configuration files
+logging.conf

@@ -11,6 +11,7 @@ import pyrap.tables as pt
 import pyrap.images
 import pwd
 import logging
+import logging.config
 import glob
 from numpy import pi
 
@@ -32,6 +33,7 @@ from numpy import pi
 #    - 2. image that again using the same setting
 #    - 3. redo the subtract (will be slightly better....but solutions remain the same, just better noise) or just proceed to the next field?
 
+
 def verify_timegrid(parmdb, ms):
     import lofar.parmdb
     anttab     = pt.table(ms + '/ANTENNA')
@@ -45,10 +47,11 @@ def verify_timegrid(parmdb, ms):
     parmdb_ntime = len(parms['CommonScalarPhase:'+ antenna_list[0]]['values'][:, 0]) # CommonScalarPhase should always exist
     #print 'number of timesamples ' + ms + ' :', ms_ntime
     if ms_ntime != parmdb_ntime:
-      print 'number of timesamples ' + ms + ' :', ms_ntime
-      print 'number of timesamples ' + parmdb + ' :', parmdb_ntime
-      raise Exception('Number of timescales of the parmdb template does not match with the ms')
+        logging.debug('number of timesamples ' + ms + ' : '+str(ms_ntime))
+        logging.debug('number of timesamples ' + parmdb + ' : '+str(parmdb_ntime))
+        raise Exception('Number of timescales of the parmdb template does not match with the ms')
     return
+
 
 def find_newsize(mask):
     """
@@ -60,31 +63,31 @@ def find_newsize(mask):
     sh     = numpy.shape(pixels)[3:4]
     newsize = numpy.copy(sh[0])
     sh      = sh[0]
-    print newsize
+    logging.debug(newsize)
 
     trysizes = numpy.copy(sorted([6400,6144,5600,5400,5184,4800,4608,4320,4096,3840,3600,3200,3072,2880,2560,2304,2048, 1600, 1536, 1200, 1024, 800, 512]))
     idx = numpy.where(trysizes < sh)
-    print idx
+    logging.debug(idx)
     trysizes = numpy.copy(trysizes[idx]) # remove sizes larger than image
     trysizes = numpy.copy(trysizes[::-1]) # reverse sorted
-    print trysizes
+    logging.debug(trysizes)
 
     for size in trysizes:
-        print 'Trying', size
+        logging.debug('Trying {}'.format(size))
         cutedge = numpy.int((sh - size)/2.)
-        print cutedge
+        logging.debug(cutedge)
 
         idx1 = numpy.size(numpy.where(pixels[0,0,  0:cutedge,0:sh]      != 0))
         idx2 = numpy.size(numpy.where(pixels[0,0,  sh-cutedge:sh,0:sh]  != 0))
         idx3 = numpy.size(numpy.where(pixels[0,0,  0:sh,0:cutedge]      != 0))
         idx4 = numpy.size(numpy.where(pixels[0,0,  0:sh,sh-cutedge:sh]  != 0))
 
-        print idx1, idx2, idx3, idx4
+        logging.debug("{} {} {} {}".format(idx1, idx2, idx3, idx4))
 
         if ((idx1) == 0) and ((idx2)  == 0) and ((idx3)  == 0) and ((idx4) == 0):
             # UPDATE THE IMAGE SIZE
             newsize  = numpy.copy(size)
-            print 'Found new size', newsize, ' fits within the mask'
+            logging.debug('Found new size {} fits within the mask'.format(newsize))
 
     return newsize
 
@@ -108,12 +111,13 @@ def runbbs(mslist, skymodel, parset, parmdb, replacesource, maxcpu=None):
             cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1'
         else:
             cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1'
-        print cmd
+        logging.debug(cmd)
         b.run(cmd)
     time.sleep(10)
 
     b.wait()
     return
+
 
 def create_subtract_parset_field_outlier(outputcolumn, TEC):
     """
@@ -177,7 +181,7 @@ def runbbs_diffskymodel_addback(mslist, parmdb, replacesource, direction, imsize
         callist = output.strip()
         callistarraysources = callist.split(',')
 
-        print 'Adding back for calibration:', callist
+        logging.debug('Adding back for calibration: '+str(callist))
 
         if len(callist) != 0: # otherwise do not have to add
             parset = create_add_parset_ms(callist, ms, do_ap)
@@ -189,11 +193,12 @@ def runbbs_diffskymodel_addback(mslist, parmdb, replacesource, direction, imsize
             time.sleep(10)  # otherwise add.parset is deleted (takes time for BBS to start up)
 
         else:
-            print 'No source to add back, are you sure the DDE position is correct?'
+            logging.warning('No source to add back, are you sure the DDE position is correct?')
             run("taql 'update " + ms + " set ADDED_DATA_SOURCE=SUBTRACTED_DATA_ALL'")
 
     b.wait()
     return
+
 
 def runbbs_diffskymodel_addbackfield(mslist, parmdb, replacesource, direction, imsize, output_template_im, do_ap):
     """
@@ -213,7 +218,7 @@ def runbbs_diffskymodel_addbackfield(mslist, parmdb, replacesource, direction, i
         callist = output.strip()
         callistarraysources = callist.split(',')
 
-        print 'Add field back step 1'
+        logging.debug('Add field back step 1')
 
         # return the source list from the source to be added back sourrinding the peeling source and which fall within the mask boundaries
         # put in MODEL_DATA
@@ -227,7 +232,7 @@ def runbbs_diffskymodel_addbackfield(mslist, parmdb, replacesource, direction, i
 
 
 
-        print 'Field source added back are: ', addback_sourcelist
+        logging.debug('Field source added back are: '+str(addback_sourcelist))
 
         if len(addback_sourcelist) != 0: # otherwise do not have to add
             parset = create_add_parset_field_ms(addback_sourcelist, ms, do_ap)
@@ -235,7 +240,7 @@ def runbbs_diffskymodel_addbackfield(mslist, parmdb, replacesource, direction, i
                 cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1'
             else:
                 cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1'
-            print cmd
+            logging.debug(cmd)
             b.run(cmd)
         else:
             run("taql 'update " + ms + " set MODEL_DATA=ADDED_DATA_SOURCE'") # in case no sources are put back
@@ -261,11 +266,12 @@ def runbbs_2(mslist, msparmdb, skymodel, parset, parmdb):
     for ms_id, ms in enumerate(mslist):
         log      =  ms + '.bbslog'
         cmd = 'calibrate-stand-alone --parmdb ' + msparmdb[ms_id]+'/'+parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1'
-        print cmd
+        logging.debug(cmd)
         b.run(cmd)
     time.sleep(10)
 
     b.wait()
+
 
 def create_phaseshift_parset_full(msin, msout, direction, column):
     """
@@ -344,9 +350,9 @@ def create_phaseshift_parset(msin, msout, source, direction, imsize, dynamicrang
             f.write('avg1.freqstep = %s\n' % str(numchanperms))
     else:
         if dynamicrange != 'HD':
-            print 'dynamicrange ', dynamicrange
+            logging.error('dynamicrange {}'.format(dynamicrange))
             raise Exception('Wrong dynamicrange code, use "LD" or "HD"')
-        print 'High dynamic range DDE cycle, eveything with be slow...'
+        logging.warning('High dynamic range DDE cycle, eveything with be slow...')
         f.write('avg1.freqstep = %s\n' % str(numchanperms/10)) # one channel per SB
 
     f.write('avg1.timestep = 1\n')
@@ -756,11 +762,11 @@ def normalize_parmdbs(mslist, parmdbname, parmdboutname):
                 amplist.append(amp)
 
     norm_factor = 1./(numpy.mean(amplist))
-    print 'Normalizing gains: average gain value is', 1./norm_factor
-    print 'Multiplying gains by:', norm_factor
+    logging.debug('Normalizing gains: average gain value is {}'.format(1./norm_factor))
+    logging.debug('Multiplying gains by: {}'.format(norm_factor))
 
     if (norm_factor > 1.5) or (norm_factor < (1./1.5)):
-        print 'Check normalization'
+        logging.error('Check normalization')
         raise Exception('Wrong normalization')
 
     # now normalize the parmdbs
@@ -797,10 +803,10 @@ def return_slist(imagename, skymodel, ref_source):
 
     if len(numpy.shape(data)) == 1:  # in this case not issue and we do not use Pythonlibs
         patchest,ra_patches,dec_patches, flux_patches =  compute_patch_center(data,fluxweight)
-        print 'option 1'
+        logging.debug('option 1')
     if len(numpy.shape(data)) == 2:
         patchest,ra_patches,dec_patches, flux_patches = compute_patch_center_libsproblem(data,fluxweight)
-        print 'option 2'
+        logging.debug('option 2')
 
     # remove sources already in the field and convert to radians
 
@@ -912,10 +918,10 @@ def cal_return_slist(imagename, skymodel, direction, imsize):
 
     if len(numpy.shape(data)) == 1:  # in this case not issue and we do not use Pythonlibs
         patches,ra_patches,dec_patches, flux_patches =  compute_patch_center(data,fluxweight)
-        print 'option 1'
+        logging.debug('option 1')
     if len(numpy.shape(data)) == 2:
         patches,ra_patches,dec_patches, flux_patches = compute_patch_center_libsproblem(data,fluxweight)
-        print 'option 2'
+        logging.debug('option 2')
 
     ralist  = pi*(ra_patches)/180.
     declist = pi*(dec_patches)/180.
@@ -923,7 +929,7 @@ def cal_return_slist(imagename, skymodel, direction, imsize):
 
     plist = []
 
-    print ref_ra, ref_dec
+    logging.debug("{} {}".format(ref_ra, ref_dec))
 
 
 
@@ -1114,8 +1120,8 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl,
 
     if wideband:
         channelsout = numpy.int(numpy.ceil(numpy.float(len(mslist))/numpy.float(WScleanWBgroup)))
-        print 'channelsout paramters is set to ', channelsout
-        print 'Bandwidth is divided into a total of ' + str(numpy.int(numpy.ceil(numpy.float(len(mslist))/numpy.float(WScleanWBgroup)))) + ' parts '
+        logging.debug('channelsout paramters is set to {}'.format(channelsout))
+        logging.debug('Bandwidth is divided into a total of ' + str(numpy.int(numpy.ceil(numpy.float(len(mslist))/numpy.float(WScleanWBgroup)))) + ' parts ')
         cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
         cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' -cleanborder 0 -threshold '+ cleandepth1 + ' '
         cmd3 = '-minuv-l '+ str(uvrange) + ' -casamask ' +  inputmask + ' '\
@@ -1126,7 +1132,7 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl,
         cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' -cleanborder 0 -threshold '+ cleandepth1 + ' '
         cmd3 = '-minuv-l '+ str(uvrange) +' -mgain 0.6 -fitbeam -datacolumn DATA -no-update-model-required ' + outms
 
-    print cmd1+cmd2+cmd3
+    logging.debug(cmd1+cmd2+cmd3)
     run(cmd1+cmd2+cmd3)
 
     # FIX for missing beam INFO in Wideband clean
@@ -1197,7 +1203,7 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl,
         cmd3 = '-minuv-l '+ str(uvrange) +' -mgain 0.6 -fitbeam -datacolumn DATA -no-update-model-required -casamask ' + \
                mask_sources+'field' + ' '+ outms
 
-    print cmd1+cmd2+cmd3
+    logging.debug(cmd1+cmd2+cmd3)
     run(cmd1+cmd2+cmd3)
 
     # convert from FITS to casapy format
@@ -1270,7 +1276,7 @@ def do_fieldFFT(ms, image, imsize, cellsize, wsclean, mslist,
         cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' '
         cmd3 = '-cleanborder 0 -mgain 0.85 -fitbeam -datacolumn DATA '+ ' ' + ms
 
-    print cmd1+cmd2+cmd3
+    logging.debug(cmd1+cmd2+cmd3)
     run(cmd1+cmd2+cmd3)
     return
 
@@ -1287,8 +1293,8 @@ def image_size_from_mask(mask):
     im = pyrap.images.image(mask)
     sh = im.shape()
     if sh[-1] != sh[-2]:
-        print "image is not square!"
-        print sh[-1], sh[-2]
+        logging.warning("image is not square!")
+        logging.warning("{} {}".format(sh[-1], sh[-2]))
     npix = sh[-1]
     return npix
 
@@ -1413,20 +1419,24 @@ if __name__ == "__main__":
     print 'StartAtStep is',StartAtStep
 
     ## Logger configuration
-    # Start
-    logger = logging.getLogger()
-    logger.setLevel(logging.DEBUG)   
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-    # Log to STDOUT
-    ch = logging.StreamHandler()
-    ch.setFormatter(formatter)
-    logger.addHandler(ch)
-    # Log to file
-    file_name = "dde.log"
-    fh = logging.FileHandler(file_name) 
-    fh.setFormatter(formatter)
-    logger.addHandler(fh)
-    logging.info('\n')
+    if os.path.exists("logging.conf"):
+        logging.config.fileConfig('logging.conf')
+        logger = logging.getLogger()
+    else:
+        # Start
+        logger = logging.getLogger()
+        logger.setLevel(logging.DEBUG)   
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+        # Log to STDOUT
+        ch = logging.StreamHandler()
+        ch.setFormatter(formatter)
+        logger.addHandler(ch)
+        # Log to file
+        file_name = "dde.log"
+        fh = logging.FileHandler(file_name) 
+        fh.setFormatter(formatter)
+        logger.addHandler(fh)
+        logging.info('\n')
 
 #    os.system('cp ' + SCRIPTPATH + '/coordinates_mode.py .')
 #    os.system('cp ' + SCRIPTPATH + '/blank.py .')
