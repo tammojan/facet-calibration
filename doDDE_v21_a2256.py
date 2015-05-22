@@ -1077,15 +1077,15 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl,
         wideband = True
 
     # speed up the imaging if possible by reducing image size within the mask region
-    newsize = find_newsize(inputmask)
-    if newsize < imsize: # ok so we can use a smaller image size then
-        #make a new template
-        run('casapy --nogui -c ' + SCRIPTPATH + '/make_empty_image.py '+ str(mslist[0]) + ' ' + inputmask+'2' + ' ' + str(newsize) + ' ' +'1.5arcsec')
-        run('casapy --nogui -c ' + SCRIPTPATH + '/regrid_image.py '    + inputmask      + ' ' + inputmask+'2' + ' ' + inputmask+'3')
-
-        # reset the imsize and the mask
-        imsize    = newsize
-        inputmask = inputmask+'3'
+    #newsize = find_newsize(inputmask)
+    #if newsize < imsize: # ok so we can use a smaller image size then
+    #    #make a new template
+    #    run('casapy --nogui -c ' + SCRIPTPATH + '/make_empty_image.py '+ str(mslist[0]) + ' ' + inputmask+'2' + ' ' + str(newsize) + ' ' +'1.5arcsec')
+    #    run('casapy --nogui -c ' + SCRIPTPATH + '/regrid_image.py '    + inputmask      + ' ' + inputmask+'2' + ' ' + inputmask+'3')
+    #
+    #    # reset the imsize and the mask
+    #    imsize    = newsize
+    #    inputmask = inputmask+'3'
 
 
     ms = ''
