@@ -1151,7 +1151,7 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl,
               ' --threshisl '+str(threshisl) +' --atrous_do '+ str(atrous_do) +
               ' --casaregion  '+ region + ' '  + mask_image)
 
-    mask_name  = imout + '.fitsmask'
+    mask_name  = mask_image + '.fitsmask'
     casa_mask  = imout + '.casamask'
 
     maskim=pyrap.images.image(mask_name)
