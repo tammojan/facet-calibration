@@ -111,7 +111,6 @@ def runbbs(mslist, skymodel, parset, parmdb, replacesource, maxcpu=None):
             cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1'
         else:
             cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1'
-        logging.debug(cmd)
         b.run(cmd)
     time.sleep(10)
 
@@ -240,7 +239,6 @@ def runbbs_diffskymodel_addbackfield(mslist, parmdb, replacesource, direction, i
                 cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1'
             else:
                 cmd = 'calibrate-stand-alone --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1'
-            logging.debug(cmd)
             b.run(cmd)
         else:
             run("taql 'update " + ms + " set MODEL_DATA=ADDED_DATA_SOURCE'") # in case no sources are put back
@@ -266,7 +264,6 @@ def runbbs_2(mslist, msparmdb, skymodel, parset, parmdb):
     for ms_id, ms in enumerate(mslist):
         log      =  ms + '.bbslog'
         cmd = 'calibrate-stand-alone --parmdb ' + msparmdb[ms_id]+'/'+parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1'
-        logging.debug(cmd)
         b.run(cmd)
     time.sleep(10)
 
@@ -1132,7 +1129,6 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl,
         cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' -cleanborder 0 -threshold '+ cleandepth1 + ' '
         cmd3 = '-minuv-l '+ str(uvrange) +' -mgain 0.6 -fitbeam -datacolumn DATA -no-update-model-required ' + outms
 
-    logging.debug(cmd1+cmd2+cmd3)
     run(cmd1+cmd2+cmd3)
 
     # FIX for missing beam INFO in Wideband clean
@@ -1203,7 +1199,6 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl,
         cmd3 = '-minuv-l '+ str(uvrange) +' -mgain 0.6 -fitbeam -datacolumn DATA -no-update-model-required -casamask ' + \
                mask_sources+'field' + ' '+ outms
 
-    logging.debug(cmd1+cmd2+cmd3)
     run(cmd1+cmd2+cmd3)
 
     # convert from FITS to casapy format
@@ -1276,7 +1271,6 @@ def do_fieldFFT(ms, image, imsize, cellsize, wsclean, mslist,
         cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' '
         cmd3 = '-cleanborder 0 -mgain 0.85 -fitbeam -datacolumn DATA '+ ' ' + ms
 
-    logging.debug(cmd1+cmd2+cmd3)
     run(cmd1+cmd2+cmd3)
     return
 
