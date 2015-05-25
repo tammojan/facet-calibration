@@ -1304,9 +1304,9 @@ if __name__ == "__main__":
     # Do not modify them here.
     # They can be changed in the setup code with:
     # parms.update({"parm1":"value1"})
-    parms = {
+    config = {
         "selfcal_stefcal": "selfcalv20.py",
-        "selfcal": "selfcalv19_ww_cep3.py"
+        "selfcal": ""
         }
     
     
@@ -1411,7 +1411,16 @@ if __name__ == "__main__":
     from verify_subtract_v5 import do_verify_subtract
     from padfits import padfits
     if not(StefCal):
-        from selfcalv19_ww_cep3 import do_selfcal
+        if config["selfcal"] == "":
+            from selfcalv19_ww_cep3 import do_selfcal
+        else: # Allow the use of alternative selfcal code
+            import importlib
+            if os.path.exists(config["selfcal"]+".py"):
+                selfcal_module = importlib.import_module(config["selfcal"])
+                do_selfcal = selfcal_module.do_selfcal
+                logging.info("Method do_selfcal imported from {}".format(config["selfcal"]))
+            else:
+                raise Exception('selfcal module {} not found'.format(config["selfcal"]))
     
     print 'StartAtStep is',StartAtStep
 
@@ -1691,7 +1700,7 @@ if __name__ == "__main__":
             logging.info('Region file: '+ str(regionselfc[source_id]))
 
             if StefCal:
-                cmd = ('python ' + SCRIPTPATH + '/' + parms["selfcal_stefcal"] + ' ' + 
+                cmd = ('python ' + SCRIPTPATH + '/' + config["selfcal_stefcal"] + ' ' + 
                           inputmslist + ' ' + 
                           source + ' ' + 
                           atrous_do[source_id] + ' ' + 
@@ -1709,8 +1718,23 @@ if __name__ == "__main__":
                 run(cmd)
             else:
                 ## EXPERIMENTAL! ##
-                do_selfcal(msavglist,source,bool(atrous_do[source_id]),imsizes[source_id],nterms,cellsizetime_a[source_id],cellsizetime_p[source_id],TEC,clock,dynamicrange[source_id],regionselfc[source_id],clusterdesc,dbserver,dbuser,dbname,SCRIPTPATH)
-#                cmd = ('python ' + SCRIPTPATH + '/' + parms["selfcal"] + ' ' + 
+                do_selfcal(msavglist, 
+                           source,
+                           bool(atrous_do[source_id]),
+                           imsizes[source_id],
+                           nterms,
+                           cellsizetime_a[source_id],
+                           cellsizetime_p[source_id],
+                           TEC,
+                           clock,
+                           dynamicrange[source_id],
+                           regionselfc[source_id],
+                           clusterdesc,
+                           dbserver,
+                           dbuser,
+                           dbname,
+                           SCRIPTPATH)
+#                cmd = ('python ' + SCRIPTPATH + '/' + config["selfcal"] + ' ' + 
 #                          inputmslist + ' ' + 
 #                          source + ' ' + 
 #                          atrous_do[source_id] + ' ' + 
