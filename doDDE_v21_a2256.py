@@ -1361,6 +1361,11 @@ if __name__ == "__main__":
         allbandspath = os.getcwd() + '/'
 
     try:
+        delete_SC_ms # delete selfcal ms after selfcal to save diskspace
+    except NameError:
+        delete_SC_ms = False
+
+    try:
         clusterdesc
     except NameError:
         print 'No cluster description specified, using default in selfcal script'
@@ -1799,6 +1804,9 @@ if __name__ == "__main__":
             b.wait()
             #########
 
+
+        if delete_SC_ms: # delete selfcal MS, default is False
+            os.system('rm -rf ' + '.' + source + '.ms')
 
         parmdb_master_out="instrument_master_" + source
         if outliersource[source_id] == 'False':
