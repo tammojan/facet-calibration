@@ -1150,8 +1150,11 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl,
     run('python ' + SCRIPTPATH + '/makecleanmask_field_wsclean.py --threshpix '+str(threshpix)+
               ' --threshisl '+str(threshisl) +' --atrous_do '+ str(atrous_do) +
               ' --casaregion  '+ region + ' '  + mask_image)
-
-    mask_name  = mask_image + '.fitsmask'
+    
+    if wideband:
+        mask_name = mask_image + '.fitsmask'
+    else:
+        mask_name = imout + '.fitsmask'
     casa_mask  = imout + '.casamask'
 
     maskim=pyrap.images.image(mask_name)
