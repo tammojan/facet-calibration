@@ -19,14 +19,12 @@ import pwd
 pi       = numpy.pi
 username = pwd.getpwuid(os.getuid())[0]
 
-# store scripts in user's home (even on cep this is a copy of reinouts)
-# use /home/wwilliams/syncscripts.sh  to copy from laak to cep
-# SCRIPTPATH = '/home/{user}/para/scripts'.format(user=username)
+if len(sys.argv)<2:
+    raise Exception('Give the path to the setup code')
 
-# location of this script - all scripts/parsets it uses are contained in subdirectory 'use'
-#SCRIPTPATH = os.path.dirname(sys.argv[0])
-SCRIPTPATH = os.path.dirname(os.path.abspath(sys.argv[0]))
-
+print 'Using',sys.argv[1],'as the setup code'
+execfile(sys.argv[1])
+print 'script path is',SCRIPTPATH
 
 def write_ds9_allregions(regfile, source_info_rec, col='yellow'):
     s= '''global color={col} dashlist=8 3 width=1 font="helvetica 10 normal roman" select=1 highlite=1 dash=0 fixed=0 edit=1 move=1 delete=1 include=1 source=1
@@ -61,16 +59,15 @@ fk5
     return
 
 
-############  USER INPUT #########
-
-peel_source_info_file =  '/home/'+username+'/scripts/a2256_hba/peel_source_info_a2256.txt'
-
-region_file_name = '/data2/rvweeren/a2256_hba/SB050-359/peel_facets_boxes.reg'
+try:
+    region_file_name
+except NameError:
+    region_file_name='scdir_region_out.reg'
 
 
 ########## END USER INPUT ########
 
-source_info_rec = numpy.genfromtxt(peel_source_info_file, \
+source_info_rec = numpy.genfromtxt(peelsourceinfo, \
                                    dtype="S50,S25,S5,S5,i8,i8,i8,i8,S2,S255,S255,S255,S5", \
                                    names=["sourcelist","directions","atrous_do","mscale_field","imsizes",\
                                    "cellsizetime_p","cellsizetime_a","fieldsize","dynamicrange",\

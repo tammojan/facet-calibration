@@ -10,51 +10,17 @@ import pyrap.tables as pt
 import pwd
 username = pwd.getpwuid(os.getuid())[0]
 
+if len(sys.argv)<2:
+    raise Exception('Give the path to the setup code')
 
-# location of this script - all scripts/parsets it uses are contained in subdirectory 'use'
-#SCRIPTPATH = os.path.dirname(sys.argv[0])
-
-
-# extend path to import coordinates_mode - bit messy
-
-
-
-####################################
-###         INPUTS               ###
-####################################
-
-SCRIPTPATH      = '/home/'+username+'/scripts/a2256_hba/'
-
-peelsourceinfo  =  '/home/'+username+'/scripts/a2256_hba/peel_source_info_a2256.txt'
-
-ms              =  '/data2/rvweeren/a2256_hba/SB050-359/A2256_SB050-059.2ch10s.ms'
-
-resolution      = 1.5        # arcsec per pixel
-lowresolution   = 15      # arcsec per pixel
-max_fieldsize   = 5600   # don't allow any final masks to be bigger than this (at fullres)
-
-maxsize_fieldimage = 12 ### degrees
-
-# set max sizes of inner and outer facets (within and out fwhm)
-maxoutliersize = 4800
-maxcentralsize = 6400
-
-FREQ = 150.     # MHz  - used for plotting approx FWHM sizes
-
-make_mosaic = True      # end with a final (SLOW) step of mosaicing the templates - useful check
-
-####################################
-####################################
+print 'Using',sys.argv[1],'as the setup code'
+execfile(sys.argv[1])
+print 'script path is',SCRIPTPATH
 
 sys.path.append(SCRIPTPATH)
 from coordinates_mode import *
 
-
-
 import pyrap.images
-
-
-
 import matplotlib.pyplot as pl
 
 from scipy.spatial import Voronoi
