@@ -54,15 +54,12 @@ if __name__=='__main__':
     print lines
     for line in lines:
         if len(line)>0:
-            origline = line
-            line = line[:-1]
             line = line.split(' ')
-            while '' in line:
-                line.remove('')
             origsize = float(line[4])	
             newsize = close_higher_bsmooth_number(int(origsize),5)
             if newsize < 512:
                 newsize = 512
-            outfile.write(origline.replace(str(origsize),str(newsize))+'\n')
+            print line[0],origsize,newsize
+            outfile.write(' '.join(line[0:4])+' '+str(newsize)+' '+' '.join(line[5:])+'\n')
 
 
