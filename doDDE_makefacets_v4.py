@@ -8,17 +8,6 @@ import time
 from subprocess import Popen, PIPE, STDOUT
 import pyrap.tables as pt
 import pwd
-username = pwd.getpwuid(os.getuid())[0]
-
-if len(sys.argv)<2:
-    raise Exception('Give the path to the setup code')
-
-print 'Using',sys.argv[1],'as the setup code'
-execfile(sys.argv[1])
-print 'script path is',SCRIPTPATH
-
-sys.path.append(SCRIPTPATH)
-from coordinates_mode import *
 
 import pyrap.images
 import matplotlib.pyplot as pl
@@ -29,7 +18,6 @@ import matplotlib.path as mplPath
 import matplotlib.transforms as mplTrans
 
 pi       = numpy.pi
-
 
 
 # Use scipy Voronoi tessellation to generate a set of masks
@@ -351,118 +339,6 @@ def dir2pos(direction):
         ra, dec = d2p(direction)
     return ra,dec
 
-#def find_imsize_from_region(region, resolution):
-    #'''
-    #get approx image size from region and image resolution - ignoring correct wcs
-    #resolution - in arcsec
-    #'''
-    #edge = 25.
-
-    #t = region.transpose()
-    #ra = t[0]
-    #dec = t[1]
-
-    #span_x = (ra.max() - ra.min())*3600./resolution
-    #span_y = (dec.max() - dec.min())*3600./resolution
-
-    #max_span = max(span_x, span_y) + 2*edge
-
-    #midra = (ra.max() + ra.min())/2.
-    #middec = (dec.max() + dec.min())/2.
-    #position =  '{x:s},{y:s}'.format(x=ra_to_str(midra,delim='h'),y=dec_to_str(middec,delim='d'))
-
-    #trysizes = numpy.copy(sorted([6400,6144,5600,5400,5184,5000,4800,4608,4320,4096,3840,3600,3200,3072,2880,2560,2304,2048, 1600, 1536, 1200, 1024, 800, 512]))
-    #trysizes1 = numpy.copy(trysizes[::-1])
-    #this_size = trysizes1[numpy.sum(trysizes1>= max_span)]
-
-    #return this_size, position
-
-#def find_newsize_centre(image):
-##if 1:
- ## NB same as image NB
- #edge      = 25 # mask this number of pixels from the edge
-
- #img    = pyrap.images.image(image)
- #pixels = numpy.copy(img.getdata())
- #sh     = numpy.shape(pixels)[3:4]
- #sh      = sh[0]
- #newsize = sh
- ##print mask, newsize
-
- #trysizes = numpy.copy(sorted([6400,6144,5600,5400,5184,5000,4800,4608,4320,4096,3840,3600,3200,3072,2880,2560,2304,2048, 1600, 1536, 1200, 1024, 800, 512]))
- ##idx = numpy.where(trysizes < sh)
- ##print idx
- ##trysizes = numpy.copy(trysizes[idx]) # remove sizes larger than image
- #trysizes1 = numpy.copy(trysizes[::-1]) # reverse sorted
- ##print trysizes1
-
- #idx = numpy.where(pixels  != 0)
- #idx_x = idx[2]
- #idx_y = idx[3]
-
- ##span_x1 = 2*abs(max(idx_x) - sh/2)
- ##span_x2 = 2*abs(sh/2 - min(idx_x))
- ##span_y1 = 2*abs(max(idx_y)- sh/2)
- ##span_y2 = 2*abs(sh/2 - min(idx_y))
- ##max_span = max(span_x1, span_y1, span_x2, span_y2)
- ##print span_x1, span_x2
- ##print span_y1, span_y2
- ##print max_span
-
- #span_x = max(idx_x) - min(idx_x) + 1
- #span_y = max(idx_y) - min(idx_y) + 1
- #max_span = max(span_x, span_y) + 2*edge
- #cen_span_x = (max(idx_x) + min(idx_x))/2.
- #cen_span_y = (max(idx_y) + min(idx_y))/2.
- #print max(idx_x), min(idx_x), span_x
- #print max(idx_y), min(idx_y), span_y
- #print max_span
-
-
- #cen_span_dec, cen_span_ra = img.toworld([0,0,cen_span_x, cen_span_y])[2:4]
- #cen_span_ra *= 180./pi
- #cen_span_dec *= 180./pi
-
- #center_pix = '{x:.0f},{y:.0f}'.format(x=cen_span_x,y=cen_span_y)
- #center = '{x:s},{y:s}'.format(x=ra_to_str(cen_span_ra,delim='h'),y=dec_to_str(cen_span_dec,delim='d'))
-
-
- ##print numpy.sum(trysizes1>= max_span)
- #this_size = trysizes1[numpy.sum(trysizes1>= max_span)-1]
- ##print "New size:", this_size
-
- #newsize = this_size
-
- ##trysizes = numpy.copy(sorted([6400,6144,5600,5400,5184,5000,4800,4608,4320,4096,3840,3600,3200,3072,2880,2560,2304,2048, 1600, 1536, 1200, 1024, 800, 512]))
- ##idx = numpy.where(trysizes < sh)
- ###print idx
- ##trysizes = numpy.copy(trysizes[idx]) # remove sizes larger than image
- ##trysizes = numpy.copy(trysizes[::-1]) # reverse sorted
- ##print trysizes
- ##for size in trysizes:
-    ###print 'Trying', size
-    ##cutedge = numpy.int((sh - size)/2.)
-    ###print cutedge
-
-    ##idx1 = numpy.size(numpy.where(pixels[0,0,  0:cutedge,0:sh]      != 0))
-    ##idx2 = numpy.size(numpy.where(pixels[0,0,  sh-cutedge:sh,0:sh]  != 0))
-    ##idx3 = numpy.size(numpy.where(pixels[0,0,  0:sh,0:cutedge]      != 0))
-    ##idx4 = numpy.size(numpy.where(pixels[0,0,  0:sh,sh-cutedge:sh]  != 0))
-
-    ###print idx1, idx2, idx3, idx4
-
-    ##if ((idx1) == 0) and ((idx2)  == 0) and ((idx3)  == 0) and ((idx4) == 0):
-       ### UPDATE THE IMAGE SIZE
-       ##newsize  = numpy.copy(size)
-       ##print 'Found new size', newsize, ' fits within the mask'
-
- #return newsize, center
-
-
-
-
-
-
 
 def create_dummyms_parset_formasks(msin, msout):
     ndppp_parset = (msin.split('.')[0]) +'_ndppp_dummy.parset'
@@ -703,9 +579,7 @@ def voronoi_finite_polygons_2d_box(vor, box):
 
 
 
-def make_facet_mask(imname, maskout, region, pad=True):
-
-    edge      = 25 # mask this number of pixels from the edge
+def make_facet_mask(imname, maskout, region, pad=True, edge=25):
 
     os.system('rm -rf ' + maskout)
     os.system('cp -r  ' + imname + ' ' + maskout)
@@ -750,8 +624,6 @@ def make_facet_mask(imname, maskout, region, pad=True):
 
 def add_facet_mask(maskout, region, value, direction, size,  lowres=15., actualres=1.5):
     print "adding facet to " + maskout +" s"+str(value)+ " ("+str(size)+")"
-
-    edge      = 25 # mask this number of pixels from the edge
 
     #os.system('rm -rf ' + maskout)
     #os.system('cp -r  ' + imname + ' ' + maskout)
@@ -843,14 +715,6 @@ def add_facet_mask(maskout, region, value, direction, size,  lowres=15., actualr
 
 def show_facets(facetmap, directions, directions2=None, maxsize=6400, lowres=15., actualres=1.5, r=[1.,2.]):
 
-#if 1:
-
-
-    edge      = 25 # mask this number of pixels from the edge
-
-    #os.system('rm -rf ' + maskout)
-    #os.system('cp -r  ' + imname + ' ' + maskout)
-
     img    = pyrap.images.image(facetmap)
     pixels = numpy.copy(img.getdata())
     sh     = numpy.shape(pixels)
@@ -921,18 +785,11 @@ def show_facets(facetmap, directions, directions2=None, maxsize=6400, lowres=15.
     return
 
 
-def find_newsize_centre_lowresfacets(facetmap, region, direction, source, maxsize=6400, lowres=15., actualres=1.5):
-
-#if 1:
+def find_newsize_centre_lowresfacets(facetmap, region, direction, source, maxsize=6400, lowres=15., actualres=1.5, edge=25):
 
     value = int(source.replace('s',''))
 
     print "doing source " + source
-
-    edge      = 25 # mask this number of pixels from the edge
-
-    #os.system('rm -rf ' + maskout)
-    #os.system('cp -r  ' + imname + ' ' + maskout)
 
     img    = pyrap.images.image(facetmap)
     pixels = numpy.copy(img.getdata())
@@ -1122,15 +979,13 @@ def find_newsize_centre_lowresfacets(facetmap, region, direction, source, maxsiz
 
 
 
-def find_newsize_lowresfacets(facetmap, region, direction, source, maxsize=6400, lowres=15., actualres=1.5, debug=False):
+def find_newsize_lowresfacets(facetmap, region, direction, source, maxsize=6400, lowres=15., actualres=1.5, debug=True, findedge=None, edge=25):
 
 #if 1:
 
     value = int(source.replace('s',''))
 
     if debug : print "doing source " + source
-
-    edge      = 25 # mask this number of pixels from the edge
 
     #os.system('rm -rf ' + maskout)
     #os.system('cp -r  ' + imname + ' ' + maskout)
@@ -1195,6 +1050,11 @@ def find_newsize_lowresfacets(facetmap, region, direction, source, maxsize=6400,
     #span_y = Y2-Y1
     span = max(max_span_x,max_span_y)
     real_span = span*lowres/actualres  # in actual pixels
+    if findedge is not None:
+        edge=findedge(real_span)
+        maxedge=findedge(maxsize)
+        edge=int(min([maxedge,edge]))
+        if debug: print 'Calculating edge to be:',edge
     real_span += 2*edge  # add real edge pixels
     if debug : print 'span (real)', span, real_span
     #trysizes = numpy.copy(sorted([6400,6144,5600,5400,5184,5000,4800,4608,4320,4096,3840,3600,3200,3072,2880,2560,2304,2048, 1600, 1536, 1200, 1024, 800, 512]))
@@ -1218,9 +1078,9 @@ def find_newsize_lowresfacets(facetmap, region, direction, source, maxsize=6400,
     #new_cen_dec *= 180./pi
     #new_position =  '{x:s},{y:s}'.format(x=ra_to_str(new_cen_ra,delim='h'),y=dec_to_str(new_cen_dec,delim='d'))
 
-    if debug : print new_real_span
+    if debug : print 'image size, edge:',new_real_span, edge
 
-    return new_real_span
+    return new_real_span, edge
 
 
 
@@ -1281,283 +1141,297 @@ def fwhm_freq(freq, alpha=1.02):
     fwhm = 57.2957795*alpha*lam/D
     return fwhm
 
+### main code starts here ###
+
+if __name__=='__main__':
+
+    username = pwd.getpwuid(os.getuid())[0]
+
+    if len(sys.argv)<2:
+        raise Exception('Give the path to the setup code')
+
+    print 'Using',sys.argv[1],'as the setup code'
+    execfile(sys.argv[1])
+    print 'script path is',SCRIPTPATH
+
+    sys.path.append(SCRIPTPATH)
+    from coordinates_mode import *
+    try:
+        edge_scale
+    except NameError:
+        edge_scale=None
+
+    source_info_rec = numpy.genfromtxt(peelsourceinfo, \
+                                       dtype="S50,S25,S5,S5,i8,i8,i8,i8,S2,S255,S255,S255,S5", \
+                                       names=["sourcelist","directions","atrous_do","mscale_field","imsizes",\
+                                       "cellsizetime_p","cellsizetime_a","fieldsize","dynamicrange",\
+                                       "regionselfc","regionfield","peelskymodel","outliersource"],comments='#')
+
+    sourcelist = source_info_rec["sourcelist"]
+    directions = source_info_rec["directions"]
+    atrous_do = source_info_rec["atrous_do"]
+    mscale_field = source_info_rec["mscale_field"]
+    imsizes = source_info_rec["imsizes"]
+    cellsizetime_p = source_info_rec["cellsizetime_p"]
+    cellsizetime_a = source_info_rec["cellsizetime_a"]
+    fieldsize = source_info_rec["fieldsize"]
+    dynamicrange = source_info_rec["dynamicrange"]
+    regionselfc = source_info_rec["regionselfc"]
+    regionfield = source_info_rec["regionfield"]
+    peelskymodel = source_info_rec["peelskymodel"]
+    outliersource = source_info_rec["outliersource"]
 
 
 
-#######################################################################################
+    sresolution = '{r:.1f}arcsec'.format(r=resolution)
+    slowresolution = '{r:.1f}arcsec'.format(r=lowresolution)
+
+
+    fwhm = fwhm_freq(FREQ)
+    rad = [fwhm/2., numpy.sqrt(numpy.log(3.)/numpy.log(2.))*fwhm/2.]  # PB= 0.5, 0.3
+    print 'FWHM: {ff:.2f} deg (draw radii at {ss} deg)'.format(ff=fwhm, ss=', '.join(['{rad:.2f}'.format(rad=radi) for radi in rad]))
+
+
+    #mslist = ['BOOTES24_SB190-199.2ch8s.ms']
+    ### MAKE ALL THE MASKS AT ONCE ###
 
 
 
+    # create low timeres, low freqres ms for faster shifting
+    tmpms  = os.path.basename(ms).split('.')[0] + '.dummy.ms'
+    parset = create_dummyms_parset_formasks(ms, tmpms)
+    if not os.path.exists(tmpms):
+        print "making dummy ms (freq/time averaged) set for image-making"
+        os.system('NDPPP ' + parset)
 
-source_info_rec = numpy.genfromtxt(peelsourceinfo, \
-                                   dtype="S50,S25,S5,S5,i8,i8,i8,i8,S2,S255,S255,S255,S5", \
-                                   names=["sourcelist","directions","atrous_do","mscale_field","imsizes",\
-                                   "cellsizetime_p","cellsizetime_a","fieldsize","dynamicrange",\
-                                   "regionselfc","regionfield","peelskymodel","outliersource"],comments='#')
+    npixlow = int(maxsize_fieldimage*3600./lowresolution)
+    npix = int(maxsize_fieldimage*3600./resolution)
 
-sourcelist = source_info_rec["sourcelist"]
-directions = source_info_rec["directions"]
-atrous_do = source_info_rec["atrous_do"]
-mscale_field = source_info_rec["mscale_field"]
-imsizes = source_info_rec["imsizes"]
-cellsizetime_p = source_info_rec["cellsizetime_p"]
-cellsizetime_a = source_info_rec["cellsizetime_a"]
-fieldsize = source_info_rec["fieldsize"]
-dynamicrange = source_info_rec["dynamicrange"]
-regionselfc = source_info_rec["regionselfc"]
-regionfield = source_info_rec["regionfield"]
-peelskymodel = source_info_rec["peelskymodel"]
-outliersource = source_info_rec["outliersource"]
+    dummy_image = 'empty_wide.image'
 
+    ## make low_res full image
+    cmd = 'casapy --nogui --nologfile  -c '+SCRIPTPATH+'/make_empty_image.py '+ tmpms + ' ' + dummy_image + ' '  + str(npixlow) + ' ' +slowresolution
+    if not os.path.exists(dummy_image):
+        #os.system('rm -rf empty_wide.image')
+        print "making image template: {n:d} pix at {s}/pix".format(n=npixlow, s=slowresolution)
+        os.system(cmd)
 
+    ra0,dec0 = image_centre(dummy_image)
 
-sresolution = '{r:.1f}arcsec'.format(r=resolution)
-slowresolution = '{r:.1f}arcsec'.format(r=lowresolution)
-
-
-fwhm = fwhm_freq(FREQ)
-rad = [fwhm/2., numpy.sqrt(numpy.log(3.)/numpy.log(2.))*fwhm/2.]  # PB= 0.5, 0.3
-print 'FWHM: {ff:.2f} deg (draw radii at {ss} deg)'.format(ff=fwhm, ss=', '.join(['{rad:.2f}'.format(rad=radi) for radi in rad]))
+    #tesselate#
+    print "doing tesselation"
+    ra,dec = dir2pos(directions)
 
 
-#mslist = ['BOOTES24_SB190-199.2ch8s.ms']
-### MAKE ALL THE MASKS AT ONCE ###
+    x,y = image_world_to_image(dummy_image,ra,dec)
 
 
-
-# create low timeres, low freqres ms for faster shifting
-tmpms  = os.path.basename(ms).split('.')[0] + '.dummy.ms'
-parset = create_dummyms_parset_formasks(ms, tmpms)
-if not os.path.exists(tmpms):
-    print "making dummy ms (freq/time averaged) set for image-making"
-    os.system('NDPPP ' + parset)
-
-npixlow = int(maxsize_fieldimage*3600./lowresolution)
-npix = int(maxsize_fieldimage*3600./resolution)
-
-dummy_image = 'empty_wide.image'
-
-## make low_res full image
-cmd = 'casapy --nogui --nologfile  -c '+SCRIPTPATH+'/make_empty_image.py '+ tmpms + ' ' + dummy_image + ' '  + str(npixlow) + ' ' +slowresolution
-if not os.path.exists(dummy_image):
-    #os.system('rm -rf empty_wide.image')
-    print "making image template: {n:d} pix at {s}/pix".format(n=npixlow, s=slowresolution)
-    os.system(cmd)
-
-ra0,dec0 = image_centre(dummy_image)
-
-#tesselate#
-print "doing tesselation"
-ra,dec = dir2pos(directions)
+    x1,y1 = 0.,0.
+    x2,y2 = npixlow,npixlow
+    box = numpy.array([[x1,y1],[x2,y2]])
 
 
-x,y = image_world_to_image(dummy_image,ra,dec)
+    # use the image coordinates - as the non-linear sky is handled properly
+    vor = Voronoi(numpy.array((x, y)).transpose())
 
+    # convert the voronoi object into something useful (array of regions, truncated to imagesize)
+    # impoly is an array of (n,2) arrays defining the polygon region
+    impoly = voronoi_finite_polygons_2d_box(vor, box)
 
-x1,y1 = 0.,0.
-x2,y2 = npixlow,npixlow
-box = numpy.array([[x1,y1],[x2,y2]])
-
-
-# use the image coordinates - as the non-linear sky is handled properly
-vor = Voronoi(numpy.array((x, y)).transpose())
-
-# convert the voronoi object into something useful (array of regions, truncated to imagesize)
-# impoly is an array of (n,2) arrays defining the polygon region
-impoly = voronoi_finite_polygons_2d_box(vor, box)
-
-# convert image coordinates of regions to
-worldpoly = []
-for p in impoly:
-    pp = p.transpose()
-    pra,pdec = image_image_to_world(dummy_image,pp[0],pp[1])
-    worldpoly.append(numpy.array((pra,pdec)).transpose())
-worldpoly = numpy.asarray(worldpoly)
-
-
-plot_facets = True
-if plot_facets:
-    pl.figure(figsize=(8,4))
-    ax1 = pl.subplot(121)
-    ax1.plot(x,y,'*')
-    ax1.plot([x1,x1,x2,x2,x1],[y1,y2,y2,y1,y1])
+    # convert image coordinates of regions to
+    worldpoly = []
     for p in impoly:
         pp = p.transpose()
-        ax1.plot(pp[0],pp[1])
+        pra,pdec = image_image_to_world(dummy_image,pp[0],pp[1])
+        worldpoly.append(numpy.array((pra,pdec)).transpose())
+    worldpoly = numpy.asarray(worldpoly)
 
 
-    ax1.set_xlabel('x')
-    ax1.set_ylabel('y')
+    plot_facets = True
+    if plot_facets:
+        pl.figure(figsize=(8,4))
+        ax1 = pl.subplot(121)
+        ax1.plot(x,y,'*')
+        ax1.plot([x1,x1,x2,x2,x1],[y1,y2,y2,y1,y1])
+        for p in impoly:
+            pp = p.transpose()
+            ax1.plot(pp[0],pp[1])
 
 
-    ax2 = pl.subplot(122)
-    ax2.plot(ra,dec,'*')
-    for p in worldpoly:
-        pp = p.transpose()
-        ax2.plot(pp[0],pp[1])
-    x1,x2 = ax2.get_xlim()
-    ax2.set_xlabel('ra')
-    ax2.set_ylabel('dec')
-    pl.savefig('voronoi_facets.png')
-
-# use world coordinates now
-poly = worldpoly
+        ax1.set_xlabel('x')
+        ax1.set_ylabel('y')
 
 
+        ax2 = pl.subplot(122)
+        ax2.plot(ra,dec,'*')
+        for p in worldpoly:
+            pp = p.transpose()
+            ax2.plot(pp[0],pp[1])
+        x1,x2 = ax2.get_xlim()
+        ax2.set_xlabel('ra')
+        ax2.set_ylabel('dec')
+        pl.savefig('voronoi_facets.png')
 
-if 1:
-    # initial tesselation with huge facets
-    print "allow huge facets"
-    facet_image_name_huge = 'facets_wide_huge.image'
-    os.system('rm -rf {im2}'.format(im2=facet_image_name_huge))
-    os.system('cp -r {im1} {im2}'.format(im1=dummy_image,im2=facet_image_name_huge))
+    # use world coordinates now
+    poly = worldpoly
 
-    sizes = 2*npix*numpy.ones(len(sourcelist))
+
+
+    if 1:
+        # initial tesselation with huge facets
+        print "allow huge facets"
+        facet_image_name_huge = 'facets_wide_huge.image'
+        os.system('rm -rf {im2}'.format(im2=facet_image_name_huge))
+        os.system('cp -r {im1} {im2}'.format(im1=dummy_image,im2=facet_image_name_huge))
+
+        sizes = 2*npix*numpy.ones(len(sourcelist))
+
+        for source_id,source in enumerate(sourcelist):
+            value = int(source.replace('s',''))
+            add_facet_mask(facet_image_name_huge, poly[source_id], value, directions[source_id], sizes[source_id], lowres=lowresolution, actualres=resolution)
+
+
+        show_facets(facet_image_name_huge, directions, r=rad)
+
+
+
+    if 1:
+        # initial tesselation with huge facets
+        print "limit facet sizes (inner and outer)"
+        facet_image_name = 'facets_wide_maxsize.image'
+        os.system('rm -rf {im2}'.format(im2=facet_image_name))
+        os.system('cp -r {im1} {im2}'.format(im1=dummy_image,im2=facet_image_name))
+
+
+        outlierdist = rad[0]  # make it at 0.5 power point
+        # set max sizes
+        sizes = []
+        for source_id,source in enumerate(sourcelist):
+            d = directions[source_id]
+
+            C = d.split(',')
+            ra = ra_to_degrees(C[0],delim='h')
+            dec = dec_to_degrees(C[1],delim='d')
+            dist_from_pointing = angsep(ra,dec,ra0,dec0)
+
+
+            if dist_from_pointing > outlierdist:
+                sizes.append(maxoutliersize)
+            else:
+                sizes.append(maxcentralsize)
+
+
+        for source_id,source in enumerate(sourcelist):
+            value = int(source.replace('s',''))
+            add_facet_mask(facet_image_name, poly[source_id], value, directions[source_id], sizes[source_id], lowres=lowresolution, actualres=resolution)
+
+
+        show_facets(facet_image_name, directions, r=rad)
+
+
+    ## obsolete - never shift the facet centres
+    ## get smallest size possible - with shifting the facet centre
+    ## but use the max image size
+    #newpositionsshift = []
+    #newsizesshift = []
+    #for source_id,source in enumerate(sourcelist):
+        #new_pos, new_size = find_newsize_centre_lowresfacets(facet_image_name_huge, poly[source_id], directions[source_id], source, maxsize=max_fieldsize, lowres=lowresolution, actualres=resolution)
+        #newpositionsshift.append(new_pos)
+        #newsizesshift.append(new_size)
+
+
+    #for source_id,source in enumerate(sourcelist):
+        #print source, newsizesshift[source_id], newsizes[source_id], sizes[source_id]
+
+    #facet_image_name = 'facets_wide_shifted.image'
+    #os.system('rm -rf {im2}'.format(im2=facet_image_name))
+    #os.system('cp -r {im1} {im2}'.format(im1=dummy_image,im2=facet_image_name))
+    #for source_id,source in enumerate(sourcelist):
+        #value = int(source.replace('s',''))
+        #add_facet_mask(facet_image_name, poly[source_id], value, newpositionsshift[source_id], newsizesshift[source_id], lowres=lowresolution, actualres=resolution)
+    #show_facets(facet_image_name, directions, directions2=newpositionsshift, r=rad)
+
+
+    reduce_sizes = True
+    if reduce_sizes:
+
+        print "reducing image sizes where possible"
+
+        # get smallest size possible - without shifting the facet centre
+        newsizes = []
+        edges = []
+        for source_id,source in enumerate(sourcelist):
+            new_size,new_edge = find_newsize_lowresfacets(facet_image_name_huge, poly[source_id], directions[source_id], source, maxsize=max_fieldsize, lowres=lowresolution, actualres=resolution, findedge=edge_scale)
+            newsizes.append(new_size)
+            edges.append(new_edge)
+
+        facet_image_name = 'facets.image'
+        os.system('rm -rf {im2}'.format(im2=facet_image_name))
+        os.system('cp -r {im1} {im2}'.format(im1=dummy_image,im2=facet_image_name))
+        for source_id,source in enumerate(sourcelist):
+            value = int(source.replace('s',''))
+            add_facet_mask(facet_image_name, poly[source_id], value, directions[source_id], newsizes[source_id], lowres=lowresolution, actualres=resolution)
+        show_facets(facet_image_name, directions, directions2=directions, r=rad)
+
+
+    sizes = newsizes
+    positions = directions
+
+
+
+    for p,source in zip(poly,sourcelist):
+        write_ds9_region('peel_facet_{source}.reg'.format(source=source), p, source)
+        write_casapy_region('peel_facet_{source}.rgn'.format(source=source), p, source)
+    write_ds9_allregions('peel_facets.reg', poly, sourcelist)
+
+    #sys.exit()
+
+
+
+
+
+    # make empty images - maxsize #
+    NDPPPcmds = []
+    Imcmds = []
+    mslist = []
+    imagelist = []
+    sizelist = []
+    for source_id,source in enumerate(sourcelist):
+
+        tmpn  = ms.split('.')[0] + '.' + source + '.ms.tmp'
+        mslist.append(tmpn)
+        imagelist.append('templatemask_' + source)
+        sizelist.append(str(sizes[source_id]))
+        parset = create_phaseshift_parset_formasks(tmpms, tmpn, source, positions[source_id])
+        NDPPPcmds.append('NDPPP ' + parset)
+
+    run_parallel(NDPPPcmds, nthreads=8,logs='auto')
+
+    mslistfile = 'mslist.npy'
+    imagelistfile = 'magelist.npy'
+    sizelistfile = 'sizelist.npy'
+    numpy.save(mslistfile, numpy.array(mslist))
+    numpy.save(imagelistfile, numpy.array(imagelist))
+    numpy.save(sizelistfile, numpy.array(sizelist))
+    Imcmds = ['casapy --nogui --nologfile  -c '+SCRIPTPATH+'/make_empty_image_many.py '+ mslistfile + ' ' + imagelistfile + ' ' + sizelistfile + ' ' +sresolution ]
+    run_parallel(Imcmds, nthreads=1,logs='auto')
+
+    ## clean up
+    for source_id,source in enumerate(sourcelist):
+        tmpn  = ms.split('.')[0] + '.' + source + '.ms.tmp'
+        os.system('rm -rf '+tmpn)
+        tmpn  = ms.split('.')[0] +'_ndppp_avgphaseshift.'+source+'.parset'
+        os.system('rm -rf '+tmpn)
+
+    #mask_cmds = ["casapy --nogui --nologfile -c ~/para/scripts/dde_weeren/bootes_hba/make_mask_from_region.py templatemask0_{source}  peel_facet_{source}.rgn templatemask0_{source}.masktmp False".format(source=source) for source in sourcelist]
+    #run_parallel(mask_cmds, nthreads=1,logs='auto')
 
     for source_id,source in enumerate(sourcelist):
-        value = int(source.replace('s',''))
-        add_facet_mask(facet_image_name_huge, poly[source_id], value, directions[source_id], sizes[source_id], lowres=lowresolution, actualres=resolution)
+        make_facet_mask("templatemask_{source}".format(source=source), "templatemask_{source}.masktmp".format(source=source), poly[source_id], pad=True, edge=edges[source_id])
 
 
-    show_facets(facet_image_name_huge, directions, r=rad)
-
-
-
-if 1:
-    # initial tesselation with huge facets
-    print "limit facet sizes (inner and outer)"
-    facet_image_name = 'facets_wide_maxsize.image'
-    os.system('rm -rf {im2}'.format(im2=facet_image_name))
-    os.system('cp -r {im1} {im2}'.format(im1=dummy_image,im2=facet_image_name))
-
-
-    outlierdist = rad[0]  # make it at 0.5 power point
-    # set max sizes
-    sizes = []
-    for source_id,source in enumerate(sourcelist):
-        d = directions[source_id]
-
-        C = d.split(',')
-        ra = ra_to_degrees(C[0],delim='h')
-        dec = dec_to_degrees(C[1],delim='d')
-        dist_from_pointing = angsep(ra,dec,ra0,dec0)
-
-
-        if dist_from_pointing > outlierdist:
-            sizes.append(maxoutliersize)
-        else:
-            sizes.append(maxcentralsize)
-
-
-    for source_id,source in enumerate(sourcelist):
-        value = int(source.replace('s',''))
-        add_facet_mask(facet_image_name, poly[source_id], value, directions[source_id], sizes[source_id], lowres=lowresolution, actualres=resolution)
-
-
-    show_facets(facet_image_name, directions, r=rad)
-
-
-## obsolete - never shift the facet centres
-## get smallest size possible - with shifting the facet centre
-## but use the max image size
-#newpositionsshift = []
-#newsizesshift = []
-#for source_id,source in enumerate(sourcelist):
-    #new_pos, new_size = find_newsize_centre_lowresfacets(facet_image_name_huge, poly[source_id], directions[source_id], source, maxsize=max_fieldsize, lowres=lowresolution, actualres=resolution)
-    #newpositionsshift.append(new_pos)
-    #newsizesshift.append(new_size)
-
-
-#for source_id,source in enumerate(sourcelist):
-    #print source, newsizesshift[source_id], newsizes[source_id], sizes[source_id]
-
-#facet_image_name = 'facets_wide_shifted.image'
-#os.system('rm -rf {im2}'.format(im2=facet_image_name))
-#os.system('cp -r {im1} {im2}'.format(im1=dummy_image,im2=facet_image_name))
-#for source_id,source in enumerate(sourcelist):
-    #value = int(source.replace('s',''))
-    #add_facet_mask(facet_image_name, poly[source_id], value, newpositionsshift[source_id], newsizesshift[source_id], lowres=lowresolution, actualres=resolution)
-#show_facets(facet_image_name, directions, directions2=newpositionsshift, r=rad)
-
-
-reduce_sizes = True
-if reduce_sizes:
-
-    print "reducing image sizes where possible"
-
-    # get smallest size possible - without shifting the facet centre
-    newsizes = []
-    for source_id,source in enumerate(sourcelist):
-        new_size = find_newsize_lowresfacets(facet_image_name_huge, poly[source_id], directions[source_id], source, maxsize=max_fieldsize, lowres=lowresolution, actualres=resolution)
-        newsizes.append(new_size)
-
-    facet_image_name = 'facets.image'
-    os.system('rm -rf {im2}'.format(im2=facet_image_name))
-    os.system('cp -r {im1} {im2}'.format(im1=dummy_image,im2=facet_image_name))
-    for source_id,source in enumerate(sourcelist):
-        value = int(source.replace('s',''))
-        add_facet_mask(facet_image_name, poly[source_id], value, directions[source_id], newsizes[source_id], lowres=lowresolution, actualres=resolution)
-    show_facets(facet_image_name, directions, directions2=directions, r=rad)
-
-
-sizes = newsizes
-positions = directions
-
-
-
-for p,source in zip(poly,sourcelist):
-    write_ds9_region('peel_facet_{source}.reg'.format(source=source), p, source)
-    write_casapy_region('peel_facet_{source}.rgn'.format(source=source), p, source)
-write_ds9_allregions('peel_facets.reg', poly, sourcelist)
-
-#sys.exit()
-
-
-
-
-
-# make empty images - maxsize #
-NDPPPcmds = []
-Imcmds = []
-mslist = []
-imagelist = []
-sizelist = []
-for source_id,source in enumerate(sourcelist):
-
-    tmpn  = ms.split('.')[0] + '.' + source + '.ms.tmp'
-    mslist.append(tmpn)
-    imagelist.append('templatemask_' + source)
-    sizelist.append(str(sizes[source_id]))
-    parset = create_phaseshift_parset_formasks(tmpms, tmpn, source, positions[source_id])
-    NDPPPcmds.append('NDPPP ' + parset)
-
-run_parallel(NDPPPcmds, nthreads=8,logs='auto')
-
-mslistfile = 'mslist.npy'
-imagelistfile = 'magelist.npy'
-sizelistfile = 'sizelist.npy'
-numpy.save(mslistfile, numpy.array(mslist))
-numpy.save(imagelistfile, numpy.array(imagelist))
-numpy.save(sizelistfile, numpy.array(sizelist))
-Imcmds = ['casapy --nogui --nologfile  -c '+SCRIPTPATH+'/make_empty_image_many.py '+ mslistfile + ' ' + imagelistfile + ' ' + sizelistfile + ' ' +sresolution ]
-run_parallel(Imcmds, nthreads=1,logs='auto')
-
-## clean up
-for source_id,source in enumerate(sourcelist):
-    tmpn  = ms.split('.')[0] + '.' + source + '.ms.tmp'
-    os.system('rm -rf '+tmpn)
-    tmpn  = ms.split('.')[0] +'_ndppp_avgphaseshift.'+source+'.parset'
-    os.system('rm -rf '+tmpn)
-
-#mask_cmds = ["casapy --nogui --nologfile -c ~/para/scripts/dde_weeren/bootes_hba/make_mask_from_region.py templatemask0_{source}  peel_facet_{source}.rgn templatemask0_{source}.masktmp False".format(source=source) for source in sourcelist]
-#run_parallel(mask_cmds, nthreads=1,logs='auto')
-
-for source_id,source in enumerate(sourcelist):
-    make_facet_mask("templatemask_{source}".format(source=source), "templatemask_{source}.masktmp".format(source=source), poly[source_id], pad=True)
-
-
-# make a mosaic of the templates - at full res - this serves as a check of how the facets will be mosaiced
-if make_mosaic:
-    print "making mask mosaic, this may take some time"
-    cmd = 'python '+SCRIPTPATH+'/mos_masks.py'
-    os.system(cmd)
+    # make a mosaic of the templates - at full res - this serves as a check of how the facets will be mosaiced
+    if make_mosaic:
+        print "making mask mosaic, this may take some time"
+        cmd = 'python '+SCRIPTPATH+'/mos_masks.py'
+        os.system(cmd)
