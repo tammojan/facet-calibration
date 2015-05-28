@@ -17,3 +17,7 @@ maxcentralsize = 6400
 FREQ = 150.     # MHz  - used for plotting approx FWHM sizes
 
 make_mosaic = True      # end with a final (SLOW) step of mosaicing the templates - useful check
+
+edge_scale  = lambda s: s*0.15 # 15 % margin around the facets to deal with wsclean aliasing
+
+
