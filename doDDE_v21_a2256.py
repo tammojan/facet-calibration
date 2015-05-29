@@ -1892,17 +1892,22 @@ if __name__ == "__main__":
                 ###########################################################################
 
                 # PAD MODEL IMAGES
-                imout_p=imout+'-padded'  
-                if len(mslist) > WScleanWBgroup: # WIDEBAND case
-                    for modim in (glob.glob(imout + '-0*-model.fits')+glob.glob(imout + '-MFS-model.fits')):
-                        imsize_p=padfits(modim,modim.replace(imout,imout_p))
-                else: # NON-WIDEBAND case
-                    imsize_p=padfits(imout+'-model.fits',imout_p+'-model.fits')
-                logging.info('Padded model images to prevent aliasing')
+                #imout_p=imout+'-padded'  
+                #if len(mslist) > WScleanWBgroup: # WIDEBAND case
+                #    for modim in (glob.glob(imout + '-0*-model.fits')+glob.glob(imout + '-MFS-model.fits')):
+                #        imsize_p=padfits(modim,modim.replace(imout,imout_p))
+                #else: # NON-WIDEBAND case
+                #    imsize_p=padfits(imout+'-model.fits',imout_p+'-model.fits')
+                #logging.info('Padded model images to prevent aliasing')
 
                 # DO THE FFT
-                do_fieldFFT(allbandspath + 'allbands.concat.shifted_'+source+'.ms',imout_p, imsize_p, cellsize, wsclean,
+                #do_fieldFFT(allbandspath + 'allbands.concat.shifted_'+source+'.ms',imout_p, imsize_p, cellsize, wsclean,
+                #         msavglist, WSCleanRobust, WScleanWBgroup, numchanperms)
+
+                # DO THE FFT
+                do_fieldFFT(allbandspath + 'allbands.concat.shifted_'+source+'.ms',imout, imsizef, cellsize, wsclean,
                          msavglist, WSCleanRobust, WScleanWBgroup, numchanperms)
+
                 logging.info('FFTed model of DDE facet: ' + source)
 
                 # SHIFT PHASE CENTER BACK TO ORIGINAL
