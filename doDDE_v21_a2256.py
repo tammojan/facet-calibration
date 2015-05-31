@@ -158,6 +158,40 @@ def create_subtract_parset_field_outlier(outputcolumn, TEC):
     f.close()
     return bbs_parset
 
+def create_predict_parset(outputcolumn):
+    """
+    Create a parset for to predict a model (for allbands.concat.source.ms).
+    The name of the output parset is 'predict.parset'.
+    Input:
+      * outputcolumn - Output column.
+    Output:
+      * The name of the output parset
+    The chunksize is hardcoded to 200.
+    """
+    bbs_parset = 'predict.parset'
+    os.system('rm -f ' + bbs_parset)
+    f=open(bbs_parset, 'w')
+
+    chunksize = 200
+
+    f.write('Strategy.InputColumn = DATA\n')
+    f.write('Strategy.ChunkSize   = %s\n' % chunksize)
+    f.write('Strategy.Steps       = [predict]\n\n\n')
+    f.write('Step.subtract.Model.Sources                   = []\n')
+    f.write('Step.predict.Model.Cache.Enable              = T\n')
+    f.write('Step.predict.Model.Phasors.Enable            = F\n')
+    f.write('Step.predict.Model.DirectionalGain.Enable    = F\n')
+    f.write('Step.predict.Model.Gain.Enable               = F\n')
+    f.write('Step.predict.Model.Rotation.Enable          = F\n')
+    f.write('Step.predict.Model.CommonScalarPhase.Enable = F\n')
+    f.write('Step.predict.Model.CommonRotation.Enable     = F\n')
+    f.write('Step.predict.Operation                       = PREDICT\n')
+    f.write('Step.predict.Model.Beam.Enable               = F\n')
+    f.write('Step.predict.Output.WriteCovariance          = F\n')
+    f.write('Step.predict.Output.Column                   = %s\n' % outputcolumn)
+    f.close()
+    return bbs_parset
+
 
 def runbbs_diffskymodel_addback(mslist, parmdb, replacesource, direction, imsize, output_template_im, do_ap,maxcpu=None):
     """
@@ -1361,6 +1395,11 @@ if __name__ == "__main__":
         allbandspath = os.getcwd() + '/'
 
     try:
+        doOUTLIER_withGaussfix
+    except NameError:
+        doOUTLIER_withGaussfix = False
+
+    try:
         delete_SC_ms # delete selfcal ms after selfcal to save diskspace
     except NameError:
         delete_SC_ms = False
@@ -1677,7 +1716,7 @@ if __name__ == "__main__":
 
 
         ### PHASESHIFT the FULL resolution dataset, for MODEL_DATA FFT subtract
-            if outliersource[source_id] == 'False':
+            if outliersource[source_id] == 'False' or doOUTLIER_withGaussfix:
                 parset = create_phaseshift_parset_full(allbandspath + 'allbands.concat.ms',
                                                    allbandspath + 'allbands.concat.shifted_'+source+'.ms',
                                                    directions[source_id],'DATA')
@@ -1809,8 +1848,8 @@ if __name__ == "__main__":
             os.system('rm -rf ' + '*.' + source + '.ms')
 
         parmdb_master_out="instrument_master_" + source
-        if outliersource[source_id] == 'False':
-            if StartAtStep in ['preSC', 'doSC', 'postSC','preFACET']:
+        if (outliersource[source_id] == 'False') or doOUTLIER_withGaussfix:
+            if (StartAtStep in ['preSC', 'doSC', 'postSC','preFACET']) and not doOUTLIER_withGaussfix:
                 logging.info('START: preFACET')
                 ## STEP 3: prep for facet ##
                 parmdb_master_out="instrument_master_" + source
@@ -1838,14 +1877,20 @@ if __name__ == "__main__":
 
                 # Check if all NDPPP processes are finished
                 b.wait()
-
+            else: # for doOUTLIER_withGaussfix
+                logging.info('Do not add field back for outlier source, just set MODEL_DATA=ADDED_DATA_SOURCE')
+            
+                b=bg(maxp=numcpu_taql)
+                for ms in mslist:
+                    b.run("taql 'update " + ms + " set MODEL_DATA=ADDED_DATA_SOURCE'")
+                b.wait()
                 ###########################################################################
             ## STEP 4a -- do facet ##
 
             ###### MAKE FACET IMAGE #####
 
             # imsize None forces the code to work out the image size from the mask size
-            if StartAtStep in ['preSC', 'doSC', 'postSC','preFACET','doFACET']:
+            if (StartAtStep in ['preSC', 'doSC', 'postSC','preFACET','doFACET']) and not doOUTLIER_withGaussfix:
                 logging.info('START: doFACET')
                 msavglist = []
                 for ms_id, ms in enumerate(mslistorig): # remake msavglist from mslistorig(!) to capture a missing block
@@ -1904,11 +1949,16 @@ if __name__ == "__main__":
                 #do_fieldFFT(allbandspath + 'allbands.concat.shifted_'+source+'.ms',imout_p, imsize_p, cellsize, wsclean,
                 #         msavglist, WSCleanRobust, WScleanWBgroup, numchanperms)
 
-                # DO THE FFT
-                do_fieldFFT(allbandspath + 'allbands.concat.shifted_'+source+'.ms',imout, imsizef, cellsize, wsclean,
-                         msavglist, WSCleanRobust, WScleanWBgroup, numchanperms)
-
-                logging.info('FFTed model of DDE facet: ' + source)
+                if doOUTLIER_withGaussfix:
+                    # DO THE DFT
+                    parset   = create_predict_parset('MODEL_DATA')
+                    runbbs([allbandspath + 'allbands.concat.shifted_'+source+'.ms'], peelskymodel[source_id], parset, 'instrument', True)
+                    logging.info('Predicted ' + peelskymodel[source_id] + ' with BBS')
+                else:
+                    # DO THE FFT
+                    do_fieldFFT(allbandspath + 'allbands.concat.shifted_'+source+'.ms',imout, imsizef, cellsize, wsclean,
+                             msavglist, WSCleanRobust, WScleanWBgroup, numchanperms)
+                    logging.info('FFTed model of DDE facet: ' + source)
 
                 # SHIFT PHASE CENTER BACK TO ORIGINAL
                 logging.info('Shift model back to pointing centre')
@@ -1962,7 +2012,7 @@ if __name__ == "__main__":
             
             #### DO THE SUBTRACT ####
             logging.info(' postFACET subtract')
-            if peelskymodel[source_id] != 'empty': # should also cover "outliersource"
+            if peelskymodel[source_id] != 'empty' and not doOUTLIER_withGaussfix: # should also cover "outliersource"
                 logging.debug('Subtracting source with a user defined skymodel ' + peelskymodel[source_id])
                 parset   = create_subtract_parset_field_outlier('SUBTRACTED_DATA_ALL',TEC)
                 runbbs(mslist, peelskymodel[source_id], parset, parmdb_master_out, True) # NOTE: no 'normalization' and replace sourcedb
