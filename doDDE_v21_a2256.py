@@ -1849,7 +1849,7 @@ if __name__ == "__main__":
 
         parmdb_master_out="instrument_master_" + source
         if (outliersource[source_id] == 'False') or doOUTLIER_withGaussfix:
-            if (StartAtStep in ['preSC', 'doSC', 'postSC','preFACET']) and not doOUTLIER_withGaussfix:
+            if (StartAtStep in ['preSC', 'doSC', 'postSC','preFACET']):
                 if doOUTLIER_withGaussfix: # for doOUTLIER_withGaussfix
 
                     logging.info('Do not add field back for outlier source, just set MODEL_DATA=ADDED_DATA_SOURCE')
