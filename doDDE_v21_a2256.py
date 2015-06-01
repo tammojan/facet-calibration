@@ -1717,10 +1717,11 @@ if __name__ == "__main__":
 
         ### PHASESHIFT the FULL resolution dataset, for MODEL_DATA FFT subtract
             if outliersource[source_id] == 'False' or doOUTLIER_withGaussfix:
+                ndallbands = bg()
                 parset = create_phaseshift_parset_full(allbandspath + 'allbands.concat.ms',
                                                    allbandspath + 'allbands.concat.shifted_'+source+'.ms',
                                                    directions[source_id],'DATA')
-                run('NDPPP ' + parset + '&') # run in background
+                ndallbands.run('NDPPP ' + parset) # run in background
 
 
         ## END STEP 1
@@ -1846,6 +1847,7 @@ if __name__ == "__main__":
 
         if delete_SC_ms: # delete selfcal MS, default is False
             os.system('rm -rf ' + '*.' + source + '.ms')
+        ndallbands.wait() # wait for NDPPP run for allbands.concat.ms
 
         parmdb_master_out="instrument_master_" + source
         if (outliersource[source_id] == 'False') or doOUTLIER_withGaussfix:
