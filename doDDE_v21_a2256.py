@@ -1850,40 +1850,42 @@ if __name__ == "__main__":
         parmdb_master_out="instrument_master_" + source
         if (outliersource[source_id] == 'False') or doOUTLIER_withGaussfix:
             if (StartAtStep in ['preSC', 'doSC', 'postSC','preFACET']) and not doOUTLIER_withGaussfix:
-                logging.info('START: preFACET')
-                ## STEP 3: prep for facet ##
-                parmdb_master_out="instrument_master_" + source
-                logging.info('Adding back rest of the field for DDE facet ' + source)
-                runbbs_diffskymodel_addbackfield(mslist, 'instrument_ap_smoothed', True,  directions[source_id],imsizes[source_id], output_template_im, do_ap)
+                if doOUTLIER_withGaussfix: # for doOUTLIER_withGaussfix
 
-                logging.info('Correct field with self-cal instrument table')
-                if TEC=='True':
-                    runbbs(mslist, dummyskymodel, SCRIPTPATH + '/correctfield2+TEC.parset',parmdb_master_out+'_norm', False)
-                else:
-                    runbbs(mslist, dummyskymodel, SCRIPTPATH + '/correctfield2.parset',parmdb_master_out+'_norm', False)
-                ###########################################################################
-                # NDPPP phase shift, less averaging (NEW: run 2 in parallel)
-                msavglist = []
-                for ms_id, ms in enumerate(mslist): # make msavglist for avgfield
-                    msavglist.append(ms.split('.')[0] + '.' + source + '.ms.avgfield')
+                    logging.info('Do not add field back for outlier source, just set MODEL_DATA=ADDED_DATA_SOURCE')
+                    b=bg(maxp=numcpu_taql)
+                    for ms in mslist:
+                        b.run("taql 'update " + ms + " set MODEL_DATA=ADDED_DATA_SOURCE'")
+                    b.wait()
+                else: # for a normal reduction we go here
+                    logging.info('START: preFACET')
+                    ## STEP 3: prep for facet ##
+                    parmdb_master_out="instrument_master_" + source
+                    logging.info('Adding back rest of the field for DDE facet ' + source)
+                    runbbs_diffskymodel_addbackfield(mslist, 'instrument_ap_smoothed', True,  directions[source_id],imsizes[source_id], output_template_im, do_ap)
 
-                b=bg(maxp=2)
-                for ms_id, ms in enumerate(mslist):
-                    parset = create_phaseshift_parset_field(ms, msavglist[ms_id], source,
-                                                        directions[source_id], numchanperms)
+                    logging.info('Correct field with self-cal instrument table')
+                    if TEC=='True':
+                        runbbs(mslist, dummyskymodel, SCRIPTPATH + '/correctfield2+TEC.parset',parmdb_master_out+'_norm', False)
+                    else:
+                        runbbs(mslist, dummyskymodel, SCRIPTPATH + '/correctfield2.parset',parmdb_master_out+'_norm', False)
+                    ###########################################################################
+                    # NDPPP phase shift, less averaging (NEW: run 2 in parallel)
+                    msavglist = []
+                    for ms_id, ms in enumerate(mslist): # make msavglist for avgfield
+                        msavglist.append(ms.split('.')[0] + '.' + source + '.ms.avgfield')
 
-                    os.system('rm -rf ' + msavglist[ms_id])
-                    b.run('NDPPP ' + parset)
+                    b=bg(maxp=2)
+                    for ms_id, ms in enumerate(mslist):
+                        parset = create_phaseshift_parset_field(ms, msavglist[ms_id], source,
+                                   directions[source_id], numchanperms)
 
-                # Check if all NDPPP processes are finished
-                b.wait()
-            else: # for doOUTLIER_withGaussfix
-                logging.info('Do not add field back for outlier source, just set MODEL_DATA=ADDED_DATA_SOURCE')
-            
-                b=bg(maxp=numcpu_taql)
-                for ms in mslist:
-                    b.run("taql 'update " + ms + " set MODEL_DATA=ADDED_DATA_SOURCE'")
-                b.wait()
+                        os.system('rm -rf ' + msavglist[ms_id])
+                        b.run('NDPPP ' + parset)
+
+                    # Check if all NDPPP processes are finished
+                    b.wait()
+
                 ###########################################################################
             ## STEP 4a -- do facet ##
 
@@ -2019,7 +2021,10 @@ if __name__ == "__main__":
                 logging.info('Subtracted outlier source from data for DDE : ' + source)
             else:
                 parset   = create_subtract_parset_field('SUBTRACTED_DATA_ALL',TEC)
-                runbbs(mslist, ' ', parset, parmdb_master_out+'_norm', False) # replace-sourcedb not needed since we use "@column"
+                if doOUTLIER_withGaussfix:
+                    runbbs(mslist, ' ', parset, parmdb_master_out, False) # replace-sourcedb not needed since we use "@column"
+                else:
+                    runbbs(mslist, ' ', parset, parmdb_master_out+'_norm', False) # replace-sourcedb not needed since we use "@column"
                 logging.info('Subtracted facet model from data for DDE : ' + source)
 
             # CHECK IF THE SUBTRACT WORKED OK by making dirty low-res images
