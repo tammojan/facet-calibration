@@ -188,18 +188,20 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
         #    output locations are provided
         try:
             inputmapfiles = []
+            inlist = []
             if self.inputs['mapfile_in']:
-                indata = DataMap.load(self.inputs['mapfile_in'])
-                inputmapfiles.append(indata)
+                inlist.append(self.inputs['mapfile_in'])
 
             if self.inputs['mapfiles_in']:
                 for item in self.inputs['mapfiles_in']:
-                    inputmapfiles.append(DataMap.load(item))
+                    inlist.append(item)
                 self.inputs['mapfile_in'] = self.inputs['mapfiles_in'][0]
-            #else:
-            #    inputmapfiles.append(indata)
+
+            for item in inlist:
+                inputmapfiles.append(DataMap.load(item))
+
         except Exception:
-            self.logger.error('Could not load input Mapfile %s' % self.inputs['mapfile_in'])
+            self.logger.error('Could not load input Mapfile %s' % inlist)
             return 1
 
         outputmapfiles = []
@@ -265,15 +267,13 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
                 parsetdict[k] = str(parset[k])
 
         # construct multiple input data
-        inputlist = []
-        keylist = []
         if not self.inputs['inputkeys'] and self.inputs['inputkey']:
             self.inputs['inputkeys'].append(self.inputs['inputkey'])
 
         if not self.inputs['outputkeys'] and self.inputs['outputkey']:
             self.inputs['outputkeys'].append(self.inputs['outputkey'])
 
-        if len(self.inputs['inputkeys']) is not len(inputmapfiles):
+        if not self.inputs['skip_infile'] and len(self.inputs['inputkeys']) is not len(inputmapfiles):
             self.logger.error("Number of input mapfiles %d and input keys %d have to match." %
                               len(self.inputs['inputkeys']), len(inputmapfiles))
             return 1
@@ -289,22 +289,6 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
             filedict[self.inputs['outputkey']] = []
             for item in outputmapfiles[0]:
                 filedict[self.inputs['outputkey']].append(item.file)
-
-        # if inputmapfiles and not self.inputs['skip_infile']:
-        #     for key in self.inputs['inputkeys']:
-        #         keylist.append(key)
-        #     for item in inputmapfiles:
-        #         item.iterator = DataMap.SkipIterator
-        #     for mfile in inputmapfiles:
-        #         inputlist.append([])
-        #         for inp in mfile:
-        #             inputlist[-1].append(inp.file)
-        #
-        # if self.inputs['outputkey']:
-        #     inputlist.append([])
-        #     keylist.append(self.inputs['outputkey'])
-        #     for item in outputmapfiles[0]:
-        #         inputlist[-1].append(item.file)
 
         # ********************************************************************
         # Call the node side of the recipe
@@ -359,10 +343,13 @@ class executable_args(BaseRecipe, RemoteCommandRecipeMixIn):
                 if not k in jobresultdict:
                     jobresultdict[k] = []
                 jobresultdict[k].append(DataProduct(job.host, job.results[k], outp.skip))
+
+        # temp solution. write all output dict entries to a mapfile
+        mapfile_dir = os.path.join(self.config.get("layout", "job_directory"), "mapfiles")
         for k, v in jobresultdict.items():
             dmap = DataMap(v)
-            dmap.save(k + '.mapfile')
-            resultmap[k + '.mapfile'] = k + '.mapfile'
+            dmap.save(os.path.join(mapfile_dir, k + '.mapfile'))
+            resultmap[k + '.mapfile'] = os.path.join(mapfile_dir, k + '.mapfile')
         self.outputs.update(resultmap)
         # *********************************************************************
         # Check job results, and create output data map file

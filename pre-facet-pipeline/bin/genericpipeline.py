@@ -147,7 +147,10 @@ class GenericPipeline(control):
             additional_input = {}
             #try:
             if stepname in step_parset_obj:
-                additional_input = self._construct_step_parset(step_parset_obj[stepname], resultdicts, step_parset_files[stepname])
+                additional_input = self._construct_step_parset(step_parset_obj[stepname],
+                                                               resultdicts,
+                                                               step_parset_files[stepname],
+                                                               stepname)
             #except:
             #    print '########## moep #############'
             #    pass
@@ -331,9 +334,18 @@ class GenericPipeline(control):
             else:
                 inoutdict[k] = argsparset.getString(k)
 
-    def _construct_step_parset(self, argsparset, resdicts, filename):
+    def _construct_step_parset(self, argsparset, resdicts, filename, stepname):
         addvals = {'inputkeys': [], 'mapfiles_in': [], 'arguments': []}
-        for k in reversed(argsparset.keys()):
+        # hack for original order of args
+        tmp_keys = argsparset.keys()
+        ordered_keys = []
+        for orig in self.parset.keys:
+            for item in tmp_keys:
+                if (stepname + '.') in orig and ('argument.'+item in orig and not 'argument.'+item+'.' in orig):
+                    ordered_keys.append(item)
+                    continue
+        # \hack
+        for k in ordered_keys:
             keystring = argsparset.getString(k)
             if keystring.__contains__('.output.'):
                 if keystring.__contains__(','):
