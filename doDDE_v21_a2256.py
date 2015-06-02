@@ -1414,6 +1414,11 @@ if __name__ == "__main__":
         dbuser='dummy'
 
     try:
+        Padding
+    except NameError:
+        Padding=False
+        
+    try:
         clock
     except NameError:
         clock='False'
@@ -1940,18 +1945,6 @@ if __name__ == "__main__":
                 logging.info('Backup SUBTRACTED_DATA_ALL: completed')
                 ###########################################################################
 
-                # PAD MODEL IMAGES
-                #imout_p=imout+'-padded'  
-                #if len(mslist) > WScleanWBgroup: # WIDEBAND case
-                #    for modim in (glob.glob(imout + '-0*-model.fits')+glob.glob(imout + '-MFS-model.fits')):
-                #        imsize_p=padfits(modim,modim.replace(imout,imout_p))
-                #else: # NON-WIDEBAND case
-                #    imsize_p=padfits(imout+'-model.fits',imout_p+'-model.fits')
-                #logging.info('Padded model images to prevent aliasing')
-
-                # DO THE FFT
-                #do_fieldFFT(allbandspath + 'allbands.concat.shifted_'+source+'.ms',imout_p, imsize_p, cellsize, wsclean,
-                #         msavglist, WSCleanRobust, WScleanWBgroup, numchanperms)
 
                 if doOUTLIER_withGaussfix:
                     # DO THE DFT
@@ -1960,7 +1953,22 @@ if __name__ == "__main__":
                     logging.info('Predicted ' + peelskymodel[source_id] + ' with BBS')
                 else:
                     # DO THE FFT
-                    do_fieldFFT(allbandspath + 'allbands.concat.shifted_'+source+'.ms',imout, imsizef, cellsize, wsclean,
+                    if Padding:
+                        # PAD MODEL IMAGES -- only useful if facets do
+                        # not have wide borders, deprecated
+                # PAD MODEL IMAGES
+                        imout_p=imout+'-padded'  
+                        if len(mslist) > WScleanWBgroup: # WIDEBAND case
+                            for modim in (glob.glob(imout + '-0*-model.fits')+glob.glob(imout + '-MFS-model.fits')):
+                                imsize_p=padfits(modim,modim.replace(imout,imout_p))
+                        else: # NON-WIDEBAND case
+                            imsize_p=padfits(imout+'-model.fits',imout_p+'-model.fits')
+                        logging.info('Padded model images to prevent aliasing')
+
+                        # DO THE FFT
+                        do_fieldFFT(allbandspath + 'allbands.concat.shifted_'+source+'.ms',imout_p, imsize_p, cellsize, wsclean, msavglist, WSCleanRobust, WScleanWBgroup, numchanperms)
+                    else: # No padding
+                        do_fieldFFT(allbandspath + 'allbands.concat.shifted_'+source+'.ms',imout, imsizef, cellsize, wsclean,
                              msavglist, WSCleanRobust, WScleanWBgroup, numchanperms)
                     logging.info('FFTed model of DDE facet: ' + source)
 
