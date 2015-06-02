@@ -16,8 +16,11 @@ def run(c,proceed=False,quiet=False):
     if not(quiet):
         logging.debug('Running: '+c)
     retval=os.system(c)
-    if retval!=0 and not(proceed):
-        raise Exception('FAILED to run '+c+' -- return value was '+str(retval))
+    if retval!=0:
+        report='FAILED to run '+c+' -- return value was '+str(retval)
+        logging.error(report)
+        if not(proceed):
+            raise Exception(report)
     return retval
 
 class bg:
@@ -61,12 +64,14 @@ class bg:
                         if not(self.quiet):
                             logging.debug('Process '+str(p.pid)+' ended OK')
                     else:
+                        report='Process '+str(p.pid)+' ended with return value '+str(retval)
+                        logging.error(report)
                         if not(self.proceed):
                             for p2 in pl:
                                 p2.kill()
-                            raise Exception('Process '+str(p.pid)+' ended with return value '+str(retval))
+                            raise Exception(report)
                         else:
-                            print 'WARNING: process',str(p.pid),'died with return value',retval
+                            print 'WARNING:',report
             time.sleep(self.pollint)
         self.pl=pl 
         return
