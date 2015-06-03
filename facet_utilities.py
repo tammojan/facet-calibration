@@ -4,6 +4,7 @@ import os
 from subprocess import Popen
 import logging
 import time
+from math import floor
 
 ####
 # Run parallel commands
@@ -127,10 +128,10 @@ def ra_to_str(dra, ndec=2,delim=':'):
         delim2 = delim
 
     dra = dra/15.
-    dd = numpy.floor(dra)
+    dd = floor(dra)
     dfrac = dra - dd
     dmins = dfrac*60.
-    dm = numpy.floor(dmins)
+    dm = floor(dmins)
     dsec = (dmins-dm)*60.
     if round(dsec, ndec) == 60.00:
         dsec = 0.
@@ -153,10 +154,10 @@ def dec_to_str(ddec,ndec=1,delim=':'):
         delim1 = delim
         delim2 = delim
 
-    dd = numpy.floor(ddec)
+    dd = floor(ddec)
     dfrac = ddec - dd
     dmins = dfrac*60.
-    dm = numpy.floor(dmins)
+    dm = floor(dmins)
     dsec = (dmins-dm)*60.
     if round(dsec, ndec) == 60.0:
         dsec = 0.
