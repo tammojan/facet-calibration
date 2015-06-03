@@ -17,8 +17,8 @@ from scipy.spatial import Voronoi
 import matplotlib.path as mplPath
 import matplotlib.transforms as mplTrans
 
-pi       = numpy.pi
-
+from numpy import pi
+from facet_utilities import run, bg, angsep, dec_to_str, ra_to_str
 
 # Use scipy Voronoi tessellation to generate a set of masks
 # original code from Martin Hardcastle
@@ -133,7 +133,6 @@ optional - specify max number of processes (default 2)
     return
 
 
-
 def image_centre(image):
     '''
     return image centre
@@ -146,7 +145,6 @@ def image_centre(image):
     dec = lon*180./pi
 
     return ra,dec
-
 
 
 def image_world_to_image(image,ra,dec):
@@ -191,28 +189,6 @@ def image_image_to_world(image,x,y):
     return ra,dec
 
 
-def angsep(ra1deg, dec1deg, ra2deg, dec2deg):
-    """Returns angular separation between two coordinates (all in degrees)"""
-    import math
-
-    ra1rad=ra1deg*math.pi/180.0
-    dec1rad=dec1deg*math.pi/180.0
-    ra2rad=ra2deg*math.pi/180.0
-    dec2rad=dec2deg*math.pi/180.0
-
-    # calculate scalar product for determination
-    # of angular separation
-    x=math.cos(ra1rad)*math.cos(dec1rad)*math.cos(ra2rad)*math.cos(dec2rad)
-    y=math.sin(ra1rad)*math.cos(dec1rad)*math.sin(ra2rad)*math.cos(dec2rad)
-    z=math.sin(dec1rad)*math.sin(dec2rad)
-
-    if x+y+z >= 1: rad = 0
-    else: rad=math.acos(x+y+z)
-
-    # Angular separation
-    deg=rad*180/math.pi
-    return deg
-
 def ra_to_degrees(ra_str, delim=' '):
     '''
     converts array of strings or single string ra values to decimal degrees
@@ -239,6 +215,7 @@ def ra_to_degrees(ra_str, delim=' '):
             ra_deg[i] = 15.*(float(t[0]) + float(t[1])/60. + float(t[2])/3600.)
         return ra_deg
 
+
 def dec_to_degrees(dec_str, delim=' '):
     '''
     converts array of strings or single string dec values to decimal degrees
@@ -264,56 +241,6 @@ def dec_to_degrees(dec_str, delim=' '):
                 t = dec_s.split(delim)
             dec_deg[i] = (float(t[0]) + float(t[1])/60. + float(t[2])/3600.)
         return dec_deg
-
-def ra_to_str(dra, ndec=2,delim=':'):
-    '''
-    converts a single decimal degrees ra to hh:mm:ss.s
-    '''
-    if delim == 'h':
-        delim1 = 'h'
-        delim2 = 'm'
-    else:
-        delim1 = delim
-        delim2 = delim
-
-    dra = dra/15.
-    dd = math.floor(dra)
-    dfrac = dra - dd
-    dmins = dfrac*60.
-    dm = math.floor(dmins)
-    dsec = (dmins-dm)*60.
-    if round(dsec, ndec) == 60.00:
-        dsec = 0.
-        dm += 1
-    if dm == 60.:
-        dm = 0.
-        dd += 1
-    sra = '%02d%s%02d%s%05.2f' %(dd,delim1,dm,delim2,dsec)
-    return sra
-def dec_to_str(ddec,ndec=1,delim=':'):
-    '''
-    converts a single decimal degrees dec to dd:mm:ss.s
-    '''
-    if delim == 'd':
-        delim1 = 'd'
-        delim2 = 'm'
-    else:
-        delim1 = delim
-        delim2 = delim
-
-    dd = math.floor(ddec)
-    dfrac = ddec - dd
-    dmins = dfrac*60.
-    dm = math.floor(dmins)
-    dsec = (dmins-dm)*60.
-    if round(dsec, ndec) == 60.0:
-        dsec = 0.
-        dm += 1
-    if dm == 60.:
-        dm = 0.
-        dd += 1
-    sdec = '%02d%s%02d%s%04.1f' %(dd,delim1,dm,delim2,dsec)
-    return sdec
 
 
 def dir2pos(direction):
@@ -357,6 +284,7 @@ def create_dummyms_parset_formasks(msin, msout):
     f.close()
     return ndppp_parset
 
+
 def create_phaseshift_parset_formasks(msin, msout, source, direction):
     ndppp_parset = (msin.split('.')[0]) +'_ndppp_avgphaseshift.'+source+'.parset'
     os.system('rm -f ' + ndppp_parset)
@@ -372,11 +300,6 @@ def create_phaseshift_parset_formasks(msin, msout, source, direction):
     f.write('shift.phasecenter = [%s]\n' % direction)
     f.close()
     return ndppp_parset
-
-
-
-
-
 
 
 def voronoi_finite_polygons_2d(vor, radius=None):
@@ -466,7 +389,6 @@ def voronoi_finite_polygons_2d(vor, radius=None):
         # finish
         new_regions.append(new_region.tolist())
 
-
     return new_regions, numpy.asarray(new_vertices)
 
 
@@ -489,9 +411,6 @@ def voronoi_finite_polygons_2d_box(vor, box):
         polygon coordinates for M revised Voronoi regions.
 
     """
-
-
-
 
     if vor.points.shape[1] != 2:
         raise ValueError("Requires 2D input")
@@ -564,7 +483,6 @@ def voronoi_finite_polygons_2d_box(vor, box):
     ## now force them to be in the bounding box
     poly = numpy.asarray([imvertices[v] for v in regions])
 
-
     newpoly = []
 
     for p in poly:
@@ -574,9 +492,6 @@ def voronoi_finite_polygons_2d_box(vor, box):
         newpoly.append(pp.transpose())
 
     return numpy.asarray(newpoly)
-
-
-
 
 
 def make_facet_mask(imname, maskout, region, pad=True, edge=25):
@@ -622,6 +537,7 @@ def make_facet_mask(imname, maskout, region, pad=True, edge=25):
     img.putdata(facetmask)
     return
 
+
 def add_facet_mask(maskout, region, value, direction, size,  lowres=15., actualres=1.5):
     print "adding facet to " + maskout +" s"+str(value)+ " ("+str(size)+")"
 
@@ -656,7 +572,6 @@ def add_facet_mask(maskout, region, value, direction, size,  lowres=15., actualr
     ImageDraw.Draw(imgmaskreg).polygon(lpoly, outline=1, fill=1)
     maskreg = numpy.array(imgmaskreg)
     maskreg = maskreg.transpose()  ## get the orientation right
-
 
 
     C = direction.split(',')
@@ -712,6 +627,7 @@ def add_facet_mask(maskout, region, value, direction, size,  lowres=15., actualr
 
     img.putdata(facetmask)
     return
+
 
 def show_facets(facetmap, directions, directions2=None, maxsize=6400, lowres=15., actualres=1.5, r=[1.,2.]):
 
@@ -978,7 +894,6 @@ def find_newsize_centre_lowresfacets(facetmap, region, direction, source, maxsiz
     return new_position, new_real_span
 
 
-
 def find_newsize_lowresfacets(facetmap, region, direction, source, maxsize=6400, lowres=15., actualres=1.5, debug=True, findedge=None, edge=25):
 
 #if 1:
@@ -1083,10 +998,6 @@ def find_newsize_lowresfacets(facetmap, region, direction, source, maxsize=6400,
     return new_real_span, edge
 
 
-
-
-
-
 def write_casapy_region(regfile, polygon, name):
     #poly[[x1, y1], [x2, y2], [x3, y3], ...]
     s= '''#CRTFv0 CASA Region Text Format version 0
@@ -1100,6 +1011,7 @@ def write_casapy_region(regfile, polygon, name):
     with open(regfile,'w') as f:
         f.write(s)
     return
+
 
 def write_ds9_region(regfile, polygon, name):
     s= '''global color=green dashlist=8 3 width=1 font="helvetica 10 normal roman" select=1 highlite=1 dash=0 fixed=0 edit=1 move=1 delete=1 include=1 source=1
@@ -1133,6 +1045,7 @@ fk5
             f.write(s)
     return
 
+
 def fwhm_freq(freq, alpha=1.02):
     c = 299.79  ## m MHz
     #D = 41.05  # for remote stations
@@ -1140,6 +1053,7 @@ def fwhm_freq(freq, alpha=1.02):
     lam = c/freq
     fwhm = 57.2957795*alpha*lam/D
     return fwhm
+
 
 ### main code starts here ###
 
@@ -1156,6 +1070,7 @@ if __name__=='__main__':
 
     sys.path.append(SCRIPTPATH)
     from coordinates_mode import *
+    
     try:
         edge_scale
     except NameError:

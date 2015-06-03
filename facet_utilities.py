@@ -5,6 +5,9 @@ from subprocess import Popen
 import logging
 import time
 
+####
+# Run parallel commands
+
 def run(c,proceed=False,quiet=False):
     '''
     Run command c, throwing an exception if the return value is
@@ -75,3 +78,91 @@ class bg:
             time.sleep(self.pollint)
         self.pl=pl 
         return
+
+####
+# Coordinates
+
+def angsep(ra1deg, dec1deg, ra2deg, dec2deg):
+    """
+    Returns angular separation between two coordinates (all in degrees)
+    Input:
+      * ra1deg - RA of the first position
+      * dec1deg - dec of the first position
+      * ra2deg - RA of the second position
+      * dec2deg - dec of the second position
+    Output:
+      * Angular separation in degrees.
+    """
+
+    ra1rad = ra1deg*numpy.pi/180.0
+    dec1rad = dec1deg*numpy.pi/180.0
+    ra2rad = ra2deg*numpy.pi/180.0
+    dec2rad = dec2deg*numpy.pi/180.0
+
+    # calculate scalar product for determination
+    # of angular separation
+    x = numpy.cos(ra1rad)*numpy.cos(dec1rad)*numpy.cos(ra2rad)*numpy.cos(dec2rad)
+    y = numpy.sin(ra1rad)*numpy.cos(dec1rad)*numpy.sin(ra2rad)*numpy.cos(dec2rad)
+    z = numpy.sin(dec1rad)*numpy.sin(dec2rad)
+
+    if x+y+z >= 1:
+        rad = 0
+    else:
+        rad=numpy.acos(x+y+z)
+
+    # Angular separation
+    deg = rad*180/numpy.pi
+    return deg
+
+
+def ra_to_str(dra, ndec=2,delim=':'):
+    '''
+    converts a single decimal degrees ra to hh:mm:ss.s
+    '''
+    if delim == 'h':
+        delim1 = 'h'
+        delim2 = 'm'
+    else:
+        delim1 = delim
+        delim2 = delim
+
+    dra = dra/15.
+    dd = math.floor(dra)
+    dfrac = dra - dd
+    dmins = dfrac*60.
+    dm = math.floor(dmins)
+    dsec = (dmins-dm)*60.
+    if round(dsec, ndec) == 60.00:
+        dsec = 0.
+        dm += 1
+    if dm == 60.:
+        dm = 0.
+        dd += 1
+    sra = '%02d%s%02d%s%05.2f' %(dd,delim1,dm,delim2,dsec)
+    return sra
+
+
+def dec_to_str(ddec,ndec=1,delim=':'):
+    '''
+    converts a single decimal degrees dec to dd:mm:ss.s
+    '''
+    if delim == 'd':
+        delim1 = 'd'
+        delim2 = 'm'
+    else:
+        delim1 = delim
+        delim2 = delim
+
+    dd = math.floor(ddec)
+    dfrac = ddec - dd
+    dmins = dfrac*60.
+    dm = math.floor(dmins)
+    dsec = (dmins-dm)*60.
+    if round(dsec, ndec) == 60.0:
+        dsec = 0.
+        dm += 1
+    if dm == 60.:
+        dm = 0.
+        dd += 1
+    sdec = '%02d%s%02d%s%04.1f' %(dd,delim1,dm,delim2,dsec)
+    return sdec
