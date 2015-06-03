@@ -2,21 +2,17 @@ import matplotlib
 import numpy
 import os
 import sys
-import lofar.parmdb
 from scipy import interpolate
 import time
 from subprocess import Popen, PIPE, STDOUT
 import pyrap.tables as pt
 import pwd
-
 import pyrap.images
 import matplotlib.pyplot as pl
-
 from scipy.spatial import Voronoi
-
 import matplotlib.path as mplPath
 import matplotlib.transforms as mplTrans
-
+import lofar.parmdb
 from numpy import pi
 from facet_utilities import run, bg, angsep, dec_to_str, ra_to_str
 
