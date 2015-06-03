@@ -267,7 +267,7 @@ def dir2pos(direction):
     return ra,dec
 
 
-def create_dummyms_parset_formasks(msin, msout):
+def create_dummyms_parset_formasks(msin, msout, numchanperms=20):
     ndppp_parset = (msin.split('.')[0]) +'_ndppp_dummy.parset'
     os.system('rm -f ' + ndppp_parset)
 
@@ -279,7 +279,7 @@ def create_dummyms_parset_formasks(msin, msout):
     f.write('msout.writefullresflag=False\n')
     f.write('steps = [avg1]\n')
     f.write('avg1.type = squash\n')
-    f.write('avg1.freqstep = 20\n')
+    f.write('avg1.freqstep = %i\n' % numchanperms)
     f.write('avg1.timestep = 20\n')
     f.close()
     return ndppp_parset
@@ -1106,6 +1106,11 @@ if __name__=='__main__':
     rad = [fwhm/2., numpy.sqrt(numpy.log(3.)/numpy.log(2.))*fwhm/2.]  # PB= 0.5, 0.3
     print 'FWHM: {ff:.2f} deg (draw radii at {ss} deg)'.format(ff=fwhm, ss=', '.join(['{rad:.2f}'.format(rad=radi) for radi in rad]))
 
+    # Get the number of channels in the MS
+    freq_tab     = pt.table(ms + '/SPECTRAL_WINDOW')
+    numchanperms = freq_tab.getcol('NUM_CHAN')[0]
+    logging.info('Number of channels per ms is {:d}'.format(numchanperms))
+    freq_tab.close()
 
     #mslist = ['BOOTES24_SB190-199.2ch8s.ms']
     ### MAKE ALL THE MASKS AT ONCE ###
@@ -1114,7 +1119,7 @@ if __name__=='__main__':
 
     # create low timeres, low freqres ms for faster shifting
     tmpms  = os.path.basename(ms).split('.')[0] + '.dummy.ms'
-    parset = create_dummyms_parset_formasks(ms, tmpms)
+    parset = create_dummyms_parset_formasks(ms, tmpms, numchanperms=numchanperms)
     if not os.path.exists(tmpms):
         print "making dummy ms (freq/time averaged) set for image-making"
         os.system('NDPPP ' + parset)
