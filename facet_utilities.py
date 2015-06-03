@@ -127,10 +127,10 @@ def ra_to_str(dra, ndec=2,delim=':'):
         delim2 = delim
 
     dra = dra/15.
-    dd = math.floor(dra)
+    dd = numpy.floor(dra)
     dfrac = dra - dd
     dmins = dfrac*60.
-    dm = math.floor(dmins)
+    dm = numpy.floor(dmins)
     dsec = (dmins-dm)*60.
     if round(dsec, ndec) == 60.00:
         dsec = 0.
@@ -153,10 +153,10 @@ def dec_to_str(ddec,ndec=1,delim=':'):
         delim1 = delim
         delim2 = delim
 
-    dd = math.floor(ddec)
+    dd = numpy.floor(ddec)
     dfrac = ddec - dd
     dmins = dfrac*60.
-    dm = math.floor(dmins)
+    dm = numpy.floor(dmins)
     dsec = (dmins-dm)*60.
     if round(dsec, ndec) == 60.0:
         dsec = 0.
