@@ -236,7 +236,7 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
             ms = ms + ' ' + m
 
     imout = 'im'+ callnumber +'_cluster'+cluster+'nm'
-    print ms + ' ' + imout + ' ' + 'None' + ' ' + '1mJy' + ' ' + str(niter) + ' ' + str(nterms)
+    logging.debug(ms + ' ' + imout + ' ' + 'None' + ' ' + '1mJy' + ' ' + str(niter) + ' ' + str(nterms))
 
     if do_mask:
         if cluster == 'a2256': ## special case for a2256
@@ -278,10 +278,11 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
 
 
     if average:
-        print 'rm -rf ' + ms
+        logging.debug('rm -rf {}'.format(ms))
         os.system('rm -rf ' + ms)
 
     return imout,mask
+
 
 def runbbs(mslist, skymodel, parset, parmdb, applycal, TEC, clusterdesc, db, dbuser, dbname):
     #NOTE WORK FROM MODEL_DATA (contains correct phase data from 10SB calibration)
