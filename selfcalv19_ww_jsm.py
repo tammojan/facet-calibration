@@ -73,7 +73,7 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
     imout = 'im'+ callnumber +'_cluster'+cluster+'nm'
     logging.debug(ms + ' ' + imout + ' ' + 'None' + ' ' + '1mJy' + ' ' + str(niter) + ' ' + str(nterms))
 
-    if do_mask and not region.startswith("region"): ####
+    if do_mask: ####
         if cluster == 'a2256': ## special case for a2256
             niter = niter*15 # clean very deep here
 
@@ -89,8 +89,6 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
 
         # clean image with manual mask
         mask = imout+'.cleanmask'
-    elif region.startswith("region"):
-        mask = region
 
 
     niter = 1000
