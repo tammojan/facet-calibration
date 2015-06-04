@@ -89,6 +89,8 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
 
         # clean image with manual mask
         mask = imout+'.cleanmask'
+    elif region.startswith("region"):
+        mask = region
 
 
     niter = 1000
