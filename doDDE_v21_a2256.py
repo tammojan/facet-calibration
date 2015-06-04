@@ -1434,7 +1434,7 @@ if __name__ == "__main__":
             from selfcalv19_ww_cep3 import do_selfcal
         else: # Allow the use of alternative selfcal code
             import importlib
-            if os.path.exists(config["selfcal"]+".py"):
+            if os.path.exists(os.path.join(SCRIPTPATH, config["selfcal"]+".py")):
                 selfcal_module = importlib.import_module(config["selfcal"])
                 do_selfcal = selfcal_module.do_selfcal
                 logging.info("Method do_selfcal imported from {}".format(config["selfcal"]))
