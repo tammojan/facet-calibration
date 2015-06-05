@@ -1154,13 +1154,13 @@ def make_image_wsclean_nomask(mslist, cluster, callnumber, threshpix, threshisl,
         channelsout =  1 # there is a factor of 5 averaging
         cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
         cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + '-cleanborder 0 -threshold '+ cleandepth2 + ' '
-        cmd3 = '-minuv-l '+ str(uvrange) \
-               +' -mgain 0.75 -fitbeam -datacolumn DATA -no-update-model-required -joinchannels -channelsout ' +\
+        cmd3 = '-minuv-l '+ str(uvrange) + ' -casamask ' +  inputmask + ' '\
+               +' -mgain 0.6 -fitbeam -datacolumn DATA -no-update-model-required -joinchannels -channelsout ' +\
                str(channelsout) + ' '  + outms
     else:
         cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
         cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' -cleanborder 0 -threshold '+ cleandepth2 + ' '
-        cmd3 = '-minuv-l '+ str(uvrange) +' -mgain 0.75 -fitbeam -datacolumn DATA -no-update-model-required ' + outms
+        cmd3 = '-minuv-l '+ str(uvrange) +' -casamask ' +  inputmask + ' -mgain 0.6 -fitbeam -datacolumn DATA -no-update-model-required ' + outms
 
     print cmd1+cmd2+cmd3
     os.system(cmd1+cmd2+cmd3)
@@ -1185,11 +1185,11 @@ def do_fieldFFT(ms,image,imsize,cellsize,wsclean,mslist,WSCleanRobust):
         channelsout =  5 # DO NOT CHANGE !! (in make_image_wsclean_wideband there is averaging)
         cmd1 = wsclean + ' -predict -name ' + image + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
         cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' '
-        cmd3 = '-cleanborder 0 -mgain 0.85 -fitbeam -datacolumn DATA '+ '-joinchannels -channelsout ' + str(channelsout) + ' ' + ms
+        cmd3 = '-cleanborder 0 -mgain 0.6 -fitbeam -datacolumn DATA '+ '-joinchannels -channelsout ' + str(channelsout) + ' ' + ms
     else:
         cmd1 = wsclean + ' -predict -name ' + image + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
         cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' '
-        cmd3 = '-cleanborder 0 -mgain 0.85 -fitbeam -datacolumn DATA '+ ' ' + ms
+        cmd3 = '-cleanborder 0 -mgain 0.6 -fitbeam -datacolumn DATA '+ ' ' + ms
 
     print cmd1+cmd2+cmd3
     os.system(cmd1+cmd2+cmd3)
@@ -1257,13 +1257,13 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl, nterms
         channelsout =  1 # there is a factor of 5 averaging
         cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
         cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + '-cleanborder 0 -threshold '+ cleandepth1 + ' '
-        cmd3 = '-minuv-l '+ str(uvrange) \
-          +' -mgain 0.75 -fitbeam -datacolumn DATA -no-update-model-required -joinchannels -channelsout ' +\
+        cmd3 = '-minuv-l '+ str(uvrange) + ' -casamask ' +  inputmask + ' '\
+          +' -mgain 0.6 -fitbeam -datacolumn DATA -no-update-model-required -joinchannels -channelsout ' +\
           str(channelsout) + ' '  + outms
     else:
         cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
         cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' -cleanborder 0 -threshold '+ cleandepth1 + ' '
-        cmd3 = '-minuv-l '+ str(uvrange) +' -mgain 0.75 -fitbeam -datacolumn DATA -no-update-model-required ' + outms
+        cmd3 = '-minuv-l '+ str(uvrange) + ' -casamask ' +  inputmask + ' -mgain 0.6 -fitbeam -datacolumn DATA -no-update-model-required ' + outms
 
     print cmd1+cmd2+cmd3
     os.system(cmd1+cmd2+cmd3)

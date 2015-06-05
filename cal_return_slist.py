@@ -250,9 +250,12 @@ for patch_id,patch in enumerate(patches):
     pix  = img.topixel(coor)[2:4]
 
     # compute radial distance to image center
-    dis = angsep(ra_patches[patch_id],dec_patches[patch_id], ref_ra, ref_dec)
-
-    if dis < cut: # ok sources is within image
+    #dis = angsep(ra_patches[patch_id],dec_patches[patch_id], ref_ra, ref_dec)
+    #if dis < cut: # ok sources is within image
+    dis_ra = abs(ra_patches[patch_id]-ref_ra)*numpy.cos(ref_dec*pi/180.0)
+    dis_dec = abs(dec_patches[patch_id]-ref_dec)
+    
+    if dis_ra < cut and dis_dec < cut:
         # check if the sources is within the mask region (because mask can be smaller than image)
         if (pix[0] >= 0) and (pix[0] <= (sh[0]-1)) and \
            (pix[1] >= 0) and (pix[1] <= (sh[1]-1)):
