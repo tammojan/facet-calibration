@@ -2014,6 +2014,7 @@ if __name__ == "__main__":
             #run('python '+ SCRIPTPATH+'/verify_subtract_v5.py ' + inputmslist + ' '+str(failthreshold)+' ' + source)
             stopcal=do_verify_subtract(mslist, failthreshold, source, numchanperms=numchanperms)
             if stopcal:
+                logging.error('Paused because verify_subtract failed')
                 raw_input('Pausing: hit control-C to stop or enter to continue')
 
         os.system('rm -rf *.ms.avgfield') # clean up as these are never used anymore  
