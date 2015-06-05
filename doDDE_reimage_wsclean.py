@@ -14,7 +14,8 @@ import pwd
 import logging
 import blank
 from coordinates_mode import *
-pi = numpy.pi
+from facet_utilities import run, bg, angsep, dec_to_str, ra_to_str
+from numpy import pi
 
 
 
@@ -78,56 +79,6 @@ pi = numpy.pi
 
 # v9
 # for difficult to low snr facet, but not so far from another facet try just using the other facet solutions
-
-def ra_to_str(dra, ndec=2,delim=':'):
-    '''
-    converts a single decimal degrees ra to hh:mm:ss.s
-    '''
-    if delim == 'h':
-        delim1 = 'h'
-        delim2 = 'm'
-    else:
-        delim1 = delim
-        delim2 = delim
-
-    dra = dra/15.
-    dd = math.floor(dra)
-    dfrac = dra - dd
-    dmins = dfrac*60.
-    dm = math.floor(dmins)
-    dsec = (dmins-dm)*60.
-    if round(dsec, ndec) == 60.00:
-        dsec = 0.
-        dm += 1
-    if dm == 60.:
-        dm = 0.
-        dd += 1
-    sra = '%02d%s%02d%s%05.2f' %(dd,delim1,dm,delim2,dsec)
-    return sra
-def dec_to_str(ddec,ndec=1,delim=':'):
-    '''
-    converts a single decimal degrees dec to dd:mm:ss.s
-    '''
-    if delim == 'd':
-        delim1 = 'd'
-        delim2 = 'm'
-    else:
-        delim1 = delim
-        delim2 = delim
-
-    dd = math.floor(ddec)
-    dfrac = ddec - dd
-    dmins = dfrac*60.
-    dm = math.floor(dmins)
-    dsec = (dmins-dm)*60.
-    if round(dsec, ndec) == 60.0:
-        dsec = 0.
-        dm += 1
-    if dm == 60.:
-        dm = 0.
-        dd += 1
-    sdec = '%02d%s%02d%s%04.1f' %(dd,delim1,dm,delim2,dsec)
-    return sdec
 
 
 def find_newsize(mask):
@@ -882,28 +833,6 @@ def return_slist(imagename, skymodel, ref_source):
         sourcess = sourcess[:-1]
 
     return sourcess
-
-def angsep(ra1deg, dec1deg, ra2deg, dec2deg):
-    """Returns angular separation between two coordinates (all in degrees)"""
-    import math
-
-    ra1rad=ra1deg*math.pi/180.0
-    dec1rad=dec1deg*math.pi/180.0
-    ra2rad=ra2deg*math.pi/180.0
-    dec2rad=dec2deg*math.pi/180.0
-
-    # calculate scalar product for determination
-    # of angular separation
-    x=math.cos(ra1rad)*math.cos(dec1rad)*math.cos(ra2rad)*math.cos(dec2rad)
-    y=math.sin(ra1rad)*math.cos(dec1rad)*math.sin(ra2rad)*math.cos(dec2rad)
-    z=math.sin(dec1rad)*math.sin(dec2rad)
-
-    if x+y+z >= 1: rad = 0
-    else: rad=math.acos(x+y+z)
-
-    # Angular separation
-    deg=rad*180/math.pi
-    return deg
 
 
 def cal_return_slist(imagename,skymodel, direction, imsize):

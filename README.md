@@ -4,11 +4,11 @@ Facet calibration: scripts updated at the Facet Calibration Workshop in Leiden, 
 ## Main scripts
 
 Set up the facets:
-* doDDE_makefacets_v4.py
+* doDDE_makefacets_v4.py - It requires a configuration file with some variables defined (example doDDE_makefacets_parset.py).
 
 Run the direction dependent calibration:
-* doDDE_v19_a2256.py - Main script. It requires a configuration file with some variables defined (example a2256.parset).
-* doDDE_v21_a2256.py - Wideband version of the main script. *Under heavy development*.
+* doDDE_v19_a2256.py - Old main script. It requires a configuration file with some variables defined (example a2256.parset).
+* doDDE_v21_a2256.py - Main script. Accepts wideband. It requires a configuration file with some variables defined (example a2256.parset).
 
 Reimage the field when the full facet calibration is completed:
 * doDDE_reimage_v1_bootes_cep3.py - Version that uses the CASA imager.
