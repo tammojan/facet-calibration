@@ -90,7 +90,12 @@ class executable_args(LOFARnodeTCP):
                 for k, v in kwargs.items():
                     nodeparset.add(k, v)
                 nodeparset.writeFile(parsetname)
-                args.insert(0, parsetname)
+                if argsformat == 'bbs1':
+                    args.insert(1, parsetname)
+                elif argsformat == 'bbs2':
+                    args.insert(2, parsetname)
+                else:
+                    args.insert(0, parsetname)
 
             try:
             # ****************************************************************
