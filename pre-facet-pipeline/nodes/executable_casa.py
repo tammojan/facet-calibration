@@ -26,7 +26,7 @@ class executable_casa(LOFARnodeTCP):
     Basic script for running an executable with arguments.
     """
 
-    def run(self, infile, executable, args, kwargs, work_dir, parsetasfile, environment):
+    def run(self, infile, executable, args, kwargs, work_dir='/tmp', parsetasfile=False, args_format='', environment=''):
         """
         This function contains all the needed functionality
         """
@@ -96,6 +96,8 @@ class executable_casa(LOFARnodeTCP):
                         #args.append('--' + k + '=' + subpar[k])
                         if str(subpar[k]).find('/') == 0:
                             casastring += str(k) + '=' + "'" + str(subpar[k]) + "'" + ','
+                        elif str(subpar[k]).find('/casastr/') == 0:
+                            casastring += str(k) + '=' + "'" + str(subpar[k]).strip('/casastr/') + "'" + ','
                         else:
                             casastring += str(k) + '=' + str(subpar[k]) + ','
                     casastring = casastring.rstrip(',')
@@ -111,7 +113,13 @@ class executable_casa(LOFARnodeTCP):
                 if casastring != '':
                     casafilename = os.path.join(work_dir, os.path.basename(infile) + '.casacommand.py')
                     casacommandfile = open(casafilename, 'w')
-                    casacommandfile.write(casastring)
+                    casacommandfile.write('try:\n')
+                    casacommandfile.write('    '+casastring)
+                    casacommandfile.write('except SystemExit:\n')
+                    casacommandfile.write('    pass\n')
+                    casacommandfile.write('except:\n')
+                    casacommandfile.write('    import os\n')
+                    casacommandfile.write('    os._exit(1)\n')
                     casacommandfile.close()
                     args.append(casafilename)
                 somename = os.path.join(work_dir, os.path.basename(infile) + '.casashell.sh')
@@ -126,7 +134,7 @@ class executable_casa(LOFARnodeTCP):
                 crap.write('echo "Trying CASAPY command" \n')
                 #crap.write('/home/zam/sfroehli/casapy-42.1.29047-001-1-64b/bin/casa' + ' --nologger'+' -c ' + casafilename)
                 crap.write(commandstring)
-                crap.write('\nexit 0')
+#                 crap.write('\nexit 0')
                 crap.close()
 
                 import stat
