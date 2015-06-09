@@ -7,6 +7,7 @@ from scipy import interpolate
 import time
 from subprocess import Popen, PIPE, STDOUT
 import pyrap.tables as pt
+import pyrap.images as pim
 import uuid
 from numpy import pi
 import pwd
@@ -16,115 +17,100 @@ from facet_utilities import run, bg
 # Import functions from the main implementation
 from selfcalv19_ww_cep3 import create_merged_parmdb_spline, create_merged_parmdb,\
     runbbs, create_scalarphase_parset, create_scalarphase_parset_p, create_amponly_parset,\
-    create_scalarphase_parset_p2, get_group
+    create_scalarphase_parset_p2, get_group, make_image
                                 
 # v19
 # - change ndppp job submit for better control over jobs running
 # - add hardcoded groups (get_group)
 
 
-def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous_do, imsize, region, SCRIPTPATH):
+def find_imagenoise(imagename):
     """
-    Test modifications to make_image
+    Finds the noise level of an image
     """
-    do_mask = True
-    niter   = 1000 # 7500 causes nasty clean artifacts
-    mscale  = 'False'
-    if atrous_do == 'True':
-        mscale = 'True'
-
-    average = True  # average the data a lot to speed up the imaging,
-    # ONLY average for small FOV, otherwise timesmearing is a problem
-    #average data
-    if average:
-        b=bg(maxp=2)
-        for ms in (mslist):
-            ndppp_parset = ms + '_NDPPP.parset'
-            ndppplog = ndppp_parset.replace('.parset','.log')
-            os.system('rm -f ' + ndppp_parset)
-            output = ms + '.tmpavg'
-            os.system('rm -rf ' + output)
-            f=open(ndppp_parset, 'w')
-            f.write('msin = %s\n' % ms)
-            f.write('msin.datacolumn = CORRECTED_DATA\n')
-            f.write('msout = %s\n' % output)
-            f.write('msout.writefullresflag=False\n')
-            f.write('steps=[avg]\n')
-            f.write('rficonsole.type=aoflagger\n')
-            f.write('avg.type = squash\n')
-            f.write('avg.freqstep = 1\n')
-            f.write('avg.timestep = 12\n')      # is the default
-            f.close()
+    im    = pim.image(imagename)
+    image = numpy.copy(im.getdata())
+    mean, rms =  meanclip(image)
+    #im.close()
+    return rms,  numpy.abs(numpy.max(image)/numpy.min(image))
 
 
-            ndpppcmd = 'NDPPP ' + ndppp_parset+ ' >'+ndppplog+' 2>&1'
-            b.run(ndpppcmd)
-            #os.system (ndpppcmd)
+def meanclip(indata, clipsig=4.0, maxiter=10, converge_num=0.001, verbose=0):
+   """
+   Computes an iteratively sigma-clipped mean on a
+   data set. Clipping is done about median, but mean
+   is returned.
 
-        b.wait()
+   .. note:: MYMEANCLIP routine from ACS library.
 
-    ms = ''
-    for m in mslist:
-        if average:
-            ms = ms + ' ' + m + '.tmpavg'
-        else:
-            ms = ms + ' ' + m
+   :History:
+       * 21/10/1998 Written by RSH, RITSS
+       * 20/01/1999 Added SUBS, fixed misplaced paren on float call, improved doc. RSH
+       * 24/11/2009 Converted to Python. PLL.
 
-    imout = 'im'+ callnumber +'_cluster'+cluster+'nm'
-    logging.debug(ms + ' ' + imout + ' ' + 'None' + ' ' + '1mJy' + ' ' + str(niter) + ' ' + str(nterms))
+   Examples
+   --------
+   >>> mean, sigma = meanclip(indata)
 
-    if do_mask: ####
-        if cluster == 'a2256': ## special case for a2256
-            niter = niter*15 # clean very deep here
+   Parameters
+   ----------
+   indata: array_like
+       Input data.
 
-        run('casapy --nogui --logfile casapy-'+imout+'.log -c '+SCRIPTPATH+'/casapy_cleanv4.py ' + ms + ' ' + imout + ' ' + 'None' +\
-                ' ' + '1mJy' + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + mscale)
-        # make mask
-        if nterms > 1:
-            run('python '+SCRIPTPATH+'/makecleanmask.py --threshpix '+str(threshpix)+\
-                      ' --threshisl '+str(threshisl) +' --atrous_do '+ str(atrous_do) +' '   +imout +'.image.tt0')
-        else:
-            run('python '+SCRIPTPATH+'/makecleanmask.py --threshpix '+str(threshpix)+\
-                    ' --threshisl '+str(threshisl) +' --atrous_do '+ str(atrous_do) + ' '  + imout +'.image')
+   clipsig: float
+       Number of sigma at which to clip.
 
-        # clean image with manual mask
-        mask = imout+'.cleanmask'
+   maxiter: int
+       Ceiling on number of clipping iterations.
 
+   converge_num: float
+       If the proportion of rejected pixels is less than
+       this fraction, the iterations stop.
 
-    niter = 1000
-    imout = 'im'+ callnumber +'_cluster'+cluster
+   verbose: {0, 1}
+       Print messages to screen?
 
-    if region != 'empty' : ## special cases
-        if region.startswith("region"):
-            ####
-            # Test to use only the region mask
-            niter = niter*3
-            run('casapy --nogui --logfile casapy-'+imout+'.log -c '+SCRIPTPATH+'/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' +region + \
-                    ' ' + '1mJy' + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + mscale)
+   Returns
+   -------
+   mean: float
+       N-sigma clipped mean.
 
-        else:
-            niter = niter*3
-            run('casapy --nogui --logfile casapy-'+imout+'.log -c '+SCRIPTPATH+'/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask+','+region + \
-                    ' ' + '1mJy' + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + mscale)
-    else:
-        run('casapy --nogui --logfile casapy-'+imout+'.log -c '+SCRIPTPATH+'/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask + \
-                  ' ' + '1mJy' + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + mscale)
+   sigma: float
+       Standard deviation of remaining pixels.
 
-    # convert to FITS
-    if nterms > 1:
-        run('image2fits in=' + imout +'.image.tt0' + ' ' + 'out='+ imout + '.fits')
-    else:
-        run('image2fits in=' + imout +'.image'     + ' ' + 'out='+ imout + '.fits')
-
-    if not os.path.exists(imout+'.fits'):
-        raise Exception('Imaging Error: '+imout+'.fits does not exist' )
-
-
-    if average:
-        logging.debug('rm -rf {}'.format(ms))
-        os.system('rm -rf ' + ms)
-
-    return imout,mask
+   """
+   # Flatten array
+   skpix = indata.reshape( indata.size, )
+ 
+   ct = indata.size
+   iiter = 0
+   c1 = 1.0
+   c2 = 0.0
+ 
+   while (c1 >= c2) and (iiter < maxiter):
+       lastct = ct
+       medval = numpy.median(skpix)
+       sig = numpy.std(skpix)
+       wsm = numpy.where( abs(skpix-medval) < clipsig*sig )
+       ct = len(wsm[0])
+       if ct > 0:
+           skpix = skpix[wsm]
+ 
+       c1 = abs(ct - lastct)
+       c2 = converge_num * lastct
+       iiter += 1
+   # End of while loop
+ 
+   mean  = numpy.mean( skpix )
+   sigma = robust_sigma( skpix )
+ 
+   #if verbose:
+   prf = 'MEANCLIP:'
+   logging.debug('%s %.1f-sigma clipped mean' % (prf, clipsig))
+   logging.debug('%s Mean computed in %i iterations' % (prf, iiter))
+   logging.debug('%s Mean = %.6f, sigma = %.6f' % (prf, mean, sigma))
+ 
+   return mean, sigma
 
 
 def do_selfcal(mslist, cluster, atrous_do, imsize, nterms, cellsizetime_a, cellsizetime_p,
@@ -202,9 +188,20 @@ def do_selfcal(mslist, cluster, atrous_do, imsize, nterms, cellsizetime_a, cells
                          # 2. there sre some strong ampl various at low elevations
     smooth       = True # sometimes almost 0.0 amplitude, causes ripples
     phasezero    = True # reset phases from ap calibration
+    
+    # Loop parameters
+    number_forced_selfcalcycles = 8
+    rms_old          = 1.e9 # bad values to start with
+    dynamicrange_old = 1. # low value to start with so we get into the while loop
+    factor           = 1.0125 # demand 1.25% improvement
+    im_count         = 4
+    max_selfcalcycles = 16
 
 
-
+    #####################
+    #####################
+    
+    
     #### MAKE IMAGE 0 ###
     logging.info('Make image 0')
     imout,mask = make_image(mslist, cluster, '0', 10, 6, nterms, atrous_do, imsize, region, SCRIPTPATH)
@@ -253,9 +250,7 @@ def do_selfcal(mslist, cluster, atrous_do, imsize, nterms, cellsizetime_a, cells
     logging.info('Make image 2')
     imout,mask = make_image(mslist, cluster, '2', 15, 15, nterms, atrous_do, imsize, region, SCRIPTPATH)
     ####################
-
-
-
+    
     ### CALIBRATE WITH BBS PHASE+AMP 1 ###
     run(SCRIPTPATH+'/casapy2bbs.py -m '+ mask + ' ' +'-t ' + str(nterms)+ ' ' + imout+'.model ' +  imout+'.skymodel')
     if FFT:
@@ -290,54 +285,68 @@ def do_selfcal(mslist, cluster, atrous_do, imsize, nterms, cellsizetime_a, cells
     imout,mask = make_image(mslist, cluster, '3', 10, 10, nterms, atrous_do, imsize, region, SCRIPTPATH)
 
 
+    ####################
+    # LOOP 
+    ####################
 
-    #### CALIBRATE  BBS PHASE+AMP 2 ###
-    # make model
-    run(SCRIPTPATH+'/casapy2bbs.py -m '+ mask + ' ' +'-t ' + str(nterms)+ ' ' + imout+'.model ' +  imout+'.skymodel')
-    if FFT:
-        run('casapy --nogui -c '+SCRIPTPATH+'/ft_v2.py ' + msinputlist + ' ' + imout+'.model' \
-                  + ' ' + str(nterms) + ' '+ str(wplanes))
+    while(((dynamicrange/factor) > dynamicrange_old) or ((rms*factor) < rms_old)):
+        logging.info('Starting selfcal loop')
+        #### CALIBRATE  BBS PHASE+AMP 2 (LOOP) ###
+        # make model
+        run(SCRIPTPATH+'/casapy2bbs.py -m '+ mask + ' ' +'-t ' + str(nterms)+ ' ' + imout+'.model ' +  imout+'.skymodel')
+        if FFT:
+            run('casapy --nogui -c '+SCRIPTPATH+'/ft_v2.py ' + msinputlist + ' ' + imout+'.model' \
+                    + ' ' + str(nterms) + ' '+ str(wplanes))
 
-    #parmdb keep from previous step
-    skymodel = imout+'.skymodel'
+        #parmdb keep from previous step
+        skymodel = imout+'.skymodel'
 
+        # phase only cal
+        skymodel = imout+'.skymodel'
+        parset   = create_scalarphase_parset_p(cellsizetime_p, TEC, clock, group, FFT, uvrange)
+        runbbs(mslist, skymodel, parset, 'instrument_phase1', False, TEC, clusterdesc, dbserver, dbuser, dbname)
 
-    # reset the phases from instrument_amps0 to zero to prevent large phase corrections from incorrect AP solve
-    if phasezero:
-        inputparmdb  = parmdb +'_smoothed'
-        outputparmdb = parmdb +'_smoothed_phasezero'
+        # solve amps
+        parmdb   = 'instrument_amps1'
+        parset = create_amponly_parset(cellsizetime_a, FFT, uvrange)
+        runbbs(mslist, skymodel, parset,parmdb, False, False, clusterdesc, dbserver, dbuser, dbname)
+
         for ms in mslist:
-            run('python '+SCRIPTPATH+'/setphasezero.py ' + ms + ' ' + ms+'/'+inputparmdb +' ' + ms+'/'+outputparmdb)
-    else:
-        outputparmdb = parmdb +'_smoothed'
+            # remove outliers from the solutions
+            if phasors:
+                run('python '+SCRIPTPATH+'/smoothcal_rx42.py ' + ms + ' ' + ms+'/'+parmdb + ' ' + ms+'/'+parmdb+'_smoothed'+' > '+ms+'_'+parmdb+'_smoothed.log')
+            else:
+                run('python '+SCRIPTPATH+'/smoothcal_a2256_nophasors.py ' + ms + ' ' + ms+'/'+parmdb + ' ' + ms+'/'+parmdb+'_smoothed'+' > '+ms+'_'+parmdb+'_smoothed.log')
 
-
-    # phase only cal
-    skymodel = imout+'.skymodel'
-    parset   = create_scalarphase_parset_p(cellsizetime_p, TEC, clock, group, FFT, uvrange)
-    runbbs(mslist, skymodel, parset, 'instrument_phase1', False, TEC, clusterdesc, dbserver, dbuser, dbname)
-
-    # solve amps
-    parmdb   = 'instrument_amps1'
-    parset = create_amponly_parset(cellsizetime_a, FFT, uvrange)
-    runbbs(mslist, skymodel, parset,parmdb, False, False, clusterdesc, dbserver, dbuser, dbname)
-
-    for ms in mslist:
-        # remove outliers from the solutions
-        if phasors:
-            run('python '+SCRIPTPATH+'/smoothcal_rx42.py ' + ms + ' ' + ms+'/'+parmdb + ' ' + ms+'/'+parmdb+'_smoothed'+' > '+ms+'_'+parmdb+'_smoothed.log')
+        # apply amps
+        if smooth:
+            runbbs(mslist, skymodel,SCRIPTPATH+'/apply_amplitudeonly.parset',parmdb+'_smoothed', True, False, clusterdesc, dbserver, dbuser, dbname)
         else:
-            run('python '+SCRIPTPATH+'/smoothcal_a2256_nophasors.py ' + ms + ' ' + ms+'/'+parmdb + ' ' + ms+'/'+parmdb+'_smoothed'+' > '+ms+'_'+parmdb+'_smoothed.log')
+            runbbs(mslist, skymodel,SCRIPTPATH+'/apply_amplitudeonly.parset',parmdb, True, False, clusterdesc, dbserver, dbuser, dbname)
 
-    # apply amps
-    if smooth:
-        runbbs(mslist, skymodel,SCRIPTPATH+'/apply_amplitudeonly.parset',parmdb+'_smoothed', True, False, clusterdesc, dbserver, dbuser, dbname)
-    else:
-        runbbs(mslist, skymodel,SCRIPTPATH+'/apply_amplitudeonly.parset',parmdb, True, False, clusterdesc, dbserver, dbuser, dbname)
+        ### MAKE IMAGE #N ###
+        logging.info('Make image {}'.format(im_count))
+        imout,mask = make_image(mslist, cluster, str(im_count), 10, 10, nterms, atrous_do, imsize, region, SCRIPTPATH)
 
-    ### MAKE IMAGE 4 ###
-    logging.info('Make image 4')
-    imout,mask = make_image(mslist, cluster, '4', 10, 10, nterms, atrous_do, imsize, region, SCRIPTPATH)
+        
+        im_count++
+        
+        # save previous values to compare with
+        rms_old          = rms
+        dynamicrange_old = dynamicrange 
+        if nterms < 2:    
+            logging.info('IMAGE STATISTICS {}'.format(find_imagenoise(imout + '.image')))
+            rms, dynamicrange =  find_imagenoise(imout + '.image')
+        else:
+            logging.info('IMAGE STATISTICS {}'.format(find_imagenoise(imout + '.image.tt0')))
+            rms, dynamicrange =  find_imagenoise(imout + '.image.tt0')
+
+        if im_count < number_forced_selfcalcycles:
+            rms_old          = 1.e9 # bad values to start with
+            dynamicrange_old = 1.
+        
+        if im_count <= max_selfcalcycles:
+            break
 
 
     ### CREATE FINAL MODEL ###
