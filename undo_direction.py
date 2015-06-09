@@ -53,4 +53,5 @@ if __name__ == "__main__":
 
     mslist = ["{name:s}_SB{b1:03d}-{b2:03d}.{res:s}.ms".format(name=NAME,res=RES,b1=b,b2=b+9) for b in BANDS]
 
+    undo_direction(mslist)
 
