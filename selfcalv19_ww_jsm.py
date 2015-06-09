@@ -329,7 +329,7 @@ def do_selfcal(mslist, cluster, atrous_do, imsize, nterms, cellsizetime_a, cells
         imout,mask = make_image(mslist, cluster, str(im_count), 10, 10, nterms, atrous_do, imsize, region, SCRIPTPATH)
 
         
-        im_count++
+        im_count += 1
         
         # save previous values to compare with
         rms_old          = rms
