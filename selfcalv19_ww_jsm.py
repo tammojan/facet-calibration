@@ -284,11 +284,13 @@ def do_selfcal(mslist, cluster, atrous_do, imsize, nterms, cellsizetime_a, cells
     logging.info('Make image 3')
     imout,mask = make_image(mslist, cluster, '3', 10, 10, nterms, atrous_do, imsize, region, SCRIPTPATH)
 
-
+    
     ####################
     # LOOP 
     ####################
-
+    
+    rms, dynamicrange =  find_imagenoise(imout + '.image')
+    
     while(((dynamicrange/factor) > dynamicrange_old) or ((rms*factor) < rms_old)):
         logging.info('Starting selfcal loop')
         #### CALIBRATE  BBS PHASE+AMP 2 (LOOP) ###
