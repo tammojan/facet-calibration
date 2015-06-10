@@ -382,7 +382,7 @@ def do_selfcal(mslist, cluster, atrous_do, imsize, nterms, cellsizetime_a, cells
     
     rms, dynamicrange =  find_imagenoise(imout + '.image')
     
-    while(((dynamicrange/factor) > dynamicrange_old) or ((rms*factor) < rms_old)):
+    while (((dynamicrange/factor) > dynamicrange_old) or ((rms*factor) < rms_old)):
         logging.info('Starting selfcal loop')
         #### CALIBRATE  BBS PHASE+AMP 2 (LOOP) ###
         # make model
@@ -428,17 +428,18 @@ def do_selfcal(mslist, cluster, atrous_do, imsize, nterms, cellsizetime_a, cells
         rms_old          = rms
         dynamicrange_old = dynamicrange 
         if nterms < 2:    
-            logging.info('IMAGE STATISTICS {}'.format(find_imagenoise(imout + '.image')))
             rms, dynamicrange =  find_imagenoise(imout + '.image')
         else:
-            logging.info('IMAGE STATISTICS {}'.format(find_imagenoise(imout + '.image.tt0')))
             rms, dynamicrange =  find_imagenoise(imout + '.image.tt0')
+        logging.info('IMAGE STATISTICS {}, {}'.format(rms, dynamicrange))
 
         if im_count < number_forced_selfcalcycles:
             rms_old          = 1.e9 # bad values to start with
             dynamicrange_old = 1.
+            logging.debug("Count below the number of forced selfcal cycles. Force new loop.")
         
-        if im_count <= max_selfcalcycles:
+        if im_count >= max_selfcalcycles:
+            logging.info("Maximum number of cycles ({}) reached. Leaving selfcal loop.".format(max_selfcalcycles))
             break
 
 
