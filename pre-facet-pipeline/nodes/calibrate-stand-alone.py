@@ -89,10 +89,11 @@ class calibrate_stand_alone(LOFARnodeTCP):
             self.replace_parmdb = True
             self.replace_sourcedb = True
             kwargs.pop('force')
+        numthreads = 1
         if 'numthreads' in kwargs:
             numthreads = kwargs['numthreads']
-            args.append('--numthreads='+str(numthreads))
             kwargs.pop('numthreads')
+        args.append('--numthreads='+str(numthreads))
         if 'observation' in kwargs:
             self.observation = kwargs.pop('observation')
         if 'catalog' in kwargs:
@@ -100,9 +101,10 @@ class calibrate_stand_alone(LOFARnodeTCP):
 
         self.createsourcedb()
         self.createparmdb()
-        if 'no-columns' in kwargs:
-            if not kwargs['no-columns']:
-                self.addcolumns()
+        if not 'no-columns' in kwargs:
+            #if not kwargs['no-columns']:
+            self.addcolumns()
+        else:
             kwargs.pop('no-columns')
 
         args.append('--sourcedb=' + self.sourcedb_path)
@@ -146,7 +148,7 @@ class calibrate_stand_alone(LOFARnodeTCP):
 
             try:
             # ****************************************************************
-            # Run
+            #Run
                 cmd = [executable] + args
                 with CatchLog4CPlus(
                     work_dir,
@@ -192,7 +194,7 @@ class calibrate_stand_alone(LOFARnodeTCP):
     def createparmdb(self):
         print "create parmdb"
         #global parmdb_path
-        self.parmdb_path = self.observation + '/' + self.parmdb_basename
+        self.parmdb_path = os.path.join(self.observation, self.parmdb_basename)
         if os.path.exists(self.parmdb_path) and not self.replace_parmdb:
             self.logger.debug("warning: parmdb exists and will not be replaced (specify --replace-parmdb to force replacement)")
         elif self.parmdb:
@@ -205,19 +207,24 @@ class calibrate_stand_alone(LOFARnodeTCP):
             if not self.dry_run:
                 if os.path.exists(self.parmdb_path):
                     shutil.rmtree(self.parmdb_path)
+
                 prog = os.path.join(os.path.dirname(self.executable), 'parmdbm')
-                parmproc = subprocess.Popen([prog],stdin=subprocess.PIPE)
-                parmproc.stdin.write('create tablename='+self.parmdb_path)
-                parmproc.stdin.write('adddef Gain:0:0:Ampl  values=1.0')
-                parmproc.stdin.write('adddef Gain:1:1:Ampl  values=1.0')
-                parmproc.stdin.write('adddef Gain:0:0:Real  values=1.0')
-                parmproc.stdin.write('adddef Gain:1:1:Real  values=1.0')
-                parmproc.stdin.write('adddef DirectionalGain:0:0:Ampl  values=1.0')
-                parmproc.stdin.write('adddef DirectionalGain:1:1:Ampl  values=1.0')
-                parmproc.stdin.write('adddef DirectionalGain:0:0:Real  values=1.0')
-                parmproc.stdin.write('adddef DirectionalGain:1:1:Real  values=1.0')
-                parmproc.stdin.write('adddef Clock values=0.0, pert=1e-15')
-                parmproc.stdin.write('quit')
+                parmdbdefaults="create tablename=\""+self.parmdb_path+""""
+                  adddef Gain:0:0:Ampl  values=1.0
+                  adddef Gain:1:1:Ampl  values=1.0
+                  adddef Gain:0:0:Real  values=1.0
+                  adddef Gain:1:1:Real  values=1.0
+                  adddef DirectionalGain:0:0:Ampl  values=1.0
+                  adddef DirectionalGain:1:1:Ampl  values=1.0
+                  adddef DirectionalGain:0:0:Real  values=1.0
+                  adddef DirectionalGain:1:1:Real  values=1.0
+                  adddef Clock values=0.0, pert=1e-15
+                  quit"""
+                pipe = subprocess.Popen([prog], stdin=subprocess.PIPE)
+                pipe.communicate(input=parmdbdefaults)
+                pipe.stdin.close()
+                if pipe.wait() != 0:
+                    self.logger.error("Error while executing parmdbm")
 
     def addcolumns(self):
         self.logger.debug("add CASA imaging columns to MS")
