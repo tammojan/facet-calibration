@@ -8,7 +8,7 @@ import numpy as numpy
 import math
 import scipy
 import scipy.signal
-#import pyrap.tables as pt
+import pyrap.tables as pt
 
 
 def median_smooth(ampl, half_window):
@@ -239,24 +239,9 @@ for ii in range(len(key_names)):
         if gain == 'DirectionalGain':
             antenna_list[-1] = antenna_list[-1]+':'+split_a[5]
 
-#anttab          = pt.table(msname + '/ANTENNA')
-#antenna_list    = anttab.getcol('NAME')
-#anttab.close()
-
-antenna_list =['CS001HBA0', 'CS001HBA1', 'CS002HBA0', 'CS002HBA1', 'CS003HBA0', \
-               'CS003HBA1', 'CS004HBA0', 'CS004HBA1', 'CS005HBA0', 'CS005HBA1', \
-               'CS006HBA0', 'CS006HBA1', 'CS007HBA0', 'CS007HBA1', 'CS011HBA0', \
-               'CS011HBA1', 'CS021HBA0', 'CS021HBA1', 'CS024HBA0', 'CS024HBA1', \
-               'CS026HBA0', 'CS026HBA1', 'CS030HBA0', 'CS030HBA1', 'CS031HBA0', \
-               'CS031HBA1', 'CS032HBA0', 'CS032HBA1', 'CS101HBA0', 'CS101HBA1', \
-               'CS103HBA0', 'CS103HBA1', 'CS201HBA0', 'CS201HBA1', 'CS301HBA0', \
-               'CS301HBA1', 'CS302HBA0', 'CS302HBA1', 'CS401HBA0', 'CS401HBA1', \
-               'CS501HBA0', 'CS501HBA1', 'RS106HBA', 'RS205HBA', 'RS208HBA', \
-               'RS305HBA', 'RS306HBA', 'RS307HBA', 'RS310HBA', 'RS406HBA', \
-               'RS407HBA', 'RS409HBA', 'RS503HBA', 'RS508HBA', 'RS509HBA']
-
-
-
+anttab          = pt.table(msname + '/ANTENNA')
+antenna_list    = anttab.getcol('NAME')
+anttab.close()
 
 pol_list = numpy.unique(pol_list)
 sol_par = numpy.unique(sol_par)
