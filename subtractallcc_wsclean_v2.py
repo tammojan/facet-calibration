@@ -7,16 +7,11 @@ import pwd
 from subprocess import Popen, PIPE
 import time
 import pyrap.images
+import logging
+import logging.config
+from facet_utilities import run
 
 username = pwd.getpwuid(os.getuid())[0]
-
-def run(c,proceed=False,quiet=False):
-    if not(quiet):
-        print 'Running:',c
-    retval=os.system(c)
-    if retval!=0 and not(proceed):
-        raise Exception('FAILED to run '+c+' -- return value was '+str(retval))
-    return retval
 
 def create_ndppp_parset(msin, msout):
     ndppp_parset = msin.split('.')[0] +'ndppp_lowresavg.parset'
@@ -68,6 +63,32 @@ if __name__=='__main__':
     except NameError:
         cleanup=False
 
+    try:
+        logfile
+    except NameError:
+        logfile='subtract.log'
+
+    ## Logger configuration
+    if os.path.exists("logging.conf"):
+        logging.config.fileConfig('logging.conf')
+        logger = logging.getLogger()
+    else:
+        # Start
+        logger = logging.getLogger()
+        logger.setLevel(logging.DEBUG)   
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+        # Log to STDOUT
+        ch = logging.StreamHandler()
+        ch.setFormatter(formatter)
+        logger.addHandler(ch)
+        # Log to file
+        fh = logging.FileHandler(logfile) 
+        fh.setFormatter(formatter)
+        logger.addHandler(fh)
+
+    logging.info('Subtract starts')
+    logging.debug('MS list is '+str(mslist))
+        
     # parameters below should not need to be changed
 
     niterh = 40000
@@ -97,7 +118,7 @@ if __name__=='__main__':
             os.system('rm '+lr_bbslog+' '+hr_bbslog+' '+finalsky)
 
         if os.path.isfile(imhigh+'-image.fits'):
-            print 'High-resolution image exists, NOT remaking it'
+            logging.warning('High-resolution image exists, NOT remaking it')
         else:
     # ---------------------
     # image without mask
@@ -113,8 +134,8 @@ if __name__=='__main__':
         mask_name  = imhigh + '.fitsmask'
         casa_mask  = imhigh + '.casamask'
 
-        if os.path.isdir(casa_mask):
-            print 'Mask exists, NOT remaking it'
+        if os.path.isfile(mask_name):
+            logging.warning('Mask exists, NOT remaking it')
         else:
 
             cmd='python '+SCRIPTPATH+'/makecleanmask_10sb_wsclean.py --threshpix '+str(threshpix)+\
@@ -125,6 +146,9 @@ if __name__=='__main__':
 
             run(cmd)
 
+        if os.path.isdir(casa_mask):
+            logging.warning('CASA mask exists, NOT remaking it')
+        else:
             maskim=pyrap.images.image(mask_name)
             maskim.saveas(casa_mask)
 
@@ -139,7 +163,7 @@ if __name__=='__main__':
         imhigh = imhigh + 'withmask'
 
         if os.path.isfile(imhigh+'-image.fits'):
-            print 'Masked high-resolution image exists, NOT remaking it'
+            logging.warning('Masked high-resolution image exists, NOT remaking it')
         else:
             cmd1 = wsclean + ' -reorder -name ' + imhigh + ' -size ' + str(imsizeh) + ' ' + str(imsizeh) + ' '
             cmd2 = '-scale ' + cellh + ' -weight briggs 0.0 -niter ' + str(niterh) + ' '
@@ -151,11 +175,11 @@ if __name__=='__main__':
         fits_model = imhigh + '-model.fits'
         casa_model = imhigh + '.model'
         if os.path.isdir(casa_model):
-            print 'CASA model exists, NOT remaking it'
+            logging.warning('CASA model exists, NOT remaking it')
         else:
 
         # convert model fits image to casa .model format
-            print 'Converting model to casapy format', fits_model, ' ==> ', casa_model
+            logging.debug('Converting model to casapy format: '+fits_model+' ==> '+casa_model)
 
             modelim=pyrap.images.image(fits_model)
             modelim.saveas(casa_model)
@@ -167,12 +191,12 @@ if __name__=='__main__':
         # make the skymodel
         skymodel = imhigh  + '.skymodel'
         if os.path.isfile(skymodel):
-            print 'Skymodel exists, NOT remaking it'
+            logging.warning('Skymodel exists, NOT remaking it')
         else:
             run(SCRIPTPATH+'/casapy2bbs_one_patch_per_cc.py '  + casa_model + ' ' +  skymodel)
 
         if os.path.isfile(hr_bbslog):
-            print 'BBS log for subtraction exists, NOT re-doing subtraction. Be careful!'
+            logging.warning('BBS log for subtraction exists, NOT re-doing subtraction. Be careful!')
         else:
         # ---------------------
         # subtract the cc
@@ -187,7 +211,7 @@ if __name__=='__main__':
 
         msout = ms.split('.')[0] + '.lowres.ms'
         if os.path.isdir(msout):
-            print 'Averaged lowres MS already exists, NOT remaking it'
+            logging.warning('Averaged lowres MS already exists, NOT remaking it')
         else:
 
             ndppp_parset = create_ndppp_parset(ms, msout)
@@ -196,7 +220,7 @@ if __name__=='__main__':
             run('NDPPP ' + ndppp_parset +' >'+ ms+'.NDPPPavelog')
 
         if os.path.isfile(imlow+'-image.fits'):
-            print 'Low-resolution image exists, NOT remaking it'
+            logging.warning('Low-resolution image exists, NOT remaking it')
         else:
 
         # make the lowres image (no mask)
@@ -213,7 +237,7 @@ if __name__=='__main__':
         casa_mask  = imlow + '.casamask'
 
         if os.path.isdir(casa_mask):
-            print 'Low-res CASA mask exists, NOT re-making it'
+            logging.warning('Low-res CASA mask exists, NOT re-making it')
         else:
             cmd='python '+SCRIPTPATH+'/makecleanmask_10sb_wsclean.py --threshpix '+str(5.0)+\
                    ' --threshisl '+str(4.0) +' --atrous_do '+ str(atrous_do) + ' '
@@ -237,7 +261,7 @@ if __name__=='__main__':
 
         imlow = imlow + 'withmask'
         if os.path.isfile(imlow+'-image.fits'):
-            print 'Low-res masked image exists, NOT re-making it'
+            logging.warning('Low-res masked image exists, NOT re-making it')
         else:
             cmd1 = wsclean + ' -reorder -name ' + imlow + ' -size ' + str(imsizel) + ' ' + str(imsizel) + ' '
             cmd2 = '-scale ' + celll + ' -weight briggs 0.0 -niter ' + str(niterl) + ' '
@@ -255,10 +279,10 @@ if __name__=='__main__':
         casa_model = imlow + '.model'
 
         if os.path.isdir(casa_model):
-            print 'Low-res CASA model exists, NOT re-making it'
+            logging.warning('Low-res CASA model exists, NOT re-making it')
         else:
         # convert model fits image to casa .model format
-            print 'Converting model to casapy format', fits_model, ' ==> ', casa_model
+            logging.debug('Converting model to casapy format: '+fits_model+' ==> '+casa_model)
 
             modelim=pyrap.images.image(fits_model)
             modelim.saveas(casa_model)
@@ -270,14 +294,14 @@ if __name__=='__main__':
         skymodel = imlow  + '.skymodel'
 
         if os.path.isfile(skymodel):
-            print 'Skymodel exists, NOT remaking it'
+            logging.warning('Skymodel exists, NOT remaking it')
         else:
             run(SCRIPTPATH+'/casapy2bbs_one_patch_per_cc.py '  + casa_model  + ' ' +  skymodel)
 
         # ---------------------
         # subtract thelowres cc
         if os.path.isfile(lr_bbslog):
-            print 'BBS log exists, NOT doing low-res subtract (CAREFUL!)'
+            logging.warning('BBS log exists, NOT doing low-res subtract (CAREFUL!)')
         else:
             parset = SCRIPTPATH+'/subtractall_lowres_wsclean.parset'
             cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name instrument_ap_smoothed '
@@ -289,7 +313,7 @@ if __name__=='__main__':
         # merge the skymodels
         finalsky =  ms.split('.')[0] + '.skymodel'
         if os.path.isfile(finalsky):
-            print 'Final sky model exists, NOT replacing it (why did you run this script, exactly?)'
+            logging.warning('Final sky model exists, NOT replacing it (why did you run this script, exactly?)')
         else:
             run('cp ' + imhigh+ '.skymodel ' + finalsky)
             run("grep -v '#' "+  imlow+ ".skymodel > tmp.sky")
@@ -301,4 +325,4 @@ if __name__=='__main__':
             cmd = 'sed -i \"s/# (Name, Type, Patch, Ra, Dec, I, Q, U, V) = format/format = Name, Type, Patch, Ra, Dec, I, Q, U, V, MajorAxis, MinorAxis, Orientation, ReferenceFrequency=\'1.5e+08\', SpectralIndex=\'[]\'/g\"  '
             run(cmd + ' ' + finalsky)
 
-        print 'MS',ms,'all done!'
+        logging.info('MS '+ms+' all done!')
