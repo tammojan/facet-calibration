@@ -390,7 +390,7 @@ def do_selfcal(mslist, cluster, atrous_do, imsize, nterms, cellsizetime_a, cells
     rms, dynamicrange =  find_imagenoise(imout + '.image')
     
     while (((dynamicrange/factor) > dynamicrange_old) or ((rms*factor) < rms_old)):
-        logging.info('Starting selfcal loop')
+        logging.info('Starting selfcal loop {}'.format(im_count))
         #### CALIBRATE  BBS PHASE+AMP 2 (LOOP) ###
         # make model
         run(SCRIPTPATH+'/casapy2bbs.py -m '+ mask + ' ' +'-t ' + str(nterms)+ ' ' + imout+'.model ' +  imout+'.skymodel')
@@ -436,9 +436,17 @@ def do_selfcal(mslist, cluster, atrous_do, imsize, nterms, cellsizetime_a, cells
 
         ### MAKE IMAGE #N ###
         logging.info('Make image {}'.format(im_count))
-        imout,mask = make_image(mslist, cluster, str(im_count), 10, 10, nterms, atrous_do, imsize, region, SCRIPTPATH)
+        
+        # Do not use the initial mask in the final cycles
+        if im_count >= empty_mask_cycle:
+            region_im = "empty"
+        else:
+            region_im = region
+        
+        imout,mask = make_image(mslist, cluster, str(im_count), 10, 10, nterms, atrous_do, imsize, region_im, SCRIPTPATH)
 
         
+        ## Prepare the next iteration
         im_count += 1
         
         # save previous values to compare with
