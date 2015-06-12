@@ -400,6 +400,16 @@ def do_selfcal(mslist, cluster, atrous_do, imsize, nterms, cellsizetime_a, cells
 
         #parmdb keep from previous step
         skymodel = imout+'.skymodel'
+        
+        # reset the phases from instrument_amps0 to zero to prevent large phase corrections from incorrect AP solve
+        # FIXME: Is this used?
+        if phasezero:
+            inputparmdb  = parmdb +'_smoothed'
+            outputparmdb = parmdb +'_smoothed_phasezero'
+            for ms in mslist:
+                run('python '+SCRIPTPATH+'/setphasezero.py ' + ms + ' ' + ms+'/'+inputparmdb +' ' + ms+'/'+outputparmdb)
+        else:
+            outputparmdb = parmdb +'_smoothed'
 
         # phase only cal
         skymodel = imout+'.skymodel'
