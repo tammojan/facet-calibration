@@ -49,7 +49,7 @@ def create_merged_parmdb_spline(parmdb_a,parmdb_p, parmdb_t, parmdb_out,cellsize
 
 
     for key in keynames_a:
-        print key
+        logging.debug(key)
         tmp1 = numpy.copy(parms_t[key]['values'][:,0])
         tmp2 = numpy.copy(parms_a[key]['values'][:,0])
 
@@ -299,7 +299,7 @@ def runbbs(mslist, skymodel, parset, parmdb, applycal, TEC, clusterdesc, db, dbu
             username = pwd.getpwuid(os.getuid())[0]
             cdparset='/home/'+username+'/pgsql-setup.txt'
             if os.path.isfile(cdparset):
-                print 'Getting pgsql setup from',cdparset
+                logging.debug('Getting pgsql setup from {}'.format(cdparset))
                 lines=[line.strip() for line in open(cdparset)]
                 clusterdesc=lines[0]
                 db=lines[1]
@@ -330,7 +330,7 @@ def runbbs(mslist, skymodel, parset, parmdb, applycal, TEC, clusterdesc, db, dbu
                 run('makevds '+clusterdesc+' ' + ms)
                 vdslist = vdslist + ms + '.vds '
             gds = 'tec.gds'
-            print vdslist
+            logging.debug(vdslist)
             run('combinevds ' + gds + ' '+ vdslist)
 
             cmd1= 'calibrate -f --key ' + key + ' --cluster-desc '+clusterdesc +' --instrument-name ' + parmdb + ' '
@@ -340,7 +340,7 @@ def runbbs(mslist, skymodel, parset, parmdb, applycal, TEC, clusterdesc, db, dbu
             ntries = 0
             done = 0
             while (ntries < 10)  and (done < 1):
-                print 'calibrate try ', ntries
+                logging.debug('calibrate try {}'.format(ntries))
                 run(bbscmd)
 
                 #done = 0
@@ -349,12 +349,12 @@ def runbbs(mslist, skymodel, parset, parmdb, applycal, TEC, clusterdesc, db, dbu
                 output=Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
                 if 'OK' in output:
                     done += 1
-                    print gds, 'is done'
+                    logging.debug('{} is done'.format(gds))
                 else:
                 #cmd = "grep 'FAIL' " + gds + ".bbslog"
                 #output=Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
                 #if 'FAIL' in output:
-                    print 'calibrate failed, trying again...'
+                    logging.warning('calibrate failed, trying again...')
                     ntries += 1
                 time.sleep(5)
 
@@ -730,11 +730,11 @@ def do_selfcal(mslist, cluster, atrous_do, imsize, nterms,
         #   wplanes = 512
 
 
-    print 'mslist', mslist
-    print 'source', cluster
-    print 'atrous_do', atrous_do
-    print 'imsize', imsize
-    print 'TEC is',TEC,'and clock is',clock
+    logging.info('mslist {}'.format(mslist))
+    logging.info('source {}'.format(cluster))
+    logging.info('atrous_do {}'.format(atrous_do))
+    logging.info('imsize {} '.format(imsize))
+    logging.info('TEC is {} and clock is {}'.format(TEC, clock))
 
     msinputlist = ''
     for m in mslist:
@@ -755,7 +755,7 @@ def do_selfcal(mslist, cluster, atrous_do, imsize, nterms,
 
 
     group = get_group(mslist)
-    print 'GROUP', group
+    logging.info('GROUP {}'.format(group))
 
 
     uvrange = '80'
