@@ -690,7 +690,10 @@ def get_group(thismslist):
     return group
 
 
-def do_selfcal(mslist,cluster,atrous_do,imsize,nterms,cellsizetime_a,cellsizetime_p,TECi,clocki,HRi,region,clusterdesc,dbserver,dbuser,dbname,SCRIPTPATH):
+def do_selfcal(mslist, cluster, atrous_do, imsize, nterms, 
+               cellsizetime_a, cellsizetime_p, TECi, clocki, HRi, 
+               region, clusterdesc, dbserver, dbuser, dbname, 
+               SCRIPTPATH, config=None):
 
     TEC  = False
     FFT  = False

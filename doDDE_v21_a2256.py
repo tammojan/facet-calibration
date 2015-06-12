@@ -1753,21 +1753,8 @@ if __name__ == "__main__":
                            dbserver,
                            dbuser,
                            dbname,
-                           SCRIPTPATH)
-#                cmd = ('python ' + SCRIPTPATH + '/' + config["selfcal"] + ' ' + 
-#                          inputmslist + ' ' + 
-#                          source + ' ' + 
-#                          atrous_do[source_id] + ' ' + 
-#                          str(imsizes[source_id]) + ' ' +
-#                          str(nterms) + ' ' + 
-#                          str(cellsizetime_a[source_id]) + ' ' + 
-#                          str(cellsizetime_p[source_id]) + ' ' + 
-#                          TEC + ' ' + 
-#                          clock + ' ' +
-#                          str(dynamicrange[source_id]) + ' ' + 
-#                          regionselfc[source_id] + ' ' + clusterdesc + ' ' +
-#                          dbserver + ' '+ dbuser + ' '+  dbname )
-#                run(cmd)
+                           SCRIPTPATH,
+                           config=config)
 
             logging.info('Finished selfcal DDE patch: '+ source)
 

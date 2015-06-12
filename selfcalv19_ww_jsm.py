@@ -205,7 +205,8 @@ def robust_sigma(in_y, zero=0):
 
 
 def do_selfcal(mslist, cluster, atrous_do, imsize, nterms, cellsizetime_a, cellsizetime_p,
-               TECi, clocki, HRi, region, clusterdesc, dbserver, dbuser, dbname, SCRIPTPATH):
+               TECi, clocki, HRi, region, clusterdesc, dbserver, dbuser, dbname, SCRIPTPATH, 
+               config=None):
 
     TEC  = False
     FFT  = False
@@ -280,15 +281,21 @@ def do_selfcal(mslist, cluster, atrous_do, imsize, nterms, cellsizetime_a, cells
     smooth       = True # sometimes almost 0.0 amplitude, causes ripples
     phasezero    = True # reset phases from ap calibration
     
-    # Loop parameters
-    number_forced_selfcalcycles = 8
+    ## Loop parameters
     rms_old          = 1.e9 # bad values to start with
     dynamicrange_old = 1. # low value to start with so we get into the while loop
-    factor           = 1.0125 # demand 1.25% improvement
     im_count         = 4
+    number_forced_selfcalcycles = 8
+    factor           = 1.0125 # demand 1.25% improvement
     max_selfcalcycles = 16
-
-
+    
+    if config is not None:
+        number_forced_selfcalcycles = config.get("selfcal_forced_cycles", 8)
+        factor = config.get("selfcal_factor", 1.0125)
+        max_selfcalcycles = config.get("selfcal_max_cycles", 16)
+        empty_mask_cycle = config.get("selfcal_empty_cycle", 5)     
+        
+    
     #####################
     #####################
     
