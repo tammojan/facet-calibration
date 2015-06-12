@@ -3,12 +3,12 @@
 
 import sys
 import os
-import lofar.parmdb
 import numpy as numpy
 import math
 import scipy
 import scipy.signal
 import pyrap.tables as pt
+import lofar.parmdb
 
 
 def median_smooth(ampl, half_window):
