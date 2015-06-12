@@ -294,7 +294,9 @@ def do_selfcal(mslist, cluster, atrous_do, imsize, nterms, cellsizetime_a, cells
         factor = config.get("selfcal_factor", 1.0125)
         max_selfcalcycles = config.get("selfcal_max_cycles", 16)
         empty_mask_cycle = config.get("selfcal_empty_cycle", 5)     
-        
+    
+    logging.info('Selfcal loop params: forced {}; empty mask {}; max {}; factor {}'.format(
+        number_forced_selfcalcycles, empty_mask_cycle, max_selfcalcycles, factor))
     
     #####################
     #####################
