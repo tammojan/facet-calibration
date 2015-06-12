@@ -7,7 +7,8 @@ Set up the facets:
 * doDDE_makefacets_v4.py - It requires a configuration file with some variables defined (example doDDE_makefacets_parset.py).
 
 Run the direction dependent calibration:
-* doDDE_v19_a2256.py - Old main script. It requires a configuration file with some variables defined (example a2256.parset).
+* doDDE_v19_a2256.py - Old main script. It requires a configuration file with some variables defined (example a2256.parset). It is strongly recommended to switch to doDDE_v21_a2256.py.
+
 * doDDE_v21_a2256.py - Main script. Accepts wideband. It requires a configuration file with some variables defined (example a2256.parset).
 
 Reimage the field when the full facet calibration is completed:
