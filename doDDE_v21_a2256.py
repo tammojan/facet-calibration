@@ -1632,7 +1632,7 @@ if __name__ == "__main__":
         if StartAtStep in ['preSC', 'doSC']:
             # remove selfcal images #
             logging.info("removing any existing selfcal images")
-            os.system("rm -rf im*_cluster"+source+"*")
+            os.system("rm -rf im*_cluster"+source+".*")
             #os.system("rm -rf allbands.concat.shifted_'+source+'.ms")
         if StartAtStep in ['preSC', 'doSC', 'postSC','preFACET','doFACET']:
             # remove selfcal images #
