@@ -53,10 +53,10 @@ def backup_previous_direction_p(mslist, source, backup=None,
             pool = Pool() # Use all the procesors available
         for ms in mslist:
             pool.apply_async(backup_previous_direction, 
-                             args=(ms, 
-                                   source, 
-                                   backup=backup, 
-                                   column=column))
+                             args=(ms, source,),
+                             kwargs={"backup": backup, 
+                                     "column": column}
+                             )
         pool.close()
         pool.join()
     else:
