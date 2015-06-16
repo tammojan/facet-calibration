@@ -50,8 +50,12 @@ if __name__ == "__main__":
 
     mslist = ["{name:s}_SB{b1:03d}-{b2:03d}.{res:s}.ms".format(name=NAME, res=RES, b1=b, b2=b+9) for b in BANDS]
     
-    pool = Pool()
+    #pool = Pool()
+    #for ms in mslist:
+        #pool.apply_async(backup_previous_direction, args=(ms, do_sources[-1]))
+    #pool.close()
+    #pool.join()
+    
+    # Try sequential run
     for ms in mslist:
-        pool.apply_async(backup_previous_direction, args=(ms, do_sources[-1]))
-    pool.close()
-    pool.join()
+        backup_previous_direction(ms, do_sources[-1])
