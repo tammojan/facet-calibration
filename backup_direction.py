@@ -50,4 +50,4 @@ if __name__ == "__main__":
     for ms in mslist:
         pool.apply_async(backup_previous_direction, ms, do_sources[-1])
     pool.close()
-    pool.wait()
+    pool.join()
