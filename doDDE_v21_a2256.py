@@ -14,6 +14,7 @@ import logging
 import logging.config
 import glob
 from facet_utilities import run, bg, angsep
+from backup_direction import backup_previous_direction_p
 from numpy import pi
 
 # check high-DR
@@ -1995,7 +1996,12 @@ if __name__ == "__main__":
                 else:
                     runbbs(mslist, ' ', parset, parmdb_master_out+'_norm', False) # replace-sourcedb not needed since we use "@column"
                 logging.info('Subtracted facet model from data for DDE : ' + source)
-
+            
+            # Optionally create a backup of the column CORRECTED_DATA
+            if config.get("backup_direction", False):
+                backup_previous_direction_p(mslist, source, parallel=-1)
+                
+            
             # CHECK IF THE SUBTRACT WORKED OK by making dirty low-res images
             #inputmslist = ''
             #for ms in mslist:

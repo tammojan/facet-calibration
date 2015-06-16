@@ -43,19 +43,34 @@ def restore_direction(ms, backup, column="SUBTRACTED_DATA_ALL"):
         raise Exception('Column name not found in the MS')
     ms_table.putcol(column, data)
 
-    
+
+def backup_previous_direction_p(mslist, source, backup=None, 
+                                   column="CORRECTED_DATA", parallel=0):
+    if parallel != 0:
+        if parallel > 0:
+            pool = Pool(parallel)
+        else:
+            pool = Pool() # Use all the procesors available
+        for ms in mslist:
+            pool.apply_async(backup_previous_direction, 
+                             args=(ms, 
+                                   source, 
+                                   backup=backup, 
+                                   column=column))
+        pool.close()
+        pool.join()
+    else:
+        for ms in mslist:
+            backup_previous_direction(ms, source, backup=backup, 
+                                      column=column)
+
+
+
 if __name__ == "__main__":
     config = {}
     execfile(sys.argv[1])
 
     mslist = ["{name:s}_SB{b1:03d}-{b2:03d}.{res:s}.ms".format(name=NAME, res=RES, b1=b, b2=b+9) for b in BANDS]
     
-    pool = Pool()
-    for ms in mslist:
-        pool.apply_async(backup_previous_direction, args=(ms, do_sources[-1]))
-    pool.close()
-    pool.join()
-    
-    ## Try sequential run
-    #for ms in mslist:
-        #backup_previous_direction(ms, do_sources[-1])
+    backup_previous_direction_p(mslist, do_sources[-1], parallel=-1)
+
