@@ -14,7 +14,7 @@ def backup_previous_direction(ms, source, backup=None, column="CORRECTED_DATA"):
     print(ms)
     print(source)
     # Open the MS
-    if not os.path.exists():
+    if not os.path.exists(ms):
         raise Exception('MS file not found')
     ms_table = pt.table(ms)
     # Read the column
@@ -35,7 +35,7 @@ def restore_direction(ms, backup, column="SUBTRACTED_DATA_ALL"):
     # Read the data
     data = np.load(backup)
     # Open the MS
-    if not os.path.exists():
+    if not os.path.exists(ms):
         raise Exception('MS file not found')
     ms_table = pt.table(ms, readonly=False)
     # Write the column
