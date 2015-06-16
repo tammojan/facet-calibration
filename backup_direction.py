@@ -48,6 +48,6 @@ if __name__ == "__main__":
     
     pool = Pool()
     for ms in mslist:
-        pool.apply_async(backup_previous_direction, ms, do_sources[-1])
+        pool.apply_async(backup_previous_direction, args=(ms, do_sources[-1]))
     pool.close()
     pool.join()
