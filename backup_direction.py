@@ -11,6 +11,8 @@ def backup_previous_direction(ms, source, backup=None, column="CORRECTED_DATA"):
     Create a backup of CORRECTED_DATA after running a direction. This data 
     could be entered into SUBTRACTED_DATA_ALL to get the previous state.
     """
+    print(ms)
+    print(source)
     # Open the MS
     if not os.path.exists():
         raise Exception('MS file not found')
@@ -28,6 +30,8 @@ def restore_direction(ms, backup, column="SUBTRACTED_DATA_ALL"):
     Load a backup of CORRECTED_DATA after running a direction into 
     SUBTRACTED_DATA_ALL.
     """
+    print(ms)
+    print(backup)
     # Read the data
     data = np.load(backup)
     # Open the MS
