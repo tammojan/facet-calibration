@@ -2,6 +2,7 @@ from __future__ import print_function
 import numpy as np
 import pyrap.tables as pt
 import os
+import sys
 from multiprocessing import Pool
 
 
