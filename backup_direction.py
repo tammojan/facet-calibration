@@ -54,7 +54,7 @@ def backup_previous_direction_p(mslist, source, backup=None,
         for ms in mslist:
             pool.apply_async(backup_previous_direction, 
                              args=(ms, source,),
-                             kwargs={"backup": backup, 
+                             kwds={"backup": backup, 
                                      "column": column}
                              )
         pool.close()
