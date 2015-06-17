@@ -119,13 +119,13 @@ def do_verify_subtract(mslist, res_val, source, numchanperms=20):
             minvalpre = numpy.min(pixelspre)
 
         logging.info('verify_subtract: For %s max, min residual were %f, %f' % (image,maxval,minval))
-        print maxval, minval, ' ' + image
+        logging.debug("{} {} {}".format(maxval, minval, image))
         if pre_sourcename is not None:
-            print maxvalpre, minvalpre, ' ' + pre_sourcename
+            logging.debug("{} {} {}".format(maxvalpre, minvalpre, pre_sourcename))
         if  (maxval > res_val) or ((maxval*0.92) > maxvalpre) :
             stopcal = True
-            print 'WARNING RESIDUAL TOO LARGE, STOPPING', maxval, res_val
-            print 'WARNING RESIDUAL TOO LARGE, STOPPING, previous max in image', maxvalpre
+            logging.warning('RESIDUAL TOO LARGE, STOPPING {} {}'.format(maxval, res_val))
+            logging.warning('RESIDUAL TOO LARGE, STOPPING, previous max in image {}'.format(maxvalpre))
 
     return stopcal
 
