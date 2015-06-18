@@ -1414,7 +1414,7 @@ if __name__ == "__main__":
         numcpu_taql=4
 
     try:
-        verify_fail_action:
+        verify_fail_action
     except NameError:
         verify_fail_action=default_verify_fail_action
 
