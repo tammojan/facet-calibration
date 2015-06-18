@@ -13,7 +13,7 @@ import pwd
 import logging
 import logging.config
 import glob
-from facet_utilities import run, bg, angsep
+from facet_utilities import run, bg, angsep, getcpu, getmem
 from backup_direction import backup_previous_direction_p
 from numpy import pi
 
@@ -1121,21 +1121,23 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl,
     os.system('rm -rf ' + outms)
     run('NDPPP ' + parsetname)
 
+    cmd=wsclean
+    cmd+=' -j '+str(getcpu())
+    mem=getmem()
+    if mem is not None:
+        cmd+=' -absmem '+str(int(mem/1024**3))
+    cmd+= ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' -casamask ' +  inputmask + ' '
+    cmd+= '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' -cleanborder 0 -threshold '+ cleandepth1 + ' '
+    cmd+= '-minuv-l '+ str(uvrange) +' -mgain 0.6 -fitbeam -datacolumn DATA -no-update-model-required ' 
+
     if wideband:
         channelsout = numpy.int(numpy.ceil(numpy.float(len(mslist))/numpy.float(WScleanWBgroup)))
         logging.debug('channelsout paramters is set to {}'.format(channelsout))
         logging.debug('Bandwidth is divided into a total of ' + str(numpy.int(numpy.ceil(numpy.float(len(mslist))/numpy.float(WScleanWBgroup)))) + ' parts ')
-        cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
-        cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' -cleanborder 0 -threshold '+ cleandepth1 + ' '
-        cmd3 = '-minuv-l '+ str(uvrange) + ' -casamask ' +  inputmask + ' '\
-               +' -mgain 0.6 -fitbeam -datacolumn DATA -no-update-model-required -joinchannels -channelsout ' +\
-               str(channelsout) + ' '  + outms
-    else:
-        cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' -casamask ' +  inputmask + ' '
-        cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' -cleanborder 0 -threshold '+ cleandepth1 + ' '
-        cmd3 = '-minuv-l '+ str(uvrange) +' -mgain 0.6 -fitbeam -datacolumn DATA -no-update-model-required ' + outms
+        cmd+=' -joinchannels -channelsout'+str(channelsout)+' '
 
-    run(cmd1+cmd2+cmd3)
+    cmd+=outms
+    run(cmd)
 
     # FIX for missing beam INFO in Wideband clean
     if wideband:
@@ -1197,18 +1199,19 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl,
     os.system('rm -rf ' + imout + '-*')
     niter = niter*5 # increase niter, tune manually if needed, try to reach threshold
 
+    cmd=wsclean
+    cmd+=' -j '+str(getcpu())
+    mem=getmem()
+    if mem is not None:
+        cmd+=' -absmem '+str(int(mem/1024**3))
+    cmd+=' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
+    cmd+='-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' -cleanborder 0 -threshold '+ cleandepth2 + ' '
+    cmd+= '-minuv-l '+ str(uvrange) +' -mgain 0.6 -fitbeam -datacolumn DATA -no-update-model-required -casamask ' + mask_sources+' '
+        
     if wideband:
-        cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
-        cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' -cleanborder 0 -threshold '+ cleandepth2 + ' '
-        cmd3 = '-minuv-l '+ str(uvrange) +' -mgain 0.6 -fitbeam -datacolumn DATA -no-update-model-required -casamask ' + \
-               mask_sources+'field' + ' -joinchannels -channelsout ' + str(channelsout) + ' ' + outms
-    else:
-        cmd1 = wsclean + ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
-        cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' -cleanborder 0 -threshold '+ cleandepth2 + ' '
-        cmd3 = '-minuv-l '+ str(uvrange) +' -mgain 0.6 -fitbeam -datacolumn DATA -no-update-model-required -casamask ' + \
-               mask_sources+'field' + ' '+ outms
-
-    run(cmd1+cmd2+cmd3)
+        cmd+='-joinchannels -channelsout ' + str(channelsout) + ' '
+    cmd+=outms
+    run(cmd)
 
     # convert from FITS to casapy format
     # os.system('casapy --nogui -c ' + SCRIPTPATH +'/fits2image.py ' +
@@ -1233,7 +1236,7 @@ def insertbeaminfo_mfs(image, templateim):
     """
     Insert the beam info of an image into other image.
     Input:
-      * image - Image in which the beam info will be enterer
+      * image - Image in which the beam info will be entered
       * templateim - Image with the beam info to use
     """
     import pyfits
@@ -1258,8 +1261,8 @@ def insertbeaminfo_mfs(image, templateim):
 def do_fieldFFT(ms, image, imsize, cellsize, wsclean, mslist,
                 WSCleanRobust, WScleanWBgroup, numchanperms):
     """
-    FIXME
-    Use WSClean to ???
+    Use WSClean to FT the model from a previous wsclean run so that it
+    can be subtracted from the data.
     """
     niter   = 1
     cellsizeim = str(cellsize)+ 'arcsec'
@@ -1270,17 +1273,20 @@ def do_fieldFFT(ms, image, imsize, cellsize, wsclean, mslist,
     wideband = False
     if len(mslist) > WScleanWBgroup:
         wideband = True
-    if wideband:
-        channelsout = numpy.int(numpy.ceil(numpy.float(len(mslist))/numpy.float(WScleanWBgroup)))
-        cmd1 = wsclean + ' -predict -name ' + image + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
-        cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' '
-        cmd3 = '-cleanborder 0 -mgain 0.85 -fitbeam -datacolumn DATA '+ '-channelsout ' + str(channelsout) + ' ' + ms
-    else:
-        cmd1 = wsclean + ' -predict -name ' + image + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
-        cmd2 = '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' '
-        cmd3 = '-cleanborder 0 -mgain 0.85 -fitbeam -datacolumn DATA '+ ' ' + ms
 
-    run(cmd1+cmd2+cmd3)
+    cmd=wsclean
+    cmd+=' -j '+str(getcpu())
+    mem=getmem()
+    if mem is not None:
+        cmd+=' -absmem '+str(int(mem/1024**3))
+    cmd+=' -predict -name ' + image + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
+    cmd+= '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' '
+    cmd+= '-cleanborder 0 -mgain 0.85 -fitbeam -datacolumn DATA '
+    if wideband:
+        cmd+='-channelsout ' + str(channelsout) + ' '
+
+    cmd+=ms
+    run(cmd)
     return
 
 
@@ -1301,6 +1307,9 @@ def image_size_from_mask(mask):
     npix = sh[-1]
     return npix
 
+def default_verify_fail_action():
+    raw_input('Pausing: hit control-C to stop or enter to continue')
+    
 
 ### END of FUNCTION DEFS, MAIN SCRIPT STARTS HERE#
 
@@ -1404,6 +1413,12 @@ if __name__ == "__main__":
     except NameError:
         numcpu_taql=4
 
+    try:
+        verify_fail_action:
+    except NameError:
+        verify_fail_action=default_verify_fail_action
+
+        
     if StefCal:
         TEC = "False" # cannot fit for TEC in StefCal
         print 'Overwriting TEC user input, TEC will be False when using StefCal'
@@ -2010,9 +2025,9 @@ if __name__ == "__main__":
             #run('python '+ SCRIPTPATH+'/verify_subtract_v5.py ' + inputmslist + ' '+str(failthreshold)+' ' + source)
             logging.debug('Start verify subtract')
             stopcal=do_verify_subtract(mslist, failthreshold, source, numchanperms=numchanperms)
-            if stopcal and config.get("stop_verify_subtract", True):
-                logging.error('Paused because verify_subtract failed')
-                raw_input('Pausing: hit control-C to stop or enter to continue')
+            if stopcal:
+                logging.error('Verify_subtract failed!')
+                verify_fail_action()
 
         os.system('rm -rf *.ms.avgfield') # clean up as these are never used anymore  
         os.system('rm -rf *.ms.avgcheck') # clean up to remove clutter

@@ -1,6 +1,6 @@
 import os
 import sys
-
+import copy
 from lofarpipe.support.parset import Parset
 from lofarpipe.support.control import control
 
@@ -12,7 +12,10 @@ import logging
 from lofarpipe.support.pipelinelogging import getSearchingLogger
 import lofarpipe.support.lofaringredient as ingredient
 import loader
-
+import lofarpipe.support.utilities as utilities
+from ConfigParser import NoOptionError, NoSectionError
+from ConfigParser import SafeConfigParser as ConfigParser
+overwrite = False
 
 class GenericPipeline(control):
 
@@ -34,6 +37,28 @@ class GenericPipeline(control):
         #self.logger = None#logging.RootLogger('DEBUG')
         self.name = ''
 
+        #if not overwrite:
+        #    self.inputs['job_name'] = 'generic-pipeline'
+        # if not self.inputs.has_key("start_time"):
+        #     import datetime
+        #     self.inputs["start_time"] = datetime.datetime.utcnow().replace(microsecond=0).isoformat()
+        # if not hasattr(self, "config"):
+        #     self.config = self._read_config()
+        # #self._read_config()
+        # # ...and task files, if applicable
+        # if not self.inputs.has_key("task_files"):
+        #     try:
+        #         self.inputs["task_files"] = utilities.string_to_list(
+        #             self.config.get('DEFAULT', "task_files")
+        #         )
+        #     except NoOptionError:
+        #         self.inputs["task_files"] = []
+        # self.task_definitions = ConfigParser(self.config.defaults())
+        # print >> sys.stderr, "Reading task definition file(s): %s" % \
+        #                      ",".join(self.inputs["task_files"])
+        # self.task_definitions.read(self.inputs["task_files"])
+        #    self.go()
+
     def usage(self):
         """
         Display usage
@@ -41,7 +66,7 @@ class GenericPipeline(control):
         print >> sys.stderr, "Usage: %s [options] <parset-file>" % sys.argv[0]
         print >> sys.stderr, "Parset structure should look like:\n" \
                              "NYI"
-        return 1
+        #return 1
 
     def go(self):
         #"""
@@ -51,7 +76,8 @@ class GenericPipeline(control):
         try:
             parset_file = os.path.abspath(self.inputs['args'][0])
         except IndexError:
-            return self.usage()
+            #return self.usage()
+            self.usage()
 
         # Set job-name to basename of parset-file w/o extension, if it's not
         # set on the command-line with '-j' or '--job-name'
@@ -67,6 +93,12 @@ class GenericPipeline(control):
         # Call the base-class's `go()` method.
         return super(GenericPipeline, self).go()
 
+#    def pipeline_logic(self):
+#        print 'Dummy because of stupid wrapping inside the framework'
+#        if overwrite:
+#            self.execute_pipeline()
+
+    #def execute_pipeline(self):
     def pipeline_logic(self):
         try:
             parset_file = os.path.abspath(self.inputs['args'][0])
@@ -78,7 +110,7 @@ class GenericPipeline(control):
         except RuntimeError:
             print >> sys.stderr, "Error: Parset file not found!"
             return self.usage()
-
+        self._replace_values()
         # just a reminder that this has to be implemented
         validator = GenericPipelineParsetValidation(self.parset)
         if not validator.validate_pipeline():
@@ -115,12 +147,25 @@ class GenericPipeline(control):
         # construct the list of step names and controls
         self._construct_steps(step_name_list, step_control_dict, step_parset_files, step_parset_obj, parset_dir)
         # initial parameters to be saved in resultsdict so that recipes have access to this step0
+        # double init values. 'input' should be considered deprecated
+        # self.name would be consistent to use in subpipelines
         resultdicts = {'input': {
             'parset': parset_file,
             'parsetobj': self.parset,
             'job_dir': job_dir,
             'parset_dir': parset_dir,
             'mapfile_dir': mapfile_dir}}
+
+        resultdicts.update({self.name: {
+            'parset': parset_file,
+            'parsetobj': self.parset,
+            'job_dir': job_dir,
+            'parset_dir': parset_dir,
+            'mapfile_dir': mapfile_dir}})
+
+        if 'pipeline.mapfile' in self.parset.keys:
+            resultdicts['input']['mapfile'] = str(self.parset['pipeline.mapfile'])
+            resultdicts[self.name]['mapfile'] = str(self.parset['pipeline.mapfile'])
 
         # *********************************************************************
         # main loop
@@ -145,19 +190,15 @@ class GenericPipeline(control):
             #self._construct_cmdline(inputargs, step, resultdicts)
 
             additional_input = {}
-            #try:
+
             if stepname in step_parset_obj:
                 additional_input = self._construct_step_parset(step_parset_obj[stepname],
                                                                resultdicts,
                                                                step_parset_files[stepname],
                                                                stepname)
-            #except:
-            #    print '########## moep #############'
-            #    pass
+
             # stepname not a valid input for old recipes
             if kind_of_step == 'recipe':
-                #for item in self.task_definitions.items(typeval):
-                #    print item
                 if self.task_definitions.get(typeval, 'recipe') == 'executable_args':
                     inputdict = {'stepname': stepname}
                     inputdict.update(additional_input)
@@ -180,6 +221,80 @@ class GenericPipeline(control):
             except:
                 pass
             # \hack
+            # more hacks. Frameworks DictField not properly implemented. Construct your own dict from input.
+            # python buildin functions cant handle the string returned from parset class.
+            if 'environment' in inputdict.keys():
+                val = inputdict['environment'].rstrip('}').lstrip('{').replace(' ', '')
+                splitval = str(val).split(',')
+                valdict = {}
+                for item in splitval:
+                    valdict[item.split(':')[0]] = item.split(':')[1]
+                inputdict['environment'] = valdict
+
+            # subpipeline. goal is to specify a pipeline within a pipeline.
+            # load other existing pipeline parset and add them to your own.
+            if kind_of_step == 'pipeline':
+                subpipeline_parset = Parset()
+                subpipeline_parset.adoptFile(typeval)
+                submapfile = ''
+                subpipeline_steplist = subpipeline_parset.getStringVector('pipeline.steps')
+
+                if 'pipeline.mapfile' in subpipeline_parset.keys:
+                    submapfile = subpipeline_parset['pipeline.mapfile']
+                    subpipeline_parset.remove('pipeline.mapfile')
+                if 'mapfile' in inputdict.keys():
+                    submapfile = inputdict.pop('mapfile')
+                resultdicts.update({os.path.splitext(os.path.basename(typeval))[0]: {
+                    'parset': typeval,
+                    'mapfile': submapfile,
+                }})
+                #todo: take care of pluginpathes and everything other then individual steps
+                # make a pipeline parse methods that returns everything needed.
+                # maybe as dicts to combine them to one
+
+                subpipeline_parset.remove('pipeline.steps')
+                if 'pipeline.pluginpath' in subpipeline_parset.keys:
+                    subpipeline_parset.remove('pipeline.pluginpath')
+                checklist = copy.deepcopy(subpipeline_steplist)
+                for k in subpipeline_parset.keys:
+                    if 'loopsteps' in k:
+                        for item in subpipeline_parset.getStringVector(k):
+                            checklist.append(item)
+                # *********************************************************************
+                # master parset did not handle formatting and comments in the parset.
+                # proper format only after use of parset.makesubset. then it is a different object
+                # from a different super class :(. this also explains use of parset.keys and parset.keys()
+                # take the parset from subpipeline and add it to the master parset.
+                # *********************************************************************
+                # replace names of steps with the subpipeline stepname to create a unique identifier.
+                # replacement values starting with ! will be taken from the master parset and overwrite
+                # the ones in the subpipeline. only works if the ! value is already in the subpipeline
+                for k in subpipeline_parset.keys:
+                    if not str(k).startswith('#'):
+                        val = subpipeline_parset[k]
+                        if not str(k).startswith('!'):
+                            for item in checklist:
+                                if item in str(val):
+                                    val = str(val).replace(item, stepname + '-' + item)
+
+                            self.parset.add(stepname + '-' + k, str(val))
+                        else:
+                            self.parset.add(k, str(val))
+                for i, item in enumerate(subpipeline_steplist):
+                    subpipeline_steplist[i] = stepname + '-' + item
+                for item in step_parset_obj[stepname].keys():
+                    for k in self.parset.keys:
+                        if str(k).startswith('!') and item in k:
+                            self.parset.remove(k)
+                            self.parset.add('! ' + item, str(step_parset_obj[stepname][item]))
+
+                self._replace_values()
+
+                self._construct_steps(subpipeline_steplist, step_control_dict, step_parset_files, step_parset_obj, parset_dir)
+                for j in reversed(subpipeline_steplist):
+                    name = j
+                    step_control_dict[name] = step_control_dict[j]
+                    step_name_list.insert(0, name)
 
             # loop
             if kind_of_step == 'loop':
@@ -210,6 +325,7 @@ class GenericPipeline(control):
                 else:
                     # reset values for second use of the loop (but why would you do that?)
                     resultdict = {'counter': -1, 'break': False}
+                    activeloop.pop(0)
 
             # recipes
             if kind_of_step == 'recipe':
@@ -227,23 +343,15 @@ class GenericPipeline(control):
                                                     inputargs,
                                                     **inputdict)
             resultdicts[stepname] = resultdict
-            #print 'RESULTDICT: ', resultdict
+
             # breaking the loopstep
             # if the step has the keyword for loopbreaks assign the value
             if resultdict is not None and 'break' in resultdict:
                 if resultdict['break']:
                     resultdicts[activeloop[0]]['break'] = resultdict['break']
-                    activeloop.pop(0)
 
     # *********************************************************************
     # build the inputs for the master recipes.
-    # args are for the commandline arguments and the dict for the input parameters
-    # values are added from normal parset subsets or from output of earlier steps
-    # parset would look something like
-    # ----- bbsreducer.control.opts.sky_mapfile=setupsourcedb2.output.mapfile -----
-    # 'mapfile' is the name of value in the outputdict from step setupsourcedb2.
-    # that value gets assigned to 'sky_mapfile' of step with the name bbsreducer
-    # code is somewhat double... need to think of some fancy method with reusabilty
     def _construct_input(self, inoutdict, controlparset, resdicts):
         # intermediate backward compatibility for opts subparset
         if controlparset.fullModuleName('opts'):
@@ -270,10 +378,21 @@ class GenericPipeline(control):
         except:
             pass
 
-    def _construct_steps(self, step_name_list,step_control_dict, step_parset_files, step_parset_obj, parset_dir):
-        for stepname in step_name_list:
+    def _construct_steps(self, step_name_list, step_control_dict, step_parset_files, step_parset_obj, parset_dir):
+        step_list_copy = (copy.deepcopy(step_name_list))
+        counter = 0
+        while step_list_copy:
+            counter -= 1
+            stepname = step_list_copy.pop(-1)
             fullparset = self.parset.makeSubset(self.parset.fullModuleName(str(stepname)) + '.')
             subparset = fullparset.makeSubset(fullparset.fullModuleName('control') + '.')
+            number = 0
+            for item in step_list_copy:
+                if item == stepname:
+                    number += 1
+            if number != 0:
+                stepname += str(number)
+            step_name_list[counter] = stepname
             step_control_dict[stepname] = subparset
             # double implementation for intermediate backward compatibility
             if fullparset.fullModuleName('parsetarg') or fullparset.fullModuleName('argument'):
@@ -289,7 +408,8 @@ class GenericPipeline(control):
                 try:
                     file_parset = Parset(stepparset.getString('parset'))
                     for k in file_parset.keys:
-                        stepparset.add(k, str(file_parset[k]))
+                        if not k in stepparset.keys():
+                            stepparset.add(k, str(file_parset[k]))
                     stepparset.remove('parset')
                 except:
                     pass
@@ -297,14 +417,16 @@ class GenericPipeline(control):
                 try:
                     file_parset = Parset(self.task_definitions.get(str(subparset['type']), 'parset'))
                     for k in file_parset.keys:
-                        stepparset.add(k, str(file_parset[k]))
+                        if not k in stepparset.keys():
+                            stepparset.add(k, str(file_parset[k]))
                 except:
                     pass
                 # for parset in control section
                 try:
                     file_parset = Parset(subparset.getString('parset'))
                     for k in file_parset.keys:
-                        stepparset.add(k, str(file_parset[k]))
+                        if not k in stepparset.keys():
+                            stepparset.add(k, str(file_parset[k]))
                     subparset.remove('parset')
                 except:
                     pass
@@ -366,9 +488,10 @@ class GenericPipeline(control):
                         argsparset.remove(k)
                 else:
                     step, outvar = argsparset.getString(k).split('.output.')
-                    argsparset.replace(k,resdicts[step][outvar])
-                    addvals['inputkeys'].append(resdicts[step][outvar])
-                    addvals['mapfiles_in'].append(resdicts[step][outvar])
+                    argsparset.replace(k,str(resdicts[step][outvar]))
+                    if isinstance(resdicts[step][outvar], str):
+                        addvals['inputkeys'].append(resdicts[step][outvar])
+                        addvals['mapfiles_in'].append(resdicts[step][outvar])
                     if k == 'flags':
                         addvals['arguments'] = str(argsparset[k])
                         argsparset.remove(k)
@@ -381,6 +504,43 @@ class GenericPipeline(control):
 
     def _get_parset_dicts(self):
         return {}
+
+    def show_tasks(self):
+        tasklist = []
+        tasklist = self.task_definitions.sections()
+        for item in tasklist:
+            print item
+        #return tasklist
+
+    def show_task(self, task):
+        task_parset = Parset()
+        if self.task_definitions.has_option(task,'parset'):
+            task_parset.adoptFile(self.task_definitions.get(task,'parset'))
+            print 'possible arguments: key    =    value'
+            for k in task_parset.keys:
+                print '                   ',k,'    ','=','    ',task_parset[k]
+
+    def _add_step(self):
+        steplist = []
+
+    def _replace_values(self):
+        replacedict = {}
+        try:
+            import imp
+            plugin = imp.load_source('main', str(self.parset['prepare']))
+            replacedict = plugin.main()
+        except:
+            pass
+        for check in self.parset.keys:
+            if str(check).startswith('!'):
+                replacedict[str(check).lstrip('!').lstrip(' ')] = str(self.parset[check])
+        #print 'REPLACEDICT: ',replacedict
+        for check in self.parset.keys:
+            if not str(check).startswith('#'):
+                for k, v in replacedict.iteritems():
+                    if '{{ '+k+' }}' in str(self.parset[check]):
+                        replacestring = str(self.parset[check]).replace('{{ '+k+' }}',v)
+                        self.parset.replace(check,replacestring)
 
 
 class GenericPipelineParsetValidation():
@@ -408,4 +568,5 @@ class GenericPipelineParsetValidation():
 
 
 if __name__ == '__main__':
+    overwrite = True
     sys.exit(GenericPipeline().main())
