@@ -2000,6 +2000,7 @@ if __name__ == "__main__":
             # Optionally create a backup of the column CORRECTED_DATA
             if config.get("backup_direction", False):
                 backup_previous_direction_p(mslist, source, parallel=-1)
+                logging.info('Backup of the data previous to: ' + source)
                 
             
             # CHECK IF THE SUBTRACT WORKED OK by making dirty low-res images
@@ -2007,6 +2008,7 @@ if __name__ == "__main__":
             #for ms in mslist:
             #    inputmslist = inputmslist + ' ' + ms
             #run('python '+ SCRIPTPATH+'/verify_subtract_v5.py ' + inputmslist + ' '+str(failthreshold)+' ' + source)
+            logging.debug('Start verify subtract')
             stopcal=do_verify_subtract(mslist, failthreshold, source, numchanperms=numchanperms)
             if stopcal and config.get("stop_verify_subtract", True):
                 logging.error('Paused because verify_subtract failed')
@@ -2014,4 +2016,4 @@ if __name__ == "__main__":
 
         os.system('rm -rf *.ms.avgfield') # clean up as these are never used anymore  
         os.system('rm -rf *.ms.avgcheck') # clean up to remove clutter
-        logging.info('finished '+source)
+        logging.info('Finished '+source)
