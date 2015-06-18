@@ -5,6 +5,8 @@ from subprocess import Popen
 import logging
 import time
 from math import floor
+import os
+import resource
 
 ####
 # Run parallel commands
@@ -167,3 +169,38 @@ def dec_to_str(ddec,ndec=1,delim=':'):
         dd += 1
     sdec = '%02d%s%02d%s%04.1f' %(dd,delim1,dm,delim2,dsec)
     return sdec
+
+# Memory and CPU use for wsclean
+
+def getcpu():
+    # check if there is a PBS NODEFILE
+    nodefile=os.environ.get('PBS_NODEFILE')
+    if nodefile is not None:
+        lines=open(nodefile).readlines()
+        return len(lines)
+    else:
+        # find total number of *physical* CPUs.
+        cpus=os.popen('lscpu').readlines()
+        for l in cpus:
+            bits=l.split(':')
+            if bits[0]=='Core(s) per socket':
+                cores=int(bits[1])
+            if bits[0]=='Socket(s)':
+                sockets=int(bits[1])
+        try:
+            ncpus=cores*sockets
+        except UnboundLocalError:
+            # we failed to get the info from lscpu for some reason, so just go with the number of cores
+            import multiprocessing
+            ncpus=multiprocessing.cpu_count()
+        return ncpus
+
+def getmem():
+    # Torque puts the memory limit in the (unused) RLIMIT_DATA. If
+    # this is set, use it to work out how much RAM we have in total
+    limit=resource.getrlimit(resource.RLIMIT_DATA)[0]
+    if limit>0:
+        return limit*getcpu()
+    else:
+        return None
+
