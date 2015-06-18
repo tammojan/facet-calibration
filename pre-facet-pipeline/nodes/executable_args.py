@@ -8,13 +8,13 @@
 from __future__ import with_statement
 from subprocess import CalledProcessError
 import os
-import shutil
+#import shutil
 import sys
 import errno
 
 from lofarpipe.support.pipelinelogging import CatchLog4CPlus
 from lofarpipe.support.pipelinelogging import log_time
-from lofarpipe.support.utilities import create_directory
+#from lofarpipe.support.utilities import create_directory
 from lofarpipe.support.utilities import catch_segfaults
 from lofarpipe.support.lofarnode import LOFARnodeTCP
 from lofarpipe.support.parset import Parset
@@ -90,12 +90,7 @@ class executable_args(LOFARnodeTCP):
                 for k, v in kwargs.items():
                     nodeparset.add(k, v)
                 nodeparset.writeFile(parsetname)
-                if argsformat == 'bbs1':
-                    args.insert(1, parsetname)
-                elif argsformat == 'bbs2':
-                    args.insert(2, parsetname)
-                else:
-                    args.insert(0, parsetname)
+                args.insert(0, parsetname)
 
             try:
             # ****************************************************************
