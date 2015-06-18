@@ -1307,6 +1307,9 @@ def image_size_from_mask(mask):
     npix = sh[-1]
     return npix
 
+def default_verify_fail_action():
+    raw_input('Pausing: hit control-C to stop or enter to continue')
+    
 
 ### END of FUNCTION DEFS, MAIN SCRIPT STARTS HERE#
 
@@ -1410,6 +1413,12 @@ if __name__ == "__main__":
     except NameError:
         numcpu_taql=4
 
+    try:
+        verify_fail_action:
+    except NameError:
+        verify_fail_action=default_verify_fail_action
+
+        
     if StefCal:
         TEC = "False" # cannot fit for TEC in StefCal
         print 'Overwriting TEC user input, TEC will be False when using StefCal'
@@ -2015,9 +2024,8 @@ if __name__ == "__main__":
             #run('python '+ SCRIPTPATH+'/verify_subtract_v5.py ' + inputmslist + ' '+str(failthreshold)+' ' + source)
             stopcal=do_verify_subtract(mslist, failthreshold, source, numchanperms=numchanperms)
             if stopcal:
-                logging.error('verify_subtract failed!')
-                if config.get("stop_verify_subtract", True):
-                    raw_input('Pausing: hit control-C to stop or enter to continue')
+                logging.error('Verify_subtract failed!')
+                verify_fail_action()
 
         os.system('rm -rf *.ms.avgfield') # clean up as these are never used anymore  
         os.system('rm -rf *.ms.avgcheck') # clean up to remove clutter
