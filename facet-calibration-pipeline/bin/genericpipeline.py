@@ -242,8 +242,8 @@ class GenericPipeline(control):
                 if 'pipeline.mapfile' in subpipeline_parset.keys:
                     submapfile = subpipeline_parset['pipeline.mapfile']
                     subpipeline_parset.remove('pipeline.mapfile')
-                if 'mapfile' in inputdict.keys():
-                    submapfile = inputdict.pop('mapfile')
+                if 'mapfile_in' in inputdict.keys():
+                    submapfile = inputdict.pop('mapfile_in')
                 resultdicts.update({os.path.splitext(os.path.basename(typeval))[0]: {
                     'parset': typeval,
                     'mapfile': submapfile,
