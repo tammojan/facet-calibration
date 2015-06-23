@@ -1134,7 +1134,7 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl,
         channelsout = numpy.int(numpy.ceil(numpy.float(len(mslist))/numpy.float(WScleanWBgroup)))
         logging.debug('channelsout paramters is set to {}'.format(channelsout))
         logging.debug('Bandwidth is divided into a total of ' + str(numpy.int(numpy.ceil(numpy.float(len(mslist))/numpy.float(WScleanWBgroup)))) + ' parts ')
-        cmd+=' -joinchannels -channelsout'+str(channelsout)+' '
+        cmd+=' -joinchannels -channelsout '+ str(channelsout)+' '
 
     cmd+=outms
     run(cmd)
