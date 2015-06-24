@@ -1273,6 +1273,7 @@ def do_fieldFFT(ms, image, imsize, cellsize, wsclean, mslist,
     wideband = False
     if len(mslist) > WScleanWBgroup:
         wideband = True
+        channelsout = numpy.int(numpy.ceil(numpy.float(len(mslist))/numpy.float(WScleanWBgroup)))
 
     cmd=wsclean
     cmd+=' -j '+str(getcpu())
