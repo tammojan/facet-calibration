@@ -1701,12 +1701,13 @@ if __name__ == "__main__":
                 runbbs_diffskymodel_addback(mslist, 'instrument_ap_smoothed', True, directions[source_id],imsizes[source_id],output_template_im, do_ap)
 
             ## average and phaseshift with NDPPP
+            b=bg(maxp=2)
             for ms_id, ms in enumerate(mslist):
                 parset = create_phaseshift_parset(ms, msavglist[ms_id], source, directions[source_id],
                                               imsizes[source_id], dynamicrange[source_id], StefCal, numchanperms)
                 os.system('rm -rf ' + msavglist[ms_id])
-                run('NDPPP ' + parset)
-
+                b.run('NDPPP ' + parset)
+            b.wait()
 
         ### PHASESHIFT the FULL resolution dataset, for MODEL_DATA FFT subtract
             if outliersource[source_id] == 'False' or doOUTLIER_withGaussfix:
