@@ -1,0 +1,104 @@
+pipeline.steps = [create_ms_map, create_parmdb_map, create_full_skymodels_map, make_facet_skymodels_all, make_facet_skymodels_cal, add_all_facet_sources, add_cal_facet_sources, shift_all, shift_cal, shift_empty, copy_all_map, copy_cal_map, copy_empty_map]
+
+pipeline.pluginpath                              =   /home/lofar/local/src/factor/factor/pipeline/plugins
+
+create_ms_map.control.kind                       =   plugin
+create_ms_map.control.type                       =   addMSMapfile
+create_ms_map.control.hosts                      =   ['node01', 'node03', 'node04', 'node05', 'node06', 'node07']
+create_ms_map.control.folder                     =   /lofar1/sttf201/NEP/Bands
+create_ms_map.control.mapfile_dir                =   /lofar1/sttf201/NEP/Factor_6bands_init2/datamaps/facetadd/facet_patch_1002
+create_ms_map.control.filename                   =   input_bands.datamap
+
+create_parmdb_map.control.kind                   =   plugin
+create_parmdb_map.control.type                   =   addParmdbMapfile
+create_parmdb_map.control.mapfile_in             =   create_ms_map.output.mapfile
+create_parmdb_map.control.parmdb_name            =   smoothed_instrument
+create_parmdb_map.control.mapfile_dir            =   /lofar1/sttf201/NEP/Factor_6bands_init2/datamaps/facetadd/facet_patch_1002
+create_parmdb_map.control.filename               =   dir_indep_instrument_parmdbs.datamap
+
+create_full_skymodels_map.control.kind           =   plugin
+create_full_skymodels_map.control.type           =   addListMapfile
+create_full_skymodels_map.control.hosts          =   ['node01', 'node03', 'node04', 'node05', 'node06', 'node07']
+create_full_skymodels_map.control.files          =   ['/lofar1/sttf201/NEP/Factor_6bands_init2/results/initsubtract/field/NEP_SB000_009.2ch10s.wsclean_low2-model.merge', '/lofar1/sttf201/NEP/Factor_6bands_init2/results/initsubtract/field/NEP_SB010_019.2ch10s.wsclean_low2-model.merge', '/lofar1/sttf201/NEP/Factor_6bands_init2/results/initsubtract/field/NEP_SB020_029.2ch10s.wsclean_low2-model.merge', '/lofar1/sttf201/NEP/Factor_6bands_init2/results/initsubtract/field/NEP_SB030_039.2ch10s.wsclean_low2-model.merge', '/lofar1/sttf201/NEP/Factor_6bands_init2/results/initsubtract/field/NEP_SB040_049.2ch10s.wsclean_low2-model.merge', '/lofar1/sttf201/NEP/Factor_6bands_init2/results/initsubtract/field/NEP_SB050_059.2ch10s.wsclean_low2-model.merge']
+create_full_skymodels_map.control.mapfile_dir    =   /lofar1/sttf201/NEP/Factor_6bands_init2/datamaps/facetadd/facet_patch_1002
+create_full_skymodels_map.control.filename       =   full_skymodels.datamap
+
+make_facet_skymodels_all.control.type            =   make_facet_skymodel
+make_facet_skymodels_all.control.mapfile_in      =   create_full_skymodels_map.output.mapfile
+make_facet_skymodels_all.control.inputkey        =   fullmodelfile
+make_facet_skymodels_all.control.outputkey       =   outfile
+make_facet_skymodels_all.argument.flags          =   [fullmodelfile,outfile,/lofar1/sttf201/NEP/Factor_6bands_init2/state/facet_patch_1002_save.pkl]
+make_facet_skymodels_all.argument.cal_only       =   False
+make_facet_skymodels_all.argument.facet_ra       =   267.025799167
+make_facet_skymodels_all.argument.facet_dec      =   67.0214146111
+
+make_facet_skymodels_cal.control.type            =   make_facet_skymodel
+make_facet_skymodels_cal.control.mapfile_in      =   create_full_skymodels_map.output.mapfile
+make_facet_skymodels_cal.control.inputkey        =   fullmodelfile
+make_facet_skymodels_cal.control.outputkey       =   outfile
+make_facet_skymodels_cal.argument.flags          =   [fullmodelfile,outfile,/lofar1/sttf201/NEP/Factor_6bands_init2/state/facet_patch_1002_save.pkl]
+make_facet_skymodels_cal.argument.cal_only       =   True
+make_facet_skymodels_cal.argument.facet_ra       =   267.025799167
+make_facet_skymodels_cal.argument.facet_dec      =   67.0214146111
+make_facet_skymodels_cal.argument.cal_radius_deg =   0.090457557057
+
+add_all_facet_sources.control.type               =   calibrate-stand-alone_new
+add_all_facet_sources.argument.observation       =   create_ms_map.output.mapfile
+add_all_facet_sources.argument.parset            =   /home/lofar/local/src/factor/factor/parsets/facet_dirindep_add_all.parset
+add_all_facet_sources.argument.catalog           =   make_facet_skymodels_all.output.mapfile
+add_all_facet_sources.argument.parmdb            =   create_parmdb_map.output.mapfile
+add_all_facet_sources.argument.replace-sourcedb  =   True
+add_all_facet_sources.argument.replace-parmdb    =   True
+
+add_cal_facet_sources.control.type               =   calibrate-stand-alone_new
+add_cal_facet_sources.argument.observation       =   create_ms_map.output.mapfile
+add_cal_facet_sources.argument.parset            =   /home/lofar/local/src/factor/factor/parsets/facet_dirindep_add_cal.parset
+add_cal_facet_sources.argument.catalog           =   make_facet_skymodels_cal.output.mapfile
+add_cal_facet_sources.argument.parmdb            =   create_parmdb_map.output.mapfile
+add_cal_facet_sources.argument.replace-sourcedb  =   True
+add_cal_facet_sources.argument.replace-parmdb    =   True
+
+shift_all.control.type                           =   dppp
+shift_all.control.opts.mapfile_in                =   create_ms_map.output.mapfile
+shift_all.control.opts.inputkey                  =   msin
+shift_all.parsetarg.msin.datacolumn              =   FACET_DATA_ALL
+shift_all.parsetarg.msout.writefullresflag       =   False
+shift_all.parsetarg.steps                        =   [shift]
+shift_all.parsetarg.shift.type                   =   phaseshifter
+shift_all.parsetarg.shift.phasecenter            =   [267.025799167deg, 67.0214146111deg]
+
+shift_cal.control.type                           =   dppp
+shift_cal.control.opts.mapfile_in                =   create_ms_map.output.mapfile
+shift_cal.control.opts.inputkey                  =   msin
+shift_cal.parsetarg.msin.datacolumn              =   FACET_DATA_CAL
+shift_cal.parsetarg.msout.writefullresflag       =   False
+shift_cal.parsetarg.steps                        =   [shift]
+shift_cal.parsetarg.shift.type                   =   phaseshifter
+shift_cal.parsetarg.shift.phasecenter            =   [267.025799167deg, 67.0214146111deg]
+
+shift_empty.control.type                         =   dppp
+shift_empty.control.opts.mapfile_in              =   create_ms_map.output.mapfile
+shift_empty.control.opts.inputkey                =   msin
+shift_empty.parsetarg.msin.datacolumn            =   SUBTRACTED_DATA_ALL
+shift_empty.parsetarg.msout.writefullresflag     =   False
+shift_empty.parsetarg.steps                      =   [shift]
+shift_empty.parsetarg.shift.type                 =   phaseshifter
+shift_empty.parsetarg.shift.phasecenter          =   [267.025799167deg, 67.0214146111deg]
+
+copy_all_map.control.kind                        =   plugin
+copy_all_map.control.type                        =   copyMapfile
+copy_all_map.control.mapfile_in                  =   shift_all.output.mapfile
+copy_all_map.control.mapfile_dir                 =   /lofar1/sttf201/NEP/Factor_6bands_init2/datamaps/facetadd/facet_patch_1002
+copy_all_map.control.filename                    =   shifted_all_bands.datamap
+
+copy_cal_map.control.kind                        =   plugin
+copy_cal_map.control.type                        =   copyMapfile
+copy_cal_map.control.mapfile_in                  =   shift_cal.output.mapfile
+copy_cal_map.control.mapfile_dir                 =   /lofar1/sttf201/NEP/Factor_6bands_init2/datamaps/facetadd/facet_patch_1002
+copy_cal_map.control.filename                    =   shifted_cal_bands.datamap
+
+copy_empty_map.control.kind                      =   plugin
+copy_empty_map.control.type                      =   copyMapfile
+copy_empty_map.control.mapfile_in                =   shift_empty.output.mapfile
+copy_empty_map.control.mapfile_dir               =   /lofar1/sttf201/NEP/Factor_6bands_init2/datamaps/facetadd/facet_patch_1002
+copy_empty_map.control.filename                  =   shifted_empty_bands.datamap
