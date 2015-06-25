@@ -175,7 +175,7 @@ def create_merged_parmdb(ms, parmdb_a,parmdb_p, parmdb_t, parmdb_out,cellsizetim
 
 
 
-def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous_do, imsize, region, SCRIPTPATH):
+def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous_do, imsize, region, ncores, SCRIPTPATH):
 
     do_mask = True
     niter   = 1000 # 7500 causes nasty clean artifacts
@@ -776,7 +776,7 @@ def do_selfcal(mslist, cluster, atrous_do, imsize, nterms,
 
     #### MAKE IMAGE 0 ###
     logging.info('Make image 0')
-    imout,mask = make_image(mslist, cluster, '0', 10, 6, nterms, atrous_do, imsize, region, SCRIPTPATH)
+    imout,mask = make_image(mslist, cluster, '0', 10, 6, nterms, atrous_do, imsize, region, ncores, SCRIPTPATH)
 
     #####################
 
@@ -798,7 +798,7 @@ def do_selfcal(mslist, cluster, atrous_do, imsize, nterms,
 
     ### MAKE IMAGE 1 ###
     logging.info('Make image 1')
-    imout,mask = make_image(mslist, cluster, '1', 15, 15, nterms, atrous_do, imsize, region, SCRIPTPATH)
+    imout,mask = make_image(mslist, cluster, '1', 15, 15, nterms, atrous_do, imsize, region, ncores, SCRIPTPATH)
     ####################
 
 
@@ -820,7 +820,7 @@ def do_selfcal(mslist, cluster, atrous_do, imsize, nterms,
 
     ### MAKE IMAGE 2 ###
     logging.info('Make image 2')
-    imout,mask = make_image(mslist, cluster, '2', 15, 15, nterms, atrous_do, imsize, region, SCRIPTPATH)
+    imout,mask = make_image(mslist, cluster, '2', 15, 15, nterms, atrous_do, imsize, region, ncores, SCRIPTPATH)
     ####################
 
 
@@ -856,7 +856,7 @@ def do_selfcal(mslist, cluster, atrous_do, imsize, nterms,
 
     ### MAKE IMAGE 3 ###
     logging.info('Make image 3')
-    imout,mask = make_image(mslist, cluster, '3', 10, 10, nterms, atrous_do, imsize, region, SCRIPTPATH)
+    imout,mask = make_image(mslist, cluster, '3', 10, 10, nterms, atrous_do, imsize, region, ncores, SCRIPTPATH)
 
 
 
@@ -906,7 +906,7 @@ def do_selfcal(mslist, cluster, atrous_do, imsize, nterms,
 
     ### MAKE IMAGE 4 ###
     logging.info('Make image 4')
-    imout,mask = make_image(mslist, cluster, '4', 10, 10, nterms, atrous_do, imsize, region, SCRIPTPATH)
+    imout,mask = make_image(mslist, cluster, '4', 10, 10, nterms, atrous_do, imsize, region, ncores, SCRIPTPATH)
 
 
     ### CREATE FINAL MODEL ###
