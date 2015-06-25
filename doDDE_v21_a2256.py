@@ -1450,7 +1450,6 @@ if __name__ == "__main__":
     from verify_subtract_v5 import do_verify_subtract
     from padfits import padfits
     from makecleanmask_field_wsclean import do_makecleanmask_field_wsclean
-    from makecleanmask_field import do_makecleanmask_field
     if not(StefCal):
         if config["selfcal"] == "":
             from selfcalv19_ww_cep3 import do_selfcal
@@ -1777,6 +1776,7 @@ if __name__ == "__main__":
                            dbuser,
                            dbname,
                            SCRIPTPATH,
+                           ncores=getcpu(),
                            config=config)
 
             logging.info('Finished selfcal DDE patch: '+ source)

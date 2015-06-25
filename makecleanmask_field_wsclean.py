@@ -10,6 +10,10 @@ def do_makecleanmask_field_wsclean(image_name,threshpix,threshisl,atrousdo,ncore
 
     logging.info('makecleanmask_field_wsclean: Making mask: '+mask_name)
 
+    if atrousdo:
+        threshisl = 3.0
+        logging.info('Changing island threshold to 3 because atrous_do=True')
+
     os.system('rm -rf ' + mask_name)
 
     # DO THE SOURCE DETECTION
@@ -65,9 +69,6 @@ if __name__ == '__main__':
         o.atrous_do = False
     else:
         o.atrous_do = True
-        o.threshisl = 3.0
-        print 'Changing island threshold to 3 because atrous_do=True'
-
 
     image_name = args[0]
 

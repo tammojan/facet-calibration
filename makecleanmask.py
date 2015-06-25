@@ -1,13 +1,44 @@
 #!/usr/bin/python
 
-if __name__ == '__main__':
+import os
+import numpy
+import pyrap.images
+import pyfits
+import sys
+import lofar.bdsm as bdsm
 
-    import os
-    import numpy
-    import pyrap.images
-    import pyfits
-    import sys
-    import lofar.bdsm as bdsm
+def do_makecleanmask(image_name,threshpix,threshisl,atrousdo,ncores=8):
+    mask_name  = image_name.split('.image')[0] + '.cleanmask'
+    
+    logging.info('makecleanmask: Making mask: '+mask_name)
+
+    if atrousdo:
+        threshisl = 4.0
+        logging.info('Changing island threshold to %.1f because atrous_do=True' % threshisl)
+
+    os.system('rm -rf ' + mask_name)
+
+    # DO THE SOURCE DETECTION
+    #img = bdsm.process_image(image_name, mean_map='zero', rms_box=(70,10), thresh_pix=numpy.float(o.threshpix), \
+    #                         thresh_isl=numpy.float(o.threshisl), atrous_do=o.atrous_do,ini_method='curvature')
+    
+    img = bdsm.process_image(image_name, mean_map='zero',
+                             rms_box=(80,20), thresh_pix=threshpix,
+                             thresh_isl=threshisl,
+                             atrous_do=atrousdo,ini_method='curvature',
+                             adaptive_rms_box=True,
+                             adaptive_thresh=150,
+                             rms_box_bright=(35,7), rms_map=True, ncores=ncores)
+
+
+
+    #img.show_fit()
+
+    # WRITE THE ISLAND MASK
+    img.export_image(img_type='island_mask',img_format='casa',outfile=mask_name, clobber=True)
+
+
+if __name__ == '__main__':
 
     argc=len(sys.argv)
     from optparse import OptionParser
@@ -27,33 +58,10 @@ if __name__ == '__main__':
         o.atrous_do = False
     else:
         o.atrous_do = True
-        o.threshisl = 4.0
-        print 'Changing island threshold to 4 because atrous_do=True'
 
-    gs_cut = 1.25e-3
     image_name = args[0]
 
-    mask_name  = image_name.split('.image')[0] + '.cleanmask'
+    do_makecleanmask(image_name,float(o.threshpix),float(o.threshisl),o.atrous_do)
     
-    print '\n\n\n'
-    print 'Making mask:', mask_name
-    print '\n\n\n'
-
-    os.system('rm -rf ' + mask_name)
-
-    # DO THE SOURCE DETECTION
-    #img = bdsm.process_image(image_name, mean_map='zero', rms_box=(70,10), thresh_pix=numpy.float(o.threshpix), \
-    #                         thresh_isl=numpy.float(o.threshisl), atrous_do=o.atrous_do,ini_method='curvature')
-    
-    img = bdsm.process_image(image_name, mean_map='zero', rms_box=(80,20), thresh_pix=numpy.float(o.threshpix), \
-                             thresh_isl=numpy.float(o.threshisl), atrous_do=o.atrous_do,ini_method='curvature', \
-                             adaptive_rms_box=True, adaptive_thresh=150, rms_box_bright=(35,7), rms_map=True)
-
-
-
-    #img.show_fit()
-
-    # WRITE THE ISLAND MASK
-    img.export_image(img_type='island_mask',img_format='casa',outfile=mask_name, clobber=True)
 
 

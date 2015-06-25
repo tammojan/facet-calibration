@@ -11,6 +11,10 @@ def do_makecleanmask_field(image_name,threshpix,threshisl,atrousdo,ncores=8):
 
     logging.info('makecleanmask_field: Making mask: '+mask_name)
 
+    if atrousdo:
+        threshisl = 3.0
+        logging.info('Changing island threshold to 3 because atrous_do=True')
+
     os.system('rm -rf ' + mask_name)
     os.system('rm -rf ' + gausmodel)
     os.system('cp -r '  + image_name + ' ' + mask_name)
@@ -66,8 +70,6 @@ if __name__ == '__main__':
         o.atrous_do = False
     else:
         o.atrous_do = True
-        o.threshisl = 3.0
-        print 'Changing island threshold to 3 because atrous_do=True'
 
 #    gs_cut = 0.5e-3
     image_name = args[0]

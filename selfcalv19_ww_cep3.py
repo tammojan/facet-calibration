@@ -12,6 +12,7 @@ pi = numpy.pi
 import pwd
 import logging
 from facet_utilities import run,bg
+from makecleanmask import do_makecleanmask
 
 # location of this script - all scripts/parsets it uses are contained in subdirectory 'use'
 
@@ -246,11 +247,13 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
                 ' ' + '1mJy' + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + mscale)
         # make mask
         if nterms > 1:
-            run('python '+SCRIPTPATH+'/makecleanmask.py --threshpix '+str(threshpix)+\
-                      ' --threshisl '+str(threshisl) +' --atrous_do '+ str(atrous_do) +' '   +imout +'.image.tt0')
+            do_makecleanmask(imout +'.image.tt0',threshpix,threshisl,atrous_do,ncores=ncores)
+#            run('python '+SCRIPTPATH+'/makecleanmask.py --threshpix '+str(threshpix)+\
+#                      ' --threshisl '+str(threshisl) +' --atrous_do '+ str(atrous_do) +' '   +imout +'.image.tt0')
         else:
-            run('python '+SCRIPTPATH+'/makecleanmask.py --threshpix '+str(threshpix)+\
-                    ' --threshisl '+str(threshisl) +' --atrous_do '+ str(atrous_do) + ' '  + imout +'.image')
+            do_makecleanmask(imout +'.image',threshpix,threshisl,atrous_do,ncores=ncores)
+#           run('python '+SCRIPTPATH+'/makecleanmask.py --threshpix '+str(threshpix)+\
+#                    ' --threshisl '+str(threshisl) +' --atrous_do '+ str(atrous_do) + ' '  + imout +'.image')
 
         # clean image with manual mask
         mask = imout+'.cleanmask'
@@ -693,7 +696,7 @@ def get_group(thismslist):
 def do_selfcal(mslist, cluster, atrous_do, imsize, nterms, 
                cellsizetime_a, cellsizetime_p, TECi, clocki, HRi, 
                region, clusterdesc, dbserver, dbuser, dbname, 
-               SCRIPTPATH, config=None):
+               SCRIPTPATH, ncores=8, config=None):
 
     TEC  = False
     FFT  = False
