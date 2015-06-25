@@ -1011,11 +1011,13 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
 
     # make mask
     if nterms > 1:
-        run('python ' + SCRIPTPATH +'/makecleanmask_field.py --threshpix '+str(threshpix)+
-                    ' --threshisl '+str(threshisl) +' --atrous_do '+ str(atrous_do) +' '   +imout +'.image.tt0')
+        do_makecleanmask_field(imout +'.image.tt0',threshpix,threshisl,atrous_do,ncores=getcpu())
+#        run('python ' + SCRIPTPATH +'/makecleanmask_field.py --threshpix '+str(threshpix)+
+#                    ' --threshisl '+str(threshisl) +' --atrous_do '+ str(atrous_do) +'# '   +imout +'.image.tt0')
     else:
-        run('python ' + SCRIPTPATH +'/makecleanmask_field.py --threshpix '+str(threshpix)+
-                  ' --threshisl '+str(threshisl) +' --atrous_do '+ str(atrous_do) + ' '  + imout +'.image')
+        do_makecleanmask_field(imout +'.image.tt0',threshpix,threshisl,atrous_do,ncores=getcpu())
+#        run('python ' + SCRIPTPATH +'/makecleanmask_field.py --threshpix '+str(threshpix)+
+#                  ' --threshisl '+str(threshisl) +' --atrous_do '+ str(atrous_do) + ' '  + imout +'.image')
 
     mask_sources = imout+'.cleanmask'
     os.system('rm -rf ' + mask_sources + 'field')
@@ -1155,9 +1157,10 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl,
             mask_image=imout+'-image.fits'
 
     # create the mask
-    run('python ' + SCRIPTPATH + '/makecleanmask_field_wsclean.py --threshpix '+str(threshpix)+
-              ' --threshisl '+str(threshisl) +' --atrous_do '+ str(atrous_do) +
-              ' --casaregion  '+ region + ' '  + mask_image)
+    do_makecleanmask_field_wsclean(mask_image,threshpix,threshisl,atrous_do,ncores=getcpu())
+    #    run('python ' + SCRIPTPATH + '/makecleanmask_field_wsclean.py --threshpix '+str(threshpix)+
+#              ' --threshisl '+str(threshisl) +' --atrous_do '+ str(atrous_do) +
+#              ' --casaregion  '+ region + ' '  + mask_image)
     
     if wideband:
         mask_name = mask_image + '.fitsmask'
@@ -1446,6 +1449,8 @@ if __name__ == "__main__":
     import blank
     from verify_subtract_v5 import do_verify_subtract
     from padfits import padfits
+    from makecleanmask_field_wsclean import do_makecleanmask_field_wsclean
+    from makecleanmask_field import do_makecleanmask_field
     if not(StefCal):
         if config["selfcal"] == "":
             from selfcalv19_ww_cep3 import do_selfcal
@@ -1756,7 +1761,6 @@ if __name__ == "__main__":
                           str(cellsize))
                 run(cmd)
             else:
-                ## EXPERIMENTAL! ##
                 do_selfcal(msavglist, 
                            source,
                            bool(atrous_do[source_id]),

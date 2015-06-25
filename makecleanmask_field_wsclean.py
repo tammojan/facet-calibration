@@ -1,14 +1,53 @@
 #!/usr/bin/python
 
+import os
+import sys
+import lofar.bdsm as bdsm
+import logging
+
+def do_makecleanmask_field_wsclean(image_name,threshpix,threshisl,atrousdo,ncores=8):
+    mask_name  = image_name.split('-image')[0] + '.fitsmask'
+
+    logging.info('makecleanmask_field_wsclean: Making mask: '+mask_name)
+
+    os.system('rm -rf ' + mask_name)
+
+    # DO THE SOURCE DETECTION
+    img = bdsm.process_image(image_name, mean_map='zero',
+                             rms_box=(300,60), thresh_pix=threshpix,
+                             thresh_isl=threshisl,
+                             atrous_do=atrousdo,
+                             adaptive_rms_box=True,
+                             adaptive_thresh=150,
+                             rms_box_bright=(70,10),
+                             atrous_jmax=3,ncores=ncores)
+
+    #img.show_fit()
+
+    # WRITE THE MASK FITS
+    img.export_image(img_type='island_mask', img_format='fits', outfile=mask_name)
+
+
+    # convert mask to casapy format
+
+    #sys.exit()
+
+    #img         = pyrap.images.image(mask_name)
+    #pixels      = numpy.copy(img.getdata())
+    #pixels_mask = 0.*numpy.copy(pixels)
+
+    #hdulist   = pyfits.open(maskmodel + '.fits')
+    #pixels_gs = hdulist[0].data
+
+    #idx = numpy.where(pixels_gs > 0.0)
+    #pixels_mask[idx] = 1.0
+
+    #img.putdata(pixels_mask)
+
+
 if __name__ == '__main__':
-
-    import os
-    import numpy
-    import pyrap.images
-    import pyfits
-    import sys
-    import lofar.bdsm as bdsm
-
+    #reproduce old command line behaviour
+    
     argc=len(sys.argv)
     from optparse import OptionParser
     parser = OptionParser(usage='%prog [options] <Input image>')
@@ -32,39 +71,5 @@ if __name__ == '__main__':
 
     image_name = args[0]
 
-    mask_name  = image_name.split('-image')[0] + '.fitsmask'
-
-
-    print '\n\n\n'
-    print 'Making mask:', mask_name
-    print '\n\n\n'
-
-    os.system('rm -rf ' + mask_name)
-
-
-    # DO THE SOURCE DETECTION
-    img = bdsm.process_image(image_name, mean_map='zero', rms_box=(300,60), thresh_pix=numpy.float(o.threshpix), \
-                             thresh_isl=numpy.float(o.threshisl), atrous_do=o.atrous_do,  \
-                             adaptive_rms_box=True, adaptive_thresh=150, rms_box_bright=(70,10), atrous_jmax=3)
-
-    #img.show_fit()
-
-    # WRITE THE MASK FITS
-    img.export_image(img_type='island_mask', img_format='fits', outfile=mask_name)
-
-
-    # convert mask to casapy format
-
-    #sys.exit()
-
-    #img         = pyrap.images.image(mask_name)
-    #pixels      = numpy.copy(img.getdata())
-    #pixels_mask = 0.*numpy.copy(pixels)
-
-    #hdulist   = pyfits.open(maskmodel + '.fits')
-    #pixels_gs = hdulist[0].data
-
-    #idx = numpy.where(pixels_gs > 0.0)
-    #pixels_mask[idx] = 1.0
-
-    #img.putdata(pixels_mask)
+    do_makecleanmask_field_wsclean(image_name,float(o.threshpix),float(o.threshisl),o.atrous_do)
+    
