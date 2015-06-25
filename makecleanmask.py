@@ -1,11 +1,9 @@
 #!/usr/bin/python
 
 import os
-import numpy
-import pyrap.images
-import pyfits
 import sys
 import lofar.bdsm as bdsm
+import logging
 
 def do_makecleanmask(image_name,threshpix,threshisl,atrousdo,ncores=8):
     mask_name  = image_name.split('.image')[0] + '.cleanmask'

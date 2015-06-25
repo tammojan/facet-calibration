@@ -12,7 +12,7 @@ def do_makecleanmask_field_wsclean(image_name,threshpix,threshisl,atrousdo,ncore
 
     if atrousdo:
         threshisl = 3.0
-        logging.info('Changing island threshold to 3 because atrous_do=True')
+        logging.info('Changing island threshold to %.1f because atrous_do=True' % threshisl)
 
     os.system('rm -rf ' + mask_name)
 
