@@ -1757,7 +1757,7 @@ if __name__ == "__main__":
                           regionselfc[source_id] + ' ' + 
                           str(uvrange) + ' ' + 
                           str(peelskymodel[source_id]) + ' ' +
-                          str(cellsize) + ' ' + NAME)
+                          str(cellsize) + ' ' + NAME + ' ' + RES)
                 run(cmd)
             else:
                 do_selfcal(msavglist, 
