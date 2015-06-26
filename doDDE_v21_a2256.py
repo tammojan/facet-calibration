@@ -1368,6 +1368,11 @@ if __name__ == "__main__":
         print 'StefCal not set, defaulting to', StefCal
 
     try:
+        increaseSNR_via_freqcoverage
+    except NameError:
+        increaseSNR_via_freqcoverage = False  # experimental for StefCal
+
+    try:
         WScleanWBgroup
     except NameError:
         print 'WScleanWBgroup is not set, not using wideband clean algorithm'
@@ -1757,7 +1762,10 @@ if __name__ == "__main__":
                           regionselfc[source_id] + ' ' + 
                           str(uvrange) + ' ' + 
                           str(peelskymodel[source_id]) + ' ' +
-                          str(cellsize) + ' ' + NAME + ' ' + RES)
+                          str(cellsize) + ' ' +
+                          NAME + ' ' +
+                          RES + ' ' +
+                          str(increaseSNR_via_freqcoverage))
                 run(cmd)
             else:
                 do_selfcal(msavglist, 
