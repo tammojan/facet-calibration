@@ -1157,7 +1157,7 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl,
             mask_image=imout+'-image.fits'
 
     # create the mask
-    do_makecleanmask_field_wsclean(mask_image,threshpix,threshisl,atrous_do,ncores=getcpu())
+    do_makecleanmask_field_wsclean(mask_image,threshpix,threshisl,str(atrous_do),ncores=getcpu())
     #    run('python ' + SCRIPTPATH + '/makecleanmask_field_wsclean.py --threshpix '+str(threshpix)+
 #              ' --threshisl '+str(threshisl) +' --atrous_do '+ str(atrous_do) +
 #              ' --casaregion  '+ region + ' '  + mask_image)
