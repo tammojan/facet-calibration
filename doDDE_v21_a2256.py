@@ -1502,7 +1502,7 @@ if __name__ == "__main__":
     # so it is dangerous to let a user set this without being aware of this
 
     source_info_rec = numpy.genfromtxt(peelsourceinfo,
-                                       dtype="S50,S25,S5,S5,i8,i8,i8,i8,S2,S255,S255,S255,S5",
+                                       dtype="S50,S25,bool,S5,i8,i8,i8,i8,S2,S255,S255,S255,S5",
                                        names=["sourcelist","directions","atrous_do","mscale_field","imsizes",
                                               "cellsizetime_p","cellsizetime_a","fieldsize","dynamicrange",
                                               "regionselfc","regionfield","peelskymodel","outliersource"],
