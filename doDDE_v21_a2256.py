@@ -1157,13 +1157,13 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl,
             mask_image=imout+'-image.fits'
 
     # create the mask
-    do_makecleanmask_field_wsclean(mask_image,threshpix,threshisl,str(atrous_do),ncores=getcpu())
+    do_makecleanmask_field_wsclean(mask_image,threshpix,threshisl,True,ncores=getcpu())
     #    run('python ' + SCRIPTPATH + '/makecleanmask_field_wsclean.py --threshpix '+str(threshpix)+
-#              ' --threshisl '+str(threshisl) +' --atrous_do '+ str(atrous_do) +
-#              ' --casaregion  '+ region + ' '  + mask_image)
+    #              ' --threshisl '+str(threshisl) +' --atrous_do '+ str(atrous_do) +
+    #              ' --casaregion  '+ region + ' '  + mask_image)
     
     if wideband:
-        mask_name = mask_image + '.fitsmask'
+        mask_name = mask_image.split('-image')[0] + '.fitsmask'
     else:
         mask_name = imout + '.fitsmask'
     casa_mask  = imout + '.casamask'
