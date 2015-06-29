@@ -1006,7 +1006,7 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
     imout = 'im'+ callnumber +'_cluster'+cluster+'nm'
 
     run('casapy --nogui -c ' + SCRIPTPATH + '/casapy_cleanv4.py ' + ms + ' ' + imout + ' ' + 'None' +
-               ' ' + cleandepth1 + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + mscale)
+               ' ' + cleandepth1 + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + str(mscale))
 
 
     # make mask
@@ -1044,11 +1044,11 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
     if region != 'empty': # in that case we have a extra region file for the clean mask
         niter = niter*3 # increase niter, tune manually if needed
         run('casapy --nogui -c ' + SCRIPTPATH +'/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask_sources+'field,'+region +
-                  ' ' + cleandepth2 + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + mscale)
+                  ' ' + cleandepth2 + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + str(mscale))
 
     else:
         run('casapy --nogui -c '+ SCRIPTPATH + '/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask_sources+'field' +
-                   ' ' + cleandepth2 + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + mscale)
+                   ' ' + cleandepth2 + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + str(mscale))
 
     # convert to FITS
     if nterms > 1:
@@ -1502,7 +1502,7 @@ if __name__ == "__main__":
     # so it is dangerous to let a user set this without being aware of this
 
     source_info_rec = numpy.genfromtxt(peelsourceinfo,
-                                       dtype="S50,S25,bool,S5,i8,i8,i8,i8,S2,S255,S255,S255,S5",
+                                       dtype="S50,S25,bool,bool,i8,i8,i8,i8,S2,S255,S255,S255,S5",
                                        names=["sourcelist","directions","atrous_do","mscale_field","imsizes",
                                               "cellsizetime_p","cellsizetime_a","fieldsize","dynamicrange",
                                               "regionselfc","regionfield","peelskymodel","outliersource"],
@@ -1751,7 +1751,7 @@ if __name__ == "__main__":
                 cmd = ('python ' + SCRIPTPATH + '/' + config["selfcal_stefcal"] + ' ' + 
                           inputmslist + ' ' + 
                           source + ' ' + 
-                          atrous_do[source_id] + ' ' + 
+                          str(atrous_do[source_id]) + ' ' + 
                           str(imsizes[source_id]) + ' ' +
                           str(nterms) + ' ' + 
                           str(cellsizetime_a[source_id]) + ' ' + 
@@ -1792,6 +1792,13 @@ if __name__ == "__main__":
         ## STEP 2b:  SC wrap up ##
         if StartAtStep in ['preSC', 'doSC', 'postSC']:
             logging.info('START: postSC')
+
+            # solutions are now stored in source +'.ms.concat'
+            if increaseSNR_via_freqcoverage:
+                msavglist = []
+                for ms_id, ms in enumerate(mslist):
+                    msavglist.append(ms.split('.')[0] + '.' + source + '.ms.concat')
+            
             # combine selfcal solutions with non-DDE phases
             for ms_id, ms in enumerate(mslist):
                 parmdb_selfcal     = msavglist[ms_id]+"/"+"instrument_merged"
