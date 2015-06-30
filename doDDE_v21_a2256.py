@@ -1368,6 +1368,11 @@ if __name__ == "__main__":
         print 'StefCal not set, defaulting to', StefCal
 
     try:
+        Nblockconcat
+    except NameError:
+        Nblockconcat=1
+
+    try:
         increaseSNR_via_freqcoverage
     except NameError:
         increaseSNR_via_freqcoverage = False  # experimental for StefCal
@@ -1765,7 +1770,8 @@ if __name__ == "__main__":
                           str(cellsize) + ' ' +
                           NAME + ' ' +
                           RES + ' ' +
-                          str(increaseSNR_via_freqcoverage))
+                          str(increaseSNR_via_freqcoverage) + ' ' +
+                          str(Nblockconcat))
                 run(cmd)
             else:
                 do_selfcal(msavglist, 
