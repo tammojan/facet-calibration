@@ -13,6 +13,7 @@ ionnormfactor  = numpy.float(sys.argv[2])
 ionscalefactor = numpy.float(sys.argv[3])
 nblockconcat   = numpy.int(sys.argv[4])
 colname        = str(sys.argv[5])
+chanperblock   = numpy.int(sys.argv[6])
 
 t = pt.table(msname, readonly=False)
 
@@ -27,8 +28,6 @@ antlist    = anttab.getcol('NAME')
 centerfreq = numpy.mean(chanfreq)
 freq_res   = numpy.abs(chanfreq[0]-chanfreq[1])
 
-if ((nblockconcat*2)+1) != len(chanfreq):
-    raise Exception('More than 1 channel per block, needs to fixed.....')
 
 
 for t2 in t.iter(["ANTENNA1","ANTENNA2"]):     
@@ -47,7 +46,12 @@ for t2 in t.iter(["ANTENNA1","ANTENNA2"]):
 
     fwhm = 2.3548*stddev/freq_res
     gauss = scipy.signal.gaussian(len(weightscol[0,:,0]),(stddev))
-    #print gauss
+    
+    # special case, set weightes of central block always to 1.0
+    if ((nblockconcat*2)+1) != len(chanfreq):
+      for chan_number in range(0,chanperblock):
+         gauss[chanperblock*nblockconcat + chan_number] = 1.0
+         
     
     #sys.exit()
     for chan in range(0,len(weightscol[0,:,0])):
