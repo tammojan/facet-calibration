@@ -1006,7 +1006,7 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
     imout = 'im'+ callnumber +'_cluster'+cluster+'nm'
 
     run('casapy --nogui -c ' + SCRIPTPATH + '/casapy_cleanv4.py ' + ms + ' ' + imout + ' ' + 'None' +
-               ' ' + cleandepth1 + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + mscale)
+               ' ' + cleandepth1 + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + str(mscale))
 
 
     # make mask
@@ -1044,11 +1044,11 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
     if region != 'empty': # in that case we have a extra region file for the clean mask
         niter = niter*3 # increase niter, tune manually if needed
         run('casapy --nogui -c ' + SCRIPTPATH +'/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask_sources+'field,'+region +
-                  ' ' + cleandepth2 + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + mscale)
+                  ' ' + cleandepth2 + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + str(mscale))
 
     else:
         run('casapy --nogui -c '+ SCRIPTPATH + '/casapy_cleanv4.py '+ ms + ' ' + imout + ' ' + mask_sources+'field' +
-                   ' ' + cleandepth2 + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + mscale)
+                   ' ' + cleandepth2 + ' ' + str(niter) + ' ' + str(nterms) + ' ' + str(imsize) + ' ' + str(mscale))
 
     # convert to FITS
     if nterms > 1:
@@ -1157,13 +1157,13 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl,
             mask_image=imout+'-image.fits'
 
     # create the mask
-    do_makecleanmask_field_wsclean(mask_image,threshpix,threshisl,atrous_do,ncores=getcpu())
+    do_makecleanmask_field_wsclean(mask_image,threshpix,threshisl,True,ncores=getcpu())
     #    run('python ' + SCRIPTPATH + '/makecleanmask_field_wsclean.py --threshpix '+str(threshpix)+
-#              ' --threshisl '+str(threshisl) +' --atrous_do '+ str(atrous_do) +
-#              ' --casaregion  '+ region + ' '  + mask_image)
+    #              ' --threshisl '+str(threshisl) +' --atrous_do '+ str(atrous_do) +
+    #              ' --casaregion  '+ region + ' '  + mask_image)
     
     if wideband:
-        mask_name = mask_image + '.fitsmask'
+        mask_name = mask_image.split('-image')[0] + '.fitsmask'
     else:
         mask_name = imout + '.fitsmask'
     casa_mask  = imout + '.casamask'
@@ -1368,6 +1368,16 @@ if __name__ == "__main__":
         print 'StefCal not set, defaulting to', StefCal
 
     try:
+        Nblockconcat
+    except NameError:
+        Nblockconcat=1
+
+    try:
+        increaseSNR_via_freqcoverage
+    except NameError:
+        increaseSNR_via_freqcoverage = False  # experimental for StefCal
+
+    try:
         WScleanWBgroup
     except NameError:
         print 'WScleanWBgroup is not set, not using wideband clean algorithm'
@@ -1497,7 +1507,7 @@ if __name__ == "__main__":
     # so it is dangerous to let a user set this without being aware of this
 
     source_info_rec = numpy.genfromtxt(peelsourceinfo,
-                                       dtype="S50,S25,S5,S5,i8,i8,i8,i8,S2,S255,S255,S255,S5",
+                                       dtype="S50,S25,bool,bool,i8,i8,i8,i8,S2,S255,S255,S255,S5",
                                        names=["sourcelist","directions","atrous_do","mscale_field","imsizes",
                                               "cellsizetime_p","cellsizetime_a","fieldsize","dynamicrange",
                                               "regionselfc","regionfield","peelskymodel","outliersource"],
@@ -1746,7 +1756,7 @@ if __name__ == "__main__":
                 cmd = ('python ' + SCRIPTPATH + '/' + config["selfcal_stefcal"] + ' ' + 
                           inputmslist + ' ' + 
                           source + ' ' + 
-                          atrous_do[source_id] + ' ' + 
+                          str(atrous_do[source_id]) + ' ' + 
                           str(imsizes[source_id]) + ' ' +
                           str(nterms) + ' ' + 
                           str(cellsizetime_a[source_id]) + ' ' + 
@@ -1757,7 +1767,11 @@ if __name__ == "__main__":
                           regionselfc[source_id] + ' ' + 
                           str(uvrange) + ' ' + 
                           str(peelskymodel[source_id]) + ' ' +
-                          str(cellsize))
+                          str(cellsize) + ' ' +
+                          NAME + ' ' +
+                          RES + ' ' +
+                          str(increaseSNR_via_freqcoverage) + ' ' +
+                          str(Nblockconcat))
                 run(cmd)
             else:
                 do_selfcal(msavglist, 
@@ -1784,6 +1798,13 @@ if __name__ == "__main__":
         ## STEP 2b:  SC wrap up ##
         if StartAtStep in ['preSC', 'doSC', 'postSC']:
             logging.info('START: postSC')
+
+            # solutions are now stored in source +'.ms.concat'
+            if increaseSNR_via_freqcoverage:
+                msavglist = []
+                for ms_id, ms in enumerate(mslist):
+                    msavglist.append(ms.split('.')[0] + '.' + source + '.ms.concat')
+            
             # combine selfcal solutions with non-DDE phases
             for ms_id, ms in enumerate(mslist):
                 parmdb_selfcal     = msavglist[ms_id]+"/"+"instrument_merged"
