@@ -26,7 +26,8 @@ def do_makecleanmask(image_name,threshpix,threshisl,atrousdo,ncores=8):
                              atrous_do=atrousdo,ini_method='curvature',
                              adaptive_rms_box=True,
                              adaptive_thresh=150,
-                             rms_box_bright=(35,7), rms_map=True, ncores=ncores)
+                             rms_box_bright=(35,7),
+                             rms_map=True,atrous_jmax=3,ncores=ncores)
 
 
 
