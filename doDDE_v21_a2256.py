@@ -1362,6 +1362,12 @@ if __name__ == "__main__":
         print 'BlankField not set, defaulting to',BlankField
 
     try:
+        numcpu_ndppp_phaseshift
+    except NameError:
+        numcpu_ndppp_phaseshift=2
+        print 'numcpu_ndppp_phaseshift not set, defaulting to', numcpu_ndppp_phaseshift
+
+    try:
         StefCal
     except NameError:
         StefCal=False
@@ -1715,7 +1721,7 @@ if __name__ == "__main__":
                 runbbs_diffskymodel_addback(mslist, 'instrument_ap_smoothed', True, directions[source_id],imsizes[source_id],output_template_im, do_ap)
 
             ## average and phaseshift with NDPPP
-            b=bg(maxp=2)
+            b=bg(maxp=numcpu_ndppp_phaseshift)
             for ms_id, ms in enumerate(mslist):
                 parset = create_phaseshift_parset(ms, msavglist[ms_id], source, directions[source_id],
                                               imsizes[source_id], dynamicrange[source_id], StefCal, numchanperms)
@@ -1880,12 +1886,12 @@ if __name__ == "__main__":
                     else:
                         runbbs(mslist, dummyskymodel, SCRIPTPATH + '/correctfield2.parset',parmdb_master_out+'_norm', False)
                     ###########################################################################
-                    # NDPPP phase shift, less averaging (NEW: run 2 in parallel)
+                    # NDPPP phase shift, less averaging (run numcpu_ndppp_phaseshift in parallel)
                     msavglist = []
                     for ms_id, ms in enumerate(mslist): # make msavglist for avgfield
                         msavglist.append(ms.split('.')[0] + '.' + source + '.ms.avgfield')
 
-                    b=bg(maxp=2)
+                    b=bg(maxp=numcpu_ndppp_phaseshift)
                     for ms_id, ms in enumerate(mslist):
                         parset = create_phaseshift_parset_field(ms, msavglist[ms_id], source,
                                    directions[source_id], numchanperms)
