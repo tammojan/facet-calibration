@@ -210,11 +210,11 @@ def runbbs_diffskymodel_addback(mslist, parmdb, replacesource, direction, imsize
 
         # find sources to add back, make parset
 
-        #callist, callistarraysources = cal_return_slist(output_template_im +'.masktmp',skymodel, direction, imsize)
-        cmd = 'python ' + SCRIPTPATH + '/cal_return_slist.py '+ output_template_im +'.masktmp ' +skymodel +' "'+str(direction) +'" ' + str(imsize)
-        output = Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
-        callist = output.strip()
-        callistarraysources = callist.split(',')
+        callist, callistarraysources = cal_return_slist(output_template_im +'.masktmp',skymodel, direction, imsize)
+#        cmd = 'python ' + SCRIPTPATH + '/cal_return_slist.py '+ output_template_im +'.masktmp ' +skymodel +' "'+str(direction) +'" ' + str(imsize)
+#        output = Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
+#        callist = output.strip()
+#        callistarraysources = callist.split(',')
 
         logging.debug('Adding back for calibration: '+str(callist))
 
@@ -247,15 +247,15 @@ def runbbs_diffskymodel_addbackfield(mslist, parmdb, replacesource, direction, i
         skymodel =  ms.split('.')[0] + '.skymodel'
 
         # find peeling sources (from previous step)
-        #callist, callistarraysources = cal_return_slist(output_template_im +'.masktmp',skymodel, direction, imsize)
-        cmd = 'python '+ SCRIPTPATH + '/cal_return_slist.py '+ output_template_im +'.masktmp ' +skymodel +' "'+str(direction) +'" ' + str(imsize)
-        output = Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
-        callist = output.strip()
+        callist, callistarraysources = cal_return_slist(output_template_im +'.masktmp',skymodel, direction, imsize)
+        #cmd = 'python '+ SCRIPTPATH + '/cal_return_slist.py '+ output_template_im +'.masktmp ' +skymodel +' "'+str(direction) +'" ' + str(imsize)
+        #output = Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
+        #callist = output.strip()
         callistarraysources = callist.split(',')
 
         logging.debug('Add field back step 1')
 
-        # return the source list from the source to be added back sourrinding the peeling source and which fall within the mask boundaries
+        # return the source list from the source to be added back surrounding the peeling source and which fall within the mask boundaries
         # put in MODEL_DATA
 
 
@@ -263,9 +263,6 @@ def runbbs_diffskymodel_addbackfield(mslist, parmdb, replacesource, direction, i
         cmd = 'python '+ SCRIPTPATH +'/return_slist.py '+ output_template_im +'.masktmp ' +skymodel +' "'+str(callist)+'"'
         output = Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
         addback_sourcelist = output.strip()
-
-
-
 
         logging.debug('Field source added back are: '+str(addback_sourcelist))
 
@@ -1466,6 +1463,7 @@ if __name__ == "__main__":
     from verify_subtract_v5 import do_verify_subtract
     from padfits import padfits
     from makecleanmask_field_wsclean import do_makecleanmask_field_wsclean
+    from cal_return_slist import cal_return_slist
     if not(StefCal):
         if config["selfcal"] == "":
             from selfcalv19_ww_cep3 import do_selfcal

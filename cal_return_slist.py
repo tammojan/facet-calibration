@@ -184,94 +184,92 @@ def compute_patch_center_libsproblem(data,fluxweight):
 
 
 
-#def cal_return_slist(imagename,skymodel, direction, imsize):
+def cal_return_slist(imagename,skymodel, direction, imsize):
 
-#print sys.argv
+    factor = 0.8 # only add back in the center 80%
+    cut = 1.5*(imsize/2.)*factor/3600.
 
-imagename = str(sys.argv[1])
-skymodel  = str(sys.argv[2])
-direction = str(sys.argv[3])
-imsize    = numpy.int(sys.argv[4])
+    ra  = direction.split(',')[0]
+    dec = direction.split(',')[1]
 
+    ra1   = float(ra.split('h')[0])*15.
+    ratmp = (ra.split('h')[1])
+    ra2   = float(ratmp.split('m')[0])*15./60
+    ra3   = float(ratmp.split('m')[1])*15./3600.
+    ref_ra= ra1 + ra2 +ra3
 
+    dec1   = float(dec.split('d')[0])
+    dectmp = (dec.split('d')[1])
+    dec2   = float(dectmp.split('m')[0])/60
+    dec3   = float(dectmp.split('m')[1])/3600.
+    ref_dec= dec1 + dec2 +dec3
 
-factor = 0.8 # only add back in the center 80%
-cut = 1.5*(imsize/2.)*factor/3600.
+    fluxweight = False
 
-ra  = direction.split(',')[0]
-dec = direction.split(',')[1]
+    data = load_bbs_skymodel(skymodel)
 
-ra1   = float(ra.split('h')[0])*15.
-ratmp = (ra.split('h')[1])
-ra2   = float(ratmp.split('m')[0])*15./60
-ra3   = float(ratmp.split('m')[1])*15./3600.
-ref_ra= ra1 + ra2 +ra3
+    if len(numpy.shape(data)) == 1:  # in this case not issue and we do not use Pythonlibs
+        patches,ra_patches,dec_patches, flux_patches =  compute_patch_center(data,fluxweight)
+        #print 'option 1'
+    if len(numpy.shape(data)) == 2:
+        patches,ra_patches,dec_patches, flux_patches = compute_patch_center_libsproblem(data,fluxweight)
+        #print 'option 2'
 
-dec1   = float(dec.split('d')[0])
-dectmp = (dec.split('d')[1])
-dec2   = float(dectmp.split('m')[0])/60
-dec3   = float(dectmp.split('m')[1])/3600.
-ref_dec= dec1 + dec2 +dec3
-
-fluxweight = False
-
-
-data = load_bbs_skymodel(skymodel)
-
-if len(numpy.shape(data)) == 1:  # in this case not issue and we do not use Pythonlibs
-    patches,ra_patches,dec_patches, flux_patches =  compute_patch_center(data,fluxweight)
-    #print 'option 1'
-if len(numpy.shape(data)) == 2:
-    patches,ra_patches,dec_patches, flux_patches = compute_patch_center_libsproblem(data,fluxweight)
-    #print 'option 2'
-
-ralist  = pi*(ra_patches)/180.
-declist = pi*(dec_patches)/180.
+    ralist  = pi*(ra_patches)/180.
+    declist = pi*(dec_patches)/180.
 
 
-plist = []
+    plist = []
 
-#print ref_ra, ref_dec
+    #print ref_ra, ref_dec
 
 
 
- # load image to check if source within boundaries
-img    = pyrap.images.image(imagename)
-pixels = numpy.copy(img.getdata())
-plist = []
-sh    = numpy.shape(pixels)[2:4]
+     # load image to check if source within boundaries
+    img    = pyrap.images.image(imagename)
+    pixels = numpy.copy(img.getdata())
+    plist = []
+    sh    = numpy.shape(pixels)[2:4]
 
 
- # CHECK TWO THINGS
- #  - sources fall within the image size
- #  - sources fall within the mask from the tessellation
-for patch_id,patch in enumerate(patches):
-    coor = [0,1,declist[patch_id],ralist[patch_id]]
-    pix  = img.topixel(coor)[2:4]
+     # CHECK TWO THINGS
+     #  - sources fall within the image size
+     #  - sources fall within the mask from the tessellation
+    for patch_id,patch in enumerate(patches):
+        coor = [0,1,declist[patch_id],ralist[patch_id]]
+        pix  = img.topixel(coor)[2:4]
 
-    # compute radial distance to image center
-    #dis = angsep(ra_patches[patch_id],dec_patches[patch_id], ref_ra, ref_dec)
-    #if dis < cut: # ok sources is within image
-    dis_ra = abs(ra_patches[patch_id]-ref_ra)*numpy.cos(ref_dec*pi/180.0)
-    dis_dec = abs(dec_patches[patch_id]-ref_dec)
+        # compute radial distance to image center
+        #dis = angsep(ra_patches[patch_id],dec_patches[patch_id], ref_ra, ref_dec)
+        #if dis < cut: # ok sources is within image
+        dis_ra = abs(ra_patches[patch_id]-ref_ra)*numpy.cos(ref_dec*pi/180.0)
+        dis_dec = abs(dec_patches[patch_id]-ref_dec)
+
+        if dis_ra < cut and dis_dec < cut:
+            # check if the sources is within the mask region (because mask can be smaller than image)
+            if (pix[0] >= 0) and (pix[0] <= (sh[0]-1)) and \
+               (pix[1] >= 0) and (pix[1] <= (sh[1]-1)):
+                if pixels[0,0,pix[0],pix[1]] != 0.0:  # only include if within the clean mask (==1)
+                    plist.append(patches[patch_id])
     
-    if dis_ra < cut and dis_dec < cut:
-        # check if the sources is within the mask region (because mask can be smaller than image)
-        if (pix[0] >= 0) and (pix[0] <= (sh[0]-1)) and \
-           (pix[1] >= 0) and (pix[1] <= (sh[1]-1)):
-            if pixels[0,0,pix[0],pix[1]] != 0.0:  # only include if withtin the clean mask (==1)
-                plist.append(patches[patch_id])
+    sourcess = ''
+    if len(plist) == 1:
+        sourcess = str(plist[0])
+    else:
+        for patch in plist:
+            sourcess = sourcess+patch+','
+        sourcess = sourcess[:-1]
+    return sourcess,plist
 
  # make the string type source list
-sourcess = ''
-if len(plist) == 1:
-    sourcess = str(plist[0])
-else:
-    for patch in plist:
-        sourcess = sourcess+patch+','
-    sourcess = sourcess[:-1]
 
-#print '****'
-print sourcess
-#print '****'
-#print plist
+if __name__=='__main__':
+
+    imagename = sys.argv[1]
+    skymodel  = sys.argv[2]
+    direction = sys.argv[3]
+    imsize    = int(sys.argv[4])
+
+    sourcess,plist=cal_return_slist(imagename,skymodel,direction,imsize)
+
+    print sourcess
