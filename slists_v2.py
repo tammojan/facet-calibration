@@ -317,13 +317,27 @@ def return_slist(imagename,skymodel,ref_source):
 
 if __name__=='__main__':
 
-    # does old cal_return_slist behaviour
+    if len(sys.argv)==5:
+        # does old cal_return_slist behaviour
 
-    imagename = sys.argv[1]
-    skymodel  = sys.argv[2]
-    direction = sys.argv[3]
-    imsize    = int(sys.argv[4])
+        imagename = sys.argv[1]
+        skymodel  = sys.argv[2]
+        direction = sys.argv[3]
+        imsize    = int(sys.argv[4])
 
-    sourcess,plist=cal_return_slist(imagename,skymodel,direction,imsize)
+        sourcess,plist=cal_return_slist(imagename,skymodel,direction,imsize)
 
-    print sourcess
+        print sourcess
+    elif len(sys.argv)==4:
+        # does old return_slist behaviour
+
+        imagename = sys.argv[1]
+        skymodel  = sys.argv[2]
+        ref_sourcet = sys.argv[3]
+        ref_source = ref_sourcet.split(',')
+        sourcess,plist=return_slist(imagename,skymodel,ref_source)
+        
+        print sourcess
+    else:
+        print 'Must have 3 or 4 arguments'
+        sys.exit(-1)
