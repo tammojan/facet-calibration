@@ -105,8 +105,9 @@ class GenericPipeline(control):
         except IndexError:
             return self.usage()
         try:
-            self.parset.adoptFile(parset_file)
-            self.parset_feedback_file = parset_file + "_feedback"
+            if self.parset.keys == []:
+                self.parset.adoptFile(parset_file)
+                self.parset_feedback_file = parset_file + "_feedback"
         except RuntimeError:
             print >> sys.stderr, "Error: Parset file not found!"
             return self.usage()
@@ -468,13 +469,13 @@ class GenericPipeline(control):
                     continue
         # \hack
         for k in ordered_keys:
-            keystring = argsparset.getString(k)
-            if keystring.__contains__('.output.'):
-                if keystring.__contains__(','):
-                    keystring = keystring.rstrip(']')
-                    keystring = keystring.lstrip('[')
+            valuestring = argsparset.getString(k)
+            if valuestring.__contains__('.output.'):
+                if valuestring.__contains__(','):
+                    valuestring = valuestring.rstrip(']')
+                    valuestring = valuestring.lstrip('[')
                     vec = []
-                    for item in keystring.split(','):
+                    for item in valuestring.split(','):
                         if item.__contains__('.output.'):
                             step, outvar = item.split('.output.')
                             vec.append(resdicts[step][outvar])
@@ -499,6 +500,11 @@ class GenericPipeline(control):
                 if k == 'flags':
                     addvals['arguments'] = str(argsparset[k])
                     argsparset.remove(k)
+
+            #direct usage of outputkey
+            if valuestring.__contains__('outputkey'):
+                addvals['outputkey'] = 'outputkey'
+
         argsparset.writeFile(filename)
         return addvals
 
