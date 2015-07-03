@@ -1,0 +1,211 @@
+pipeline.steps=[timmap,dpppprepcal,calibcal,ginst,gvdsfile,parmcoll,h5imp,fitclock,ampl,plots,concatmapcal,phase,calib,timtargetmap,dppppreptar,ateamtarget,ateamcliptar,trans,parmmap,calibtarget,dpppaverage,concatmaptar,createmap2,dpppconcat,flagrfi,gsmcalibtarget,selfcal]
+pipeline.pluginpath=plugins
+
+! script_path = /home/zam/sfroehli/source/facet-calibration/facet-calibration-pipeline/scripts/
+! user_parset_path = /home/zam/sfroehli/PipelineExample/parset/
+! user_skymodel_path = /home/zam/sfroehli/source/facet-calibration/facet-calibration-pipeline/skymodels/
+# maybe extra losoto path?
+! losoto_path = /your/installation/
+
+timmap.control.kind                 =   plugin
+timmap.control.type                 =   addMapfile
+timmap.control.cmdline.create       =   mapfile_from_folder
+timmap.control.mapfile_dir          =   input.output.mapfile_dir
+timmap.control.filename             =   tims.mapfile
+timmap.control.folder               =   /home/sfroehli/PipelineExample/datatim
+
+dpppprepcal.control.type                =   dppp
+dpppprepcal.argument.msin               =   timmap.output.mapfile
+dpppprepcal.argument.msin.datacolumn    =   DATA
+dpppprepcal.argument.msin.missingdata   =   True
+dpppprepcal.argument.msin.orderms       =   False
+dpppprepcal.argument.msout.datacolumn   =   DATA
+dpppprepcal.argument.steps              =   [flag,filter,avg,flagamp]
+dpppprepcal.argument.filter.type        =   filter
+dpppprepcal.argument.filter.baseline    =   [ [CS*] , [RS*] ]
+dpppprepcal.argument.filter.remove      =   true
+dpppprepcal.argument.avg.type           =   average
+dpppprepcal.argument.avg.freqstep       =   2
+dpppprepcal.argument.avg.timestep       =   2
+dpppprepcal.argument.flag.type          =   preflagger
+dpppprepcal.argument.flag.baseline      =   [ DE* , FR* , SE* , UK* , CS501HBA1*, CS103HBA0* ]
+dpppprepcal.argument.flagamp.type       =   preflagger
+dpppprepcal.argument.flagamp.amplmin    =   1e-30
+#dpppprepcal.control.opts.max_per_node  =   6
+
+calibcal.control.type                   =   python-calibrate-stand-alone
+calibcal.argument.observation           =   dpppprepcal.output.mapfile
+calibcal.argument.force                 =   True
+calibcal.argument.parset                =   {{ user_parset_path }}calibcal.parset
+calibcal.argument.catalog               =   {{ user_skymodel_path }}3C196-pandey.skymodel
+calibcal.argument.numthreads            =   8
+#calibcal.control.max_per_node          =   20           
+
+# this one is an old recipe of the lofar framework. hence the cmdline syntax
+ginst.control.type                  =   vdsmaker
+ginst.control.cmdline.inmap         =   dpppprepcal.output.mapfile
+ginst.control.unlink                =   True
+
+gvdsfile.control.kind               =   plugin
+gvdsfile.control.type               =   addMapfile
+gvdsfile.control.cmdline.create     =   mapfile_from_folder
+gvdsfile.control.mapfile_dir        =   input.output.mapfile_dir
+gvdsfile.control.filename           =   gvds.mapfile
+gvdsfile.control.folder             =   /private/lofar/release/var/run/pipeline/pre-facet-calibration/vds
+
+parmcoll.control.type               =   executable_args
+parmcoll.control.executable         =   {{ script_path }}parmdb_collector.py
+parmcoll.argument.flags             =   [-v,-d,gvdsfile.output.mapfile,-g,outputkey]
+
+h5imp.control.type                  =   executable_args
+h5imp.control.executable            =   {{ script_path }}H5parm_importer.py
+h5imp.argument.flags                =   [-v,outputkey,parmcoll.output.mapfile]
+
+fitclock.control.type               =   executable_args
+fitclock.control.executable         =   {{ script_path }}fit_clocktec_initialguess_losoto.py
+fitclock.argument.flags             =   [h5imp.output.mapfile,somename,8]
+#fitclock.control.max_per_node=2
+
+ampl.control.type                   =   executable_args
+#h5imp.output.mapfile : testing mapfile below
+ampl.control.mapfile_in             =   /home/zam/sfroehli/timstask/L239640.h5.mapfile
+ampl.control.executable             =   {{ script_path }}amplitudes_losoto.py
+ampl.argument.flags                 =   [h5gvds,somename,1]
+ampl.control.inputkey               =   h5gvds
+
+plots.control.type                  =   executable_args
+plots.control.mapfile_in            =   h5imp.output.mapfile
+plots.control.skip_infile           =   True
+plots.control.executable            =   {{ script_path }}examine_npys.py
+plots.argument.flags                =   [somename]
+
+concatmapcal.control.kind           =   plugin
+concatmapcal.control.type           =   addMapfile
+concatmapcal.control.cmdline.create =   mapfile_all_to_one
+concatmapcal.control.mapfile_in     =   dpppprepcal.output.mapfile
+concatmapcal.control.mapfile_dir    =   input.output.mapfile_dir
+concatmapcal.control.filename       =   concatcal.mapfile
+
+phase.control.type                  =   executable_args
+phase.control.executable            =   {{ script_path }}find_cal_global_phaseoffset.py
+phase.argument.flags                =   [concatmapcal.output.mapfile,somename]
+
+calib.control.type                  =   python-calibrate-stand-alone
+calib.control.mapfile_in            =   concatmapcal.output.mapfile
+calib.control.skip_infile           =   True
+#calib.control.arguments        =   [-f,--parmdb-name,template,/net/para10/data1/shimwell/pipeline/PipelineExample/parset/a2034_targettestdata/L221519_SB280_uv.dppp.MS,/net/para10/data1/shimwell/pipeline/PipelineExample/parset/calibtarget.parset,/net/para10/data1/shimwell/pipeline/PipelineExample/parset/template_parmdb.model]
+calib.argument.force =True
+calib.argument.parmdb-name =template
+calib.argument.observation =/home/sfroehli/timstask/datatarget/Target_SB119_uv.avg_dppp.MS
+calib.argument.parset=/home/sfroehli/timstask/calibtarget.parset
+calib.argument.catalog=/home/sfroehli/source/facet-calibration/pre-facet-pipeline/parset/template_parmdb.model
+
+timtargetmap.control.kind           =   plugin
+timtargetmap.control.type           =   addMapfile
+timtargetmap.control.cmdline.create =   mapfile_from_folder
+timtargetmap.control.mapfile_dir    =   input.output.mapfile_dir
+timtargetmap.control.filename       =   timstarget.mapfile
+timtargetmap.control.folder         =   /home/sfroehli/timstask/datatarget
+
+dppppreptar.control.type                =   dppp
+dppppreptar.argument.msin               =   timtargetmap.output.mapfile
+dppppreptar.argument.msin.datacolumn    =   DATA
+dppppreptar.argument.msin.missingdata   =   True
+dppppreptar.argument.msin.orderms       =   False
+dppppreptar.argument.msout.datacolumn   =   DATA
+dppppreptar.argument.steps              =   [flag,filter,avg,flagamp]
+dppppreptar.argument.filter.type        =   filter
+dppppreptar.argument.filter.baseline    =   [ [CS*] , [RS*] ]
+dppppreptar.argument.filter.remove      =   true
+dppppreptar.argument.avg.type           =   average
+dppppreptar.argument.avg.freqstep       =   1
+dppppreptar.argument.avg.timestep       =   1
+dppppreptar.argument.flag.type          =   preflagger
+dppppreptar.argument.flag.baseline      =   [ DE* , FR* , SE* , UK* , CS501HBA1*, CS103HBA0* ]
+dppppreptar.argument.flagamp.type       =   preflagger
+dppppreptar.argument.flagamp.amplmin    =   1e-30
+#dppppreptar.control.max_per_node       =   6
+
+ateamtarget.control.type                =   python-calibrate-stand-alone
+ateamtarget.argument.observation        =   dppppreptar.output.mapfile
+ateamtarget.argument.force              =   True
+ateamtarget.argument.parset             =   {{ user_parset_path }}ateamclip.parset
+ateamtarget.argument.catalog            =   {{ user_skymodel_path }}Ateam_LBA_CC.skymodel
+ateamtarget.argument.numthreads         =   8
+#ateamtarget.control.opts.max_per_node   =   20
+                                            
+ateamcliptar.control.type               =   executable_args
+ateamcliptar.control.executable         =   {{ script_path }}Ateamclipper.py
+ateamcliptar.argument.flags             =   dppppreptar.output.mapfile
+#ateamcliptar.control.max_per_node      =   20
+                                            
+trans.control.type                      =   executable_args
+trans.control.executable                =   {{ script_path }}transfer_amplitudes+clock+offset.py
+trans.argument.flags                    =   [dppppreptar.output.mapfile,instrument_amp_clock_offset,/home/sfroehli/source/facet-calibration/pre-facet-pipeline/parset/products/a2034_withselfcal,/home/sfroehli/timstask/datatarget/Target_SB119_uv.avg_dppp.MS/template,somename]
+
+parmmap.control.kind                    =   plugin
+parmmap.control.type                    =   changeMapfile
+parmmap.control.mapfile_in              =   dppppreptar.output.mapfile
+parmmap.control.join_files              =   instrument_amp_clock_offset
+parmmap.control.newname                 =   targetparmdb.mapfile
+
+calibtarget.control.type                =   python-calibrate-stand-alone
+calibtarget.argument.observation        =   dppppreptar.output.mapfile
+calibtarget.argument.parmdb             =   parmmap.output.mapfile
+calibtarget.argument.parset             =   {{ user_parset_path }}applyparmdb.parset
+calibtarget.argument.numthreads         =   8
+#calibtarget.control.max_per_node        =    20
+
+dpppaverage.control.type                =   dppp
+dpppaverage.control.max_per_node        =   6
+dpppaverage.argument.msin               =   dppppreptar.output.mapfile
+dpppaverage.argument.msin.datacolumn    =   CORRECTED_DATA
+dpppaverage.argument.msout.datacolumn   =   DATA
+dpppaverage.argument.steps              =   [count,flag,count,avg]
+dpppaverage.argument.flag.type          =   aoflagger
+dpppaverage.argument.avg.type           =   average
+dpppaverage.argument.avg.freqstep       =   2
+dpppaverage.argument.avg.timestep       =   2
+
+concatmaptar.control.kind               =   plugin
+concatmaptar.control.type               =   addMapfile
+concatmaptar.control.cmdline.create     =   mapfile_all_to_one
+concatmaptar.control.mapfile_in         =   dpppaverage.output.mapfile
+concatmaptar.control.mapfile_dir        =   input.output.mapfile_dir
+concatmaptar.control.filename           =   concatmaptar.mapfile
+
+createmap2.control.kind                 =   plugin
+createmap2.control.type                 =   addMapfile
+createmap2.control.cmdline.create       =   mapfile_split_list
+createmap2.control.opts.mapfile_dir     =   input.output.mapfile_dir
+createmap2.control.opts.listsize        =   10
+createmap2.control.opts.filename        =   splitlist.mapfile
+createmap2.control.opts.mapfile_in      =   concatmaptar.output.mapfile
+
+dpppconcat.control.type                 =   dppp
+dpppconcat.argument.msin                =   createmap2.output.mapfile
+dpppconcat.argument.msin.datacolumn     =   DATA
+dpppconcat.argument.msin.missingdata    =   True
+dpppconcat.argument.msin.orderms        =   False
+dpppconcat.argument.msout.datacolumn    =   DATA
+dpppconcat.argument.steps               =   []
+#dpppconcat.control.max_per_node         =  6
+
+flagrfi.control.type                    =   executable_args
+flagrfi.control.executable              =   /net/para35/data2/oonk/software/lofar/bin/rficonsole
+flagrfi.control.arguments               =   [dpppconcat.output.mapfile]
+#flagrfi.control.max_per_node            =  20
+
+gsmcalibtarget.control.type             =   python-calibrate-stand-alone
+gsmcalibtarget.argument.observation     =   dpppconcat.output.mapfile
+gsmcalibtarget.argument.force           =   True
+gsmcalibtarget.argument.parset          =   {{ user_parset_path }}gsmcal.parset
+gsmcalibtarget.argument.catalog         =   {{ user_skymodel_path }}gsmmodel
+#gsmcalibtarget.control.max_per_node    =  2
+
+selfcal.control.type                    =   executable_args
+selfcal.control.executable              =   /home/shimwell/Desktop/work/LOFAR/lofarcodes/lofar-selfcal-image-smootherphase-flag-noiseclean-arrayfactor-argparse.py
+selfcal.control.arguments               =   [dpppconcat.output.mapfile,--workdir,selfcaldir]
+selfcal.control.outputkey               =   selfcaldir
+selfcal.control.max_per_node            =   2
+
