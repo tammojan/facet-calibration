@@ -210,15 +210,15 @@ def runbbs_diffskymodel_addback(mslist, parmdb, replacesource, direction, imsize
 
         # find sources to add back, make parset
 
-        #callist, callistarraysources = cal_return_slist(output_template_im +'.masktmp',skymodel, direction, imsize)
-        cmd = 'python ' + SCRIPTPATH + '/cal_return_slist.py '+ output_template_im +'.masktmp ' +skymodel +' "'+str(direction) +'" ' + str(imsize)
-        output = Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
-        callist = output.strip()
-        callistarraysources = callist.split(',')
+        callist, callistarraysources = cal_return_slist(output_template_im +'.masktmp',skymodel, direction, imsize)
+#        cmd = 'python ' + SCRIPTPATH + '/cal_return_slist.py '+ output_template_im +'.masktmp ' +skymodel +' "'+str(direction) +'" ' + str(imsize)
+#        output = Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
+#        callist = output.strip()
+#        callistarraysources = callist.split(',')
 
         logging.debug('Adding back for calibration: '+str(callist))
 
-        if len(callist) != 0: # otherwise do not have to add
+        if len(callist)>0: # otherwise do not have to add
             parset = create_add_parset_ms(callist, ms, do_ap)
             if replacesource:
                 cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1'
@@ -247,25 +247,19 @@ def runbbs_diffskymodel_addbackfield(mslist, parmdb, replacesource, direction, i
         skymodel =  ms.split('.')[0] + '.skymodel'
 
         # find peeling sources (from previous step)
-        #callist, callistarraysources = cal_return_slist(output_template_im +'.masktmp',skymodel, direction, imsize)
-        cmd = 'python '+ SCRIPTPATH + '/cal_return_slist.py '+ output_template_im +'.masktmp ' +skymodel +' "'+str(direction) +'" ' + str(imsize)
-        output = Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
-        callist = output.strip()
-        callistarraysources = callist.split(',')
+        callist, callistarraysources = cal_return_slist(output_template_im +'.masktmp',skymodel, direction, imsize)
+        #cmd = 'python '+ SCRIPTPATH + '/cal_return_slist.py '+ output_template_im +'.masktmp ' +skymodel +' "'+str(direction) +'" ' + str(imsize)
+        #output = Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
+        #callist = output.strip()
+        #callistarraysources = callist.split(',')
 
         logging.debug('Add field back step 1')
 
-        # return the source list from the source to be added back sourrinding the peeling source and which fall within the mask boundaries
+        # return the source list from the source to be added back surrounding the peeling source and which fall within the mask boundaries
         # put in MODEL_DATA
 
 
-        #addback_sourcelist = return_slist(output_template_im +'.masktmp', skymodel, callistarraysources)
-        cmd = 'python '+ SCRIPTPATH +'/return_slist.py '+ output_template_im +'.masktmp ' +skymodel +' "'+str(callist)+'"'
-        output = Popen(cmd, shell=True, stdout=PIPE).communicate()[0]
-        addback_sourcelist = output.strip()
-
-
-
+        addback_sourcelist,dummy = return_slist(output_template_im +'.masktmp', skymodel, callistarraysources)
 
         logging.debug('Field source added back are: '+str(addback_sourcelist))
 
@@ -822,160 +816,6 @@ def normalize_parmdbs(mslist, parmdbname, parmdboutname):
 
     return numpy.mean(amplist)
 
-
-def return_slist(imagename, skymodel, ref_source):
-    """
-    FIXME
-    Return the list of sources of a skymodel within the boundaries of
-    an image region??
-    """
-
-    fluxweight = False
-
-    data = load_bbs_skymodel(skymodel)
-
-    if len(numpy.shape(data)) == 1:  # in this case not issue and we do not use Pythonlibs
-        patchest,ra_patches,dec_patches, flux_patches =  compute_patch_center(data,fluxweight)
-        logging.debug('option 1')
-    if len(numpy.shape(data)) == 2:
-        patchest,ra_patches,dec_patches, flux_patches = compute_patch_center_libsproblem(data,fluxweight)
-        logging.debug('option 2')
-
-    # remove sources already in the field and convert to radians
-
-    if len(ref_source) == 1:
-        idx = numpy.where(patchest != ref_source)
-        ralist  = pi*(ra_patches[idx])/180.
-        declist = pi*(dec_patches[idx])/180.
-        patches = patchest[idx]
-    else:
-        idx = numpy.asarray([numpy.where(patchest == y)[0][0] for y in ref_source])
-        accept_idx = sorted(set(range(patchest.size)) - set(idx))
-
-        ralist  = pi*(ra_patches[accept_idx])/180.
-        declist = pi*(dec_patches[accept_idx])/180.
-        patches = patchest[accept_idx]
-
-
-    img    = pyrap.images.image(imagename)
-    pixels = numpy.copy(img.getdata())
-    plist = []
-    sh    = numpy.shape(pixels)[2:4]
-
-
-    for patch_id,patch in enumerate(patches):
-        coor = [0,1,declist[patch_id],ralist[patch_id]]
-        pix  = img.topixel(coor)[2:4]
-
-        if ((pix[0] >= 0) and
-            (pix[0] <= (sh[0]-1)) and
-            (pix[1] >= 0) and
-            (pix[1] <= (sh[1]-1))):
-
-            if pixels[0,0,pix[0],pix[1]] != 0.0:  # only include if withtin the clean mask (==1)
-                plist.append(patches[patch_id])
-
-    sourcess = ''
-    if len(plist) == 1:
-        sourcess = str(plist[0])
-    else:
-        for patch in plist:
-            sourcess = sourcess+patch+','
-        sourcess = sourcess[:-1]
-
-    return sourcess
-
-
-
-
-
-def cal_return_slist(imagename, skymodel, direction, imsize):
-    """
-    FIXME
-    Return the list of sources of a skymodel within the boundaries of
-    an image region??
-    """
-
-    factor = 0.8 # only add back in the center 80%
-    cut = 1.5*(imsize/2.)*factor/3600.
-
-    ra  = direction.split(',')[0]
-    dec = direction.split(',')[1]
-
-    ra1   = float(ra.split('h')[0])*15.
-    ratmp = (ra.split('h')[1])
-    ra2   = float(ratmp.split('m')[0])*15./60
-    ra3   = float(ratmp.split('m')[1])*15./3600.
-    ref_ra= ra1 + ra2 +ra3
-
-    dec1   = float(dec.split('d')[0])
-    dectmp = (dec.split('d')[1])
-    dec2   = float(dectmp.split('m')[0])/60
-    dec3   = float(dectmp.split('m')[1])/3600.
-    ref_dec= dec1 + dec2 +dec3
-
-    fluxweight = False
-
-
-    data = load_bbs_skymodel(skymodel)
-
-    if len(numpy.shape(data)) == 1:  # in this case not issue and we do not use Pythonlibs
-        patches,ra_patches,dec_patches, flux_patches =  compute_patch_center(data,fluxweight)
-        logging.debug('option 1')
-    if len(numpy.shape(data)) == 2:
-        patches,ra_patches,dec_patches, flux_patches = compute_patch_center_libsproblem(data,fluxweight)
-        logging.debug('option 2')
-
-    ralist  = pi*(ra_patches)/180.
-    declist = pi*(dec_patches)/180.
-
-
-    plist = []
-
-    logging.debug("{} {}".format(ref_ra, ref_dec))
-
-
-
-    # load image to check if source within boundaries
-    img    = pyrap.images.image(imagename)
-    pixels = numpy.copy(img.getdata())
-    plist = []
-    sh    = numpy.shape(pixels)[2:4]
-
-
-    # CHECK TWO THINGS
-    #  - sources fall within the image size
-    #  - sources fall within the mask from the tessellation
-    for patch_id,patch in enumerate(patches):
-        coor = [0,1,declist[patch_id],ralist[patch_id]]
-        pix  = img.topixel(coor)[2:4]
-
-        # compute radial distance to image center
-        dis = angsep(ra_patches[patch_id],dec_patches[patch_id], ref_ra, ref_dec)
-
-        if dis < cut: # ok sources is within image
-            # check if the sources is within the mask region (because mask can be smaller than image)
-            if ((pix[0] >= 0) and
-                (pix[0] <= (sh[0]-1)) and
-                (pix[1] >= 0) and
-                (pix[1] <= (sh[1]-1))):
-
-                if pixels[0,0,pix[0],pix[1]] != 0.0:  # only include if withtin the clean mask (==1)
-                    plist.append(patches[patch_id])
-
-    # make the string type source list
-    sourcess = ''
-    if len(plist) == 1:
-        sourcess = str(plist[0])
-    else:
-        for patch in plist:
-            sourcess = sourcess+patch+','
-        sourcess = sourcess[:-1]
-
-    return sourcess, plist
-
-
-
 def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous_do, imsize, inputmask, mscale, region):
     """
     Make image using CASA for a list of MSs.
@@ -1466,6 +1306,7 @@ if __name__ == "__main__":
     from verify_subtract_v5 import do_verify_subtract
     from padfits import padfits
     from makecleanmask_field_wsclean import do_makecleanmask_field_wsclean
+    from slists_v2 import cal_return_slist,return_slist
     if not(StefCal):
         if config["selfcal"] == "":
             from selfcalv19_ww_cep3 import do_selfcal

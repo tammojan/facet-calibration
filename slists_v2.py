@@ -6,30 +6,18 @@ import pyrap.images
 
 pi = numpy.pi
 
+def make_image(ra,dec,data,cdelt):
 
-def angsep(ra1deg, dec1deg, ra2deg, dec2deg):
-    """Returns angular separation between two coordinates (all in degrees)"""
-    import math
+    # make a dummy image to get a starting set of co-ords
+    # avoids using casacore co-ords directly
 
-    ra1rad=ra1deg*math.pi/180.0
-    dec1rad=dec1deg*math.pi/180.0
-    ra2rad=ra2deg*math.pi/180.0
-    dec2rad=dec2deg*math.pi/180.0
-
-    # calculate scalar product for determination
-    # of angular separation
-    x=math.cos(ra1rad)*math.cos(dec1rad)*math.cos(ra2rad)*math.cos(dec2rad)
-    y=math.sin(ra1rad)*math.cos(dec1rad)*math.sin(ra2rad)*math.cos(dec2rad)
-    z=math.sin(dec1rad)*math.sin(dec2rad)
-
-    if x+y+z >= 1: rad = 0
-    else: rad=math.acos(x+y+z)
-
-    # Angular separation
-    deg=rad*180/math.pi
-    return deg
-
-
+    im=pyrap.images.image('',shape=data.shape)
+    cs=im.coordinates()
+    cs.dict()['direction0']['units']=['rad','rad']
+    cs.dict()['direction0']['crval']=[ra,dec]
+    cs.dict()['direction0']['cdelt']=[-cdelt,cdelt]
+    im=pyrap.images.image('',values=data,coordsys=cs)
+    return im
 
 def load_bbs_skymodel(infilename):
     tmp_input = infilename + '.tmp'
@@ -186,8 +174,9 @@ def compute_patch_center_libsproblem(data,fluxweight):
 
 def cal_return_slist(imagename,skymodel, direction, imsize):
 
+    pixelsize=1.5 # arcsec
     factor = 0.8 # only add back in the center 80%
-    cut = 1.5*(imsize/2.)*factor/3600.
+    cut = pixelsize*(imsize/2.)*factor/3600.
 
     ra  = direction.split(',')[0]
     dec = direction.split(',')[1]
@@ -218,40 +207,47 @@ def cal_return_slist(imagename,skymodel, direction, imsize):
     ralist  = pi*(ra_patches)/180.
     declist = pi*(dec_patches)/180.
 
+    ref_ra_rad=pi*ref_ra/180.0
+    ref_dec_rad=pi*ref_dec/180.0
+    maskimage=numpy.zeros((imsize,imsize))
+    minpix=int(imsize*(1.0-factor)/2.0)
+    maxpix=int(imsize*(factor+(1.0-factor)/2.0))
+    maskimage[minpix:maxpix,minpix:maxpix]=1.0
+    mask_img=make_image(ref_ra_rad,ref_dec_rad,maskimage,pixelsize*pi/(180.0*3600.0))
 
     plist = []
 
     #print ref_ra, ref_dec
 
-
-
-     # load image to check if source within boundaries
-    img    = pyrap.images.image(imagename)
-    pixels = numpy.copy(img.getdata())
-    plist = []
+         # load image to check if source within boundaries
+    facet_img    = pyrap.images.image(imagename)
+    pixels = facet_img.getdata()
     sh    = numpy.shape(pixels)[2:4]
 
 
      # CHECK TWO THINGS
-     #  - sources fall within the image size
+     #  - sources fall within the calibration image
      #  - sources fall within the mask from the tessellation
+     # both of these are done by considering the co-ordinates
     for patch_id,patch in enumerate(patches):
+        # first the calibration image
+        coor = [declist[patch_id],ralist[patch_id]]
+        pix=mask_img.topixel(coor)
+        if pix[0]<0 or pix[0]>=imsize or pix[1]<0 or pix[1]>=imsize:
+            continue
+        if maskimage[pix[0],pix[1]]<0.5:
+            continue
+
+        # now the facet image
         coor = [0,1,declist[patch_id],ralist[patch_id]]
-        pix  = img.topixel(coor)[2:4]
+        pix  = facet_img.topixel(coor)[2:4]
 
-        # compute radial distance to image center
-        #dis = angsep(ra_patches[patch_id],dec_patches[patch_id], ref_ra, ref_dec)
-        #if dis < cut: # ok sources is within image
-        dis_ra = abs(ra_patches[patch_id]-ref_ra)*numpy.cos(ref_dec*pi/180.0)
-        dis_dec = abs(dec_patches[patch_id]-ref_dec)
-
-        if dis_ra < cut and dis_dec < cut:
-            # check if the sources is within the mask region (because mask can be smaller than image)
-            if (pix[0] >= 0) and (pix[0] <= (sh[0]-1)) and \
-               (pix[1] >= 0) and (pix[1] <= (sh[1]-1)):
-                if pixels[0,0,pix[0],pix[1]] != 0.0:  # only include if within the clean mask (==1)
-                    plist.append(patches[patch_id])
+        if (pix[0] >= 0) and (pix[0] <= (sh[0]-1)) and \
+           (pix[1] >= 0) and (pix[1] <= (sh[1]-1)):
+            if pixels[0,0,pix[0],pix[1]]>0.5:  # only include if within the clean mask (==1)
+                plist.append(patches[patch_id])
     
+ # make the string type source list
     sourcess = ''
     if len(plist) == 1:
         sourcess = str(plist[0])
@@ -261,9 +257,67 @@ def cal_return_slist(imagename,skymodel, direction, imsize):
         sourcess = sourcess[:-1]
     return sourcess,plist
 
- # make the string type source list
+def return_slist(imagename,skymodel,ref_source):
+    """return a list of the sky model components in the mask defined by
+    imagename, excluding all of those listed in ref_source, which have
+    already been added.
+    """
+
+    fluxweight = False
+
+    data = load_bbs_skymodel(skymodel)
+
+    if len(numpy.shape(data)) == 1:  # in this case not issue and we do not use Pythonlibs
+        patchest,ra_patches,dec_patches, flux_patches =  compute_patch_center(data,fluxweight)
+        #print 'option 1'
+    if len(numpy.shape(data)) == 2:
+        patchest,ra_patches,dec_patches, flux_patches = compute_patch_center_libsproblem(data,fluxweight)
+        #print 'option 2'
+
+      # remove sources already in the field and convert to radians
+
+    if len(ref_source) == 1:
+        idx = numpy.where(patchest != ref_source)
+        ralist  = pi*(ra_patches[idx])/180.
+        declist = pi*(dec_patches[idx])/180.
+        patches = patchest[idx]
+    else:
+        idx = numpy.asarray([numpy.where(patchest == y)[0][0] for y in ref_source])
+        accept_idx = sorted(set(range(patchest.size)) - set(idx))
+
+        ralist  = pi*(ra_patches[accept_idx])/180.
+        declist = pi*(dec_patches[accept_idx])/180.
+        patches = patchest[accept_idx]
+
+
+    img    = pyrap.images.image(imagename)
+    pixels = numpy.copy(img.getdata())
+    plist = []
+    sh    = numpy.shape(pixels)[2:4]
+
+
+    for patch_id,patch in enumerate(patches):
+        coor = [0,1,declist[patch_id],ralist[patch_id]]
+        pix  = img.topixel(coor)[2:4]
+
+        if (pix[0] >= 0) and (pix[0] <= (sh[0]-1)) and \
+           (pix[1] >= 0) and (pix[1] <= (sh[1]-1)):
+            if pixels[0,0,pix[0],pix[1]] > 0.5:  # only include if withtin the clean mask (==1)
+                plist.append(patches[patch_id])
+
+    sourcess= ''
+    if len(plist) == 1:
+        sourcess = str(plist[0])
+    else:
+        for patch in plist:
+            sourcess = sourcess+patch+','
+        sourcess = sourcess[:-1]
+
+    return sourcess,plist
 
 if __name__=='__main__':
+
+    # does old cal_return_slist behaviour
 
     imagename = sys.argv[1]
     skymodel  = sys.argv[2]
