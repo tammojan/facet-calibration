@@ -1699,7 +1699,7 @@ if __name__ == "__main__":
 
 
         if delete_SC_ms: # delete selfcal MS, default is False
-            os.system('rm -rf ' + '*.' + source + '.ms')
+            os.system('rm -rf ' + '*.' + source + '.ms*')
         
         if (StartAtStep in ['preSC']):
             ndallbands.wait() # wait for NDPPP run for allbands.concat.ms
