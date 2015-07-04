@@ -284,7 +284,7 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
         logging.debug('rm -rf {}'.format(ms))
         os.system('rm -rf ' + ms)
 
-    return imout,mask
+    return imout,imout+'.mask'
 
 
 def runbbs(mslist, skymodel, parset, parmdb, applycal, TEC, clusterdesc, db, dbuser, dbname):
