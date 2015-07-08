@@ -1,4 +1,4 @@
-pipeline.steps=[timmap,dpppprepcal,calibcal,ginst,gvdsfile,parmcoll,h5imp,fitclock,ampl,plots,concatmapcal,phase,calib,timtargetmap,dppppreptar,ateamtarget,ateamcliptar,trans,parmmap,calibtarget,dpppaverage,concatmaptar,createmap2,dpppconcat,flagrfi,gsmcalibtarget,selfcal]
+pipeline.steps=[timmap,dpppprepcal,calibcal,ginst,gvdsfile,parmcoll,h5imp,fitclock,ampl,plots,concatmapcal,phase,calib,timtargetmap,dppppreptar,ateamtarget,ateamcliptar,trans,parmmap,calibtarget,dpppaverage,concatmaptar,createmap2,dpppconcat,flagrfi,gsmcalibtarget]#,selfcal]
 pipeline.pluginpath=plugins
 
 ! script_path = /home/zam/sfroehli/source/facet-calibration/facet-calibration-pipeline/scripts/
@@ -31,15 +31,15 @@ dpppprepcal.argument.flag.type          =   preflagger
 dpppprepcal.argument.flag.baseline      =   [ DE* , FR* , SE* , UK* , CS501HBA1*, CS103HBA0* ]
 dpppprepcal.argument.flagamp.type       =   preflagger
 dpppprepcal.argument.flagamp.amplmin    =   1e-30
-#dpppprepcal.control.opts.max_per_node  =   6
+dpppprepcal.control.opts.max_per_node   =   2
 
 calibcal.control.type                   =   python-calibrate-stand-alone
 calibcal.argument.observation           =   dpppprepcal.output.mapfile
 calibcal.argument.force                 =   True
 calibcal.argument.parset                =   {{ user_parset_path }}calibcal.parset
 calibcal.argument.catalog               =   {{ user_skymodel_path }}3C196-pandey.skymodel
-calibcal.argument.numthreads            =   8
-#calibcal.control.max_per_node          =   20           
+calibcal.argument.numthreads            =   4
+calibcal.control.max_per_node           =   2
 
 # this one is an old recipe of the lofar framework. hence the cmdline syntax
 ginst.control.type                  =   vdsmaker
@@ -51,7 +51,7 @@ gvdsfile.control.type               =   addMapfile
 gvdsfile.control.cmdline.create     =   mapfile_from_folder
 gvdsfile.control.mapfile_dir        =   input.output.mapfile_dir
 gvdsfile.control.filename           =   gvds.mapfile
-gvdsfile.control.folder             =   /private/lofar/release/var/run/pipeline/pre-facet-calibration/vds
+gvdsfile.control.folder             =   pre-facet-calibration.output.job_dir+/vds
 
 parmcoll.control.type               =   executable_args
 parmcoll.control.executable         =   {{ script_path }}parmdb_collector.py
@@ -124,24 +124,24 @@ dppppreptar.argument.flag.type          =   preflagger
 dppppreptar.argument.flag.baseline      =   [ DE* , FR* , SE* , UK* , CS501HBA1*, CS103HBA0* ]
 dppppreptar.argument.flagamp.type       =   preflagger
 dppppreptar.argument.flagamp.amplmin    =   1e-30
-#dppppreptar.control.max_per_node       =   6
+dppppreptar.control.max_per_node        =   2
 
 ateamtarget.control.type                =   python-calibrate-stand-alone
 ateamtarget.argument.observation        =   dppppreptar.output.mapfile
 ateamtarget.argument.force              =   True
 ateamtarget.argument.parset             =   {{ user_parset_path }}ateamclip.parset
 ateamtarget.argument.catalog            =   {{ user_skymodel_path }}Ateam_LBA_CC.skymodel
-ateamtarget.argument.numthreads         =   8
-#ateamtarget.control.opts.max_per_node   =   20
+ateamtarget.argument.numthreads         =   4
+ateamtarget.control.opts.max_per_node   =   2
                                             
 ateamcliptar.control.type               =   executable_args
 ateamcliptar.control.executable         =   {{ script_path }}Ateamclipper.py
 ateamcliptar.argument.flags             =   dppppreptar.output.mapfile
-#ateamcliptar.control.max_per_node      =   20
+ateamcliptar.control.max_per_node       =   2
                                             
 trans.control.type                      =   executable_args
 trans.control.executable                =   {{ script_path }}transfer_amplitudes+clock+offset.py
-trans.argument.flags                    =   [dppppreptar.output.mapfile,instrument_amp_clock_offset,/home/sfroehli/source/facet-calibration/pre-facet-pipeline/parset/products/a2034_withselfcal,/home/sfroehli/timstask/datatarget/Target_SB119_uv.avg_dppp.MS/template,somename]
+trans.argument.flags                    =   [dppppreptar.output.mapfile,instrument_amp_clock_offset,pre-facet-calibration.output.job_dir,/home/sfroehli/timstask/datatarget/Target_SB119_uv.avg_dppp.MS/template,somename]
 
 parmmap.control.kind                    =   plugin
 parmmap.control.type                    =   changeMapfile
@@ -153,11 +153,11 @@ calibtarget.control.type                =   python-calibrate-stand-alone
 calibtarget.argument.observation        =   dppppreptar.output.mapfile
 calibtarget.argument.parmdb             =   parmmap.output.mapfile
 calibtarget.argument.parset             =   {{ user_parset_path }}applyparmdb.parset
-calibtarget.argument.numthreads         =   8
-#calibtarget.control.max_per_node        =    20
+calibtarget.argument.numthreads         =   4
+calibtarget.control.max_per_node        =   2
 
 dpppaverage.control.type                =   dppp
-dpppaverage.control.max_per_node        =   6
+dpppaverage.control.max_per_node        =   2
 dpppaverage.argument.msin               =   dppppreptar.output.mapfile
 dpppaverage.argument.msin.datacolumn    =   CORRECTED_DATA
 dpppaverage.argument.msout.datacolumn   =   DATA
@@ -189,19 +189,19 @@ dpppconcat.argument.msin.missingdata    =   True
 dpppconcat.argument.msin.orderms        =   False
 dpppconcat.argument.msout.datacolumn    =   DATA
 dpppconcat.argument.steps               =   []
-#dpppconcat.control.max_per_node         =  6
+dpppconcat.control.max_per_node         =   2
 
-flagrfi.control.type                    =   executable_args
-flagrfi.control.executable              =   /net/para35/data2/oonk/software/lofar/bin/rficonsole
-flagrfi.control.arguments               =   [dpppconcat.output.mapfile]
-#flagrfi.control.max_per_node            =  20
+flagrfi.control.type                    =   rficonsole
+flagrfi.argument.flags                  =   [dpppconcat.output.mapfile,]
+flagrfi.control.max_per_node            =   2
 
 gsmcalibtarget.control.type             =   python-calibrate-stand-alone
 gsmcalibtarget.argument.observation     =   dpppconcat.output.mapfile
 gsmcalibtarget.argument.force           =   True
 gsmcalibtarget.argument.parset          =   {{ user_parset_path }}gsmcal.parset
 gsmcalibtarget.argument.catalog         =   {{ user_skymodel_path }}gsmmodel
-#gsmcalibtarget.control.max_per_node    =  2
+gsmcalibtarget.argument.numthreads      =   4
+gsmcalibtarget.control.max_per_node     =   2
 
 selfcal.control.type                    =   executable_args
 selfcal.control.executable              =   /home/shimwell/Desktop/work/LOFAR/lofarcodes/lofar-selfcal-image-smootherphase-flag-noiseclean-arrayfactor-argparse.py
