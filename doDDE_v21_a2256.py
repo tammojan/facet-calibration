@@ -13,6 +13,7 @@ import pwd
 import logging
 import logging.config
 import glob
+import pyfits
 from facet_utilities import run, bg, angsep, getcpu, getmem
 from backup_direction import backup_previous_direction_p
 from numpy import pi
@@ -899,14 +900,40 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
     return imout, mask_sources+'field', imsize
 
 
+def blank_facet(imagename,maskname):
+
+    imhdu=pyfits.open(imagename)
+    maskim=pyrap.images.image(maskname)
+
+    imdata=imhdu[0].data[0,0]
+    maskdata=maskim.getdata()[0,0]
+
+    assert(imdata.shape==maskdata.shape)
+
+    nanmask=numpy.ones_like(imdata)*numpy.nan
+    imdata=numpy.where(maskdata>0,imdata,nanmask)
+    imhdu[0].data[0,0]=imdata
+    outname=imagename.replace('.fits','.blanked.fits')
+    imhdu.writeto(outname,clobber=True)
+    return outname
+
 def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl,
                        nterms, atrous_do, imsize, inputmask, mscale,
                        region, cellsize, uvrange, wsclean, WSCleanRobust,
-                       BlankField, WScleanWBgroup, numchanperms):
+                       BlankField, WScleanWBgroup, numchanperms,path=None):
     """
     Make image using WSClean for a list of MSs.
     FIXME
     """
+
+    # import if not already defined
+    try:
+        do_makecleanmask_field_wsclean
+    except NameError:
+        from makecleanmask_field_wsclean import do_makecleanmask_field_wsclean
+
+    if path is not None:
+        SCRIPTPATH=path
     if imsize is None:
         imsize = image_size_from_mask(inputmask)
 
@@ -987,9 +1014,9 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl,
 
     if BlankField:
         if wideband:
-            mask_image=blank.blank_facet(imout+'-MFS-image.fits',inputmask)
+            mask_image=blank_facet(imout+'-MFS-image.fits',inputmask)
         else:
-            mask_image=blank.blank_facet(imout+'-image.fits',inputmask)
+            mask_image=blank_facet(imout+'-image.fits',inputmask)
     else:
         if wideband:
             mask_image=imout+'-MFS-image.fits'
@@ -1082,7 +1109,6 @@ def insertbeaminfo_mfs(image, templateim):
       * image - Image in which the beam info will be entered
       * templateim - Image with the beam info to use
     """
-    import pyfits
     hduimtemplate    = pyfits.open(templateim)  # open a FITS file
     hduim            = pyfits.open(image, mode='update')  # open a FITS file
     headertemplate = hduimtemplate[0].header
@@ -1302,7 +1328,6 @@ if __name__ == "__main__":
     if SCRIPTPATH not in sys.path:
         sys.path.append(SCRIPTPATH)
     from coordinates_mode import *
-    import blank
     from verify_subtract_v5 import do_verify_subtract
     from padfits import padfits
     from makecleanmask_field_wsclean import do_makecleanmask_field_wsclean
@@ -1706,7 +1731,7 @@ if __name__ == "__main__":
 
         parmdb_master_out="instrument_master_" + source
         if (outliersource[source_id] == 'False') or doOUTLIER_withGaussfix:
-            if (StartAtStep in ['preSC', 'doSC', 'postSC','preFACET']):
+            if StartAtStep in ['preSC', 'doSC', 'postSC','preFACET']:
                 if doOUTLIER_withGaussfix: # for doOUTLIER_withGaussfix
 
                     logging.info('Do not add field back for outlier source, just set MODEL_DATA=ADDED_DATA_SOURCE')
@@ -1755,11 +1780,7 @@ if __name__ == "__main__":
                 for ms_id, ms in enumerate(mslistorig): # remake msavglist from mslistorig(!) to capture a missing block
                     msavglist.append(ms.split('.')[0] + '.' + source + '.ms.avgfield')
 
-                imout,mask_out, imsizef = make_image_wsclean(msavglist, source, 'field0', 5, 3, nterms, 'True',
-                                                         None, output_template_im +'.masktmp',
-                                                         mscale_field[source_id],regionfield[source_id],
-                                                         cellsize, uvrange,wsclean,WSCleanRobust,BlankField,
-                                                         WScleanWBgroup, numchanperms)
+                imout,mask_out, imsizef = make_image_wsclean(msavglist,source, 'field0', 5, 3, nterms, 'True', None, output_template_im+'.masktmp',mscale_field[source_id],regionfield[source_id],cellsize,uvrange,wsclean,WSCleanRobust,BlankField,WScleanWBgroup, numchanperms, path=SCRIPTPATH)
                 logging.info('Imaged full DDE facet: ' + source)
                 if len(mslist) > WScleanWBgroup:
                     logging.info('WSCLEAN Wideband CLEAN algorithm was used')
