@@ -297,6 +297,11 @@ class GenericPipeline(control):
                     step_control_dict[name] = step_control_dict[j]
                     step_name_list.insert(0, name)
 
+                # remove replacements strings to prevent loading the same key twice
+                for k in copy.deepcopy(self.parset.keys):
+                    if str(k).startswith('!'):
+                        self.parset.remove(k)
+
             # loop
             if kind_of_step == 'loop':
                 # remember what loop is running to stop it from a conditional step
