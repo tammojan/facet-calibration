@@ -3,7 +3,6 @@ import matplotlib
 import numpy
 import os
 import sys
-import lofar.parmdb
 from scipy import interpolate
 import time
 #import subprocess
@@ -16,7 +15,7 @@ import blank
 from coordinates_mode import *
 from facet_utilities import run, bg, angsep, dec_to_str, ra_to_str
 from numpy import pi
-
+import lofar.parmdb
 
 
 

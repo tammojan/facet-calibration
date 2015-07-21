@@ -5,7 +5,6 @@ import matplotlib
 import numpy
 import os
 import sys
-import lofar.parmdb
 from scipy import interpolate
 import time
 #import subprocess
@@ -15,6 +14,8 @@ import pyrap.images
 import pwd
 import logging
 from numpy import pi
+import lofar.parmdb
+
 
 def image_size_from_mask(mask):
     im = pyrap.images.image(mask)
