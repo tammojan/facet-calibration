@@ -344,7 +344,9 @@ def runbbs(mslist, skymodel, parset, parmdb, applycal, TEC, clusterdesc, db, dbu
             done = 0
             while (ntries < 10)  and (done < 1):
                 logging.debug('calibrate try {}'.format(ntries))
-                run(bbscmd)
+                
+                # let run 'proceed on failure' as the test for failure is done here to allow retries
+                run(bbscmd, proceed=True)  
 
                 #done = 0
                 #while(done < 1):
