@@ -304,7 +304,7 @@ def do_selfcal(mslist, cluster, atrous_do, imsize, nterms, cellsizetime_a, cells
     
     #### MAKE IMAGE 0 ###
     logging.info('Make image 0')
-    imout,mask = make_image(mslist, cluster, '0', 10, 6, nterms, atrous_do, imsize, region, SCRIPTPATH)
+    imout,mask = make_image(mslist, cluster, '0', 10, 6, nterms, atrous_do, imsize, region, ncores, SCRIPTPATH)
 
     #####################
 
@@ -326,7 +326,7 @@ def do_selfcal(mslist, cluster, atrous_do, imsize, nterms, cellsizetime_a, cells
 
     ### MAKE IMAGE 1 ###
     logging.info('Make image 1')
-    imout,mask = make_image(mslist, cluster, '1', 15, 15, nterms, atrous_do, imsize, region, SCRIPTPATH)
+    imout,mask = make_image(mslist, cluster, '1', 15, 15, nterms, atrous_do, imsize, region, ncores, SCRIPTPATH)
     ####################
 
 
@@ -348,7 +348,7 @@ def do_selfcal(mslist, cluster, atrous_do, imsize, nterms, cellsizetime_a, cells
 
     ### MAKE IMAGE 2 ###
     logging.info('Make image 2')
-    imout,mask = make_image(mslist, cluster, '2', 15, 15, nterms, atrous_do, imsize, region, SCRIPTPATH)
+    imout,mask = make_image(mslist, cluster, '2', 15, 15, nterms, atrous_do, imsize, region, ncores, SCRIPTPATH)
     ####################
     
     ### CALIBRATE WITH BBS PHASE+AMP 1 ###
@@ -382,7 +382,7 @@ def do_selfcal(mslist, cluster, atrous_do, imsize, nterms, cellsizetime_a, cells
 
     ### MAKE IMAGE 3 ###
     logging.info('Make image 3')
-    imout,mask = make_image(mslist, cluster, '3', 10, 10, nterms, atrous_do, imsize, region, SCRIPTPATH)
+    imout,mask = make_image(mslist, cluster, '3', 10, 10, nterms, atrous_do, imsize, region, ncores, SCRIPTPATH)
 
     
     ####################
@@ -445,7 +445,7 @@ def do_selfcal(mslist, cluster, atrous_do, imsize, nterms, cellsizetime_a, cells
         else:
             region_im = region
         
-        imout,mask = make_image(mslist, cluster, str(im_count), 10, 10, nterms, atrous_do, imsize, region_im, SCRIPTPATH)
+        imout,mask = make_image(mslist, cluster, str(im_count), 10, 10, nterms, atrous_do, imsize, region_im, ncores, SCRIPTPATH)
 
         
         ## Prepare the next iteration
