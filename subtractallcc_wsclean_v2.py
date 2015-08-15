@@ -59,6 +59,11 @@ if __name__=='__main__':
 
     print 'working on MS list',mslist
     try:
+        tempdir
+    except NameError:
+        tempdir=None
+
+    try:
         cleanup
     except NameError:
         cleanup=False
@@ -122,12 +127,14 @@ if __name__=='__main__':
         else:
     # ---------------------
     # image without mask
-            cmd1 = wsclean + ' -reorder -name ' + imhigh + ' -size ' + str(imsizeh) + ' ' + str(imsizeh) + ' '
-            cmd2 = '-scale ' + cellh + ' -weight briggs 0.0 -niter ' + str(niterh) + ' '
-            cmd3 = '-maxuv-l 7e3 -mgain 0.65 -fitbeam -datacolumn CORRECTED_DATA -no-update-model-required ' + ms
+            cmd = wsclean + ' -reorder -name ' + imhigh + ' -size ' + str(imsizeh) + ' ' + str(imsizeh) + ' '
+            if tempdir is not None:
+                cmd+='-tempdir '+tempdir+' '
+            cmd+= '-scale ' + cellh + ' -weight briggs 0.0 -niter ' + str(niterh) + ' '
+            cmd+= '-maxuv-l 7e3 -mgain 0.65 -fitbeam -datacolumn CORRECTED_DATA -no-update-model-required ' + ms
 
             wsclean_wait()
-            run(cmd1+cmd2+cmd3)
+            run(cmd)
 
 
     # create the mask
@@ -165,12 +172,14 @@ if __name__=='__main__':
         if os.path.isfile(imhigh+'-image.fits'):
             logging.warning('Masked high-resolution image exists, NOT remaking it')
         else:
-            cmd1 = wsclean + ' -reorder -name ' + imhigh + ' -size ' + str(imsizeh) + ' ' + str(imsizeh) + ' '
-            cmd2 = '-scale ' + cellh + ' -weight briggs 0.0 -niter ' + str(niterh) + ' '
-            cmd3 = '-maxuv-l 7e3 -no-update-model-required -mgain 0.65 -fitbeam -datacolumn CORRECTED_DATA -casamask ' + casa_mask  + ' ' + ms
+            cmd = wsclean + ' -reorder -name ' + imhigh + ' -size ' + str(imsizeh) + ' ' + str(imsizeh) + ' '
+            if tempdir is not None:
+                cmd+='-tempdir '+tempdir+' '
+            cmd+= '-scale ' + cellh + ' -weight briggs 0.0 -niter ' + str(niterh) + ' '
+            cmd+= '-maxuv-l 7e3 -no-update-model-required -mgain 0.65 -fitbeam -datacolumn CORRECTED_DATA -casamask ' + casa_mask  + ' ' + ms
 
             wsclean_wait()
-            run(cmd1+cmd2+cmd3)
+            run(cmd)
 
         fits_model = imhigh + '-model.fits'
         casa_model = imhigh + '.model'
@@ -202,7 +211,7 @@ if __name__=='__main__':
         # subtract the cc
             parset = SCRIPTPATH+'/subtractall_highres_wsclean.parset'
             cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name instrument_ap_smoothed '
-            cmd = cmd + ms + ' ' + parset + ' ' + skymodel + ' >' + hr_bbslog
+            cmd+= ms + ' ' + parset + ' ' + skymodel + ' >' + hr_bbslog
 
             run(cmd)
 
@@ -224,12 +233,14 @@ if __name__=='__main__':
         else:
 
         # make the lowres image (no mask)
-            cmd1 = wsclean + ' -reorder -name ' + imlow + ' -size ' + str(imsizel) + ' ' + str(imsizel) + ' '
-            cmd2 = '-scale ' + celll + ' -weight briggs 0.0 -niter ' + str(niterl) + ' '
-            cmd3 = '-maxuv-l 2e3 -no-update-model-required -mgain 0.65 -fitbeam -datacolumn DATA ' + msout
+            cmd = wsclean + ' -reorder -name ' + imlow + ' -size ' + str(imsizel) + ' ' + str(imsizel) + ' '
+            if tempdir is not None:
+                cmd+='-tempdir '+tempdir+' '
+            cmd+= '-scale ' + celll + ' -weight briggs 0.0 -niter ' + str(niterl) + ' '
+            cmd+= '-maxuv-l 2e3 -no-update-model-required -mgain 0.65 -fitbeam -datacolumn DATA ' + msout
 
         #########
-            run(cmd1+cmd2+cmd3)
+            run(cmd)
 
         # ---------------------
         # create the lowres mask
@@ -263,14 +274,16 @@ if __name__=='__main__':
         if os.path.isfile(imlow+'-image.fits'):
             logging.warning('Low-res masked image exists, NOT re-making it')
         else:
-            cmd1 = wsclean + ' -reorder -name ' + imlow + ' -size ' + str(imsizel) + ' ' + str(imsizel) + ' '
-            cmd2 = '-scale ' + celll + ' -weight briggs 0.0 -niter ' + str(niterl) + ' '
-            cmd3 = '-maxuv-l 2e3 -no-update-model-required -mgain 0.65 -fitbeam -datacolumn DATA -casamask ' + casa_mask  + ' ' + msout
+            cmd = wsclean + ' -reorder -name ' + imlow + ' -size ' + str(imsizel) + ' ' + str(imsizel) + ' '
+            if tempdir is not None:
+                cmd+='-tempdir '+tempdir+' '
+            cmd+= '-scale ' + celll + ' -weight briggs 0.0 -niter ' + str(niterl) + ' '
+            cmd+= '-maxuv-l 2e3 -no-update-model-required -mgain 0.65 -fitbeam -datacolumn DATA -casamask ' + casa_mask  + ' ' + msout
 
         ######### check that no wsclean is running
             wsclean_wait()
         #########
-            run(cmd1+cmd2+cmd3)
+            run(cmd)
 
 
 
