@@ -920,7 +920,7 @@ def blank_facet(imagename,maskname):
 def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl,
                        nterms, atrous_do, imsize, inputmask, mscale,
                        region, cellsize, uvrange, wsclean, WSCleanRobust,
-                       BlankField, WScleanWBgroup, numchanperms,path=None):
+                       BlankField, WScleanWBgroup, numchanperms,path=None,tempdir=None):
     """
     Make image using WSClean for a list of MSs.
     FIXME
@@ -995,6 +995,8 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl,
     mem=getmem()
     if mem is not None:
         cmd+=' -absmem '+str(int(mem/1024**3))
+    if tempdir is not None:
+        cmd+=' -tempdir '+tempdir
     cmd+= ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' -casamask ' +  inputmask + ' '
     cmd+= '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' -cleanborder 0 -threshold '+ cleandepth1 + ' '
     cmd+= '-minuv-l '+ str(uvrange) +' -mgain 0.6 -fitbeam -datacolumn DATA -no-update-model-required ' 
@@ -1074,6 +1076,8 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl,
     mem=getmem()
     if mem is not None:
         cmd+=' -absmem '+str(int(mem/1024**3))
+    if tempdir is not None:
+        cmd+=' -tempdir '+tempdir
     cmd+=' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
     cmd+='-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' -cleanborder 0 -threshold '+ cleandepth2 + ' '
     cmd+= '-minuv-l '+ str(uvrange) +' -mgain 0.6 -fitbeam -datacolumn DATA -no-update-model-required -casamask ' + mask_sources+' '
@@ -1304,6 +1308,10 @@ if __name__ == "__main__":
     except NameError:
         verify_fail_action=default_verify_fail_action
 
+    try:
+        tempdir
+    except NameError:
+        tempdir=None
         
     if StefCal:
         TEC = "False" # cannot fit for TEC in StefCal
@@ -1780,7 +1788,7 @@ if __name__ == "__main__":
                 for ms_id, ms in enumerate(mslistorig): # remake msavglist from mslistorig(!) to capture a missing block
                     msavglist.append(ms.split('.')[0] + '.' + source + '.ms.avgfield')
 
-                imout,mask_out, imsizef = make_image_wsclean(msavglist,source, 'field0', 5, 3, nterms, 'True', None, output_template_im+'.masktmp',mscale_field[source_id],regionfield[source_id],cellsize,uvrange,wsclean,WSCleanRobust,BlankField,WScleanWBgroup, numchanperms, path=SCRIPTPATH)
+                imout,mask_out, imsizef = make_image_wsclean(msavglist,source, 'field0', 5, 3, nterms, 'True', None, output_template_im+'.masktmp',mscale_field[source_id],regionfield[source_id],cellsize,uvrange,wsclean,WSCleanRobust,BlankField,WScleanWBgroup, numchanperms, path=SCRIPTPATH,tempdir=tempdir)
                 logging.info('Imaged full DDE facet: ' + source)
                 if len(mslist) > WScleanWBgroup:
                     logging.info('WSCLEAN Wideband CLEAN algorithm was used')
