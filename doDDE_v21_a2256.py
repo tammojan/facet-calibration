@@ -1317,20 +1317,28 @@ if __name__ == "__main__":
         TEC = "False" # cannot fit for TEC in StefCal
         print 'Overwriting TEC user input, TEC will be False when using StefCal'
 
-    # fixme: add appropriate check for stefcal...
+    # create_parset is set up here to avoid duplicating the logic, but
+    # only used if the dummyparmdb doesn't exist
+    
     dummyparmdb=None
     if TEC=='True':
         if clock=='True':
             dummyparmdb = 'instrument_template_TECclock'
+            create_parset = 'scalarphase+ap+TEC+clock.parset'
         else:
             dummyparmdb = 'instrument_template_Gain_TEC_CSphase'
+            create_parset = 'scalarphase+ap+TEC.parset'
     if StefCal:
-        dummyparmdb = 'instrument_template_Gain_CSphase'  
+        dummyparmdb = 'instrument_template_Gain_CSphase'
+        create_parset = 'scalarphase+ap.parset'
     if dummyparmdb is not None:
         if not(os.path.isdir(dummyparmdb)):
-            raise Exception('parmdb template %s does not exist' % dummyparmdb)
-
-
+            logging.warn('parmdb template %s does not exist, trying to create it' % dummyparmdb)
+            # try to create it!
+            ms = ["{name:s}_SB{b1:03d}-{b2:03d}.{res:s}.ms".format(name=NAME,res=RES,b1=b,b2=b+9) for b in BANDS][0]
+            run('calibrate-stand-alone '+ms+' '+SCRIPTPATH+'/'+create_parset)
+            run('mv '+ms+'/instrument '+dummyparmdb)
+            logging.info('parmdb template %s created' % dummyparmdb)
     print 'importing local modules....'
 
     if SCRIPTPATH not in sys.path:
