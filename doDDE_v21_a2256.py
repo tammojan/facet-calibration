@@ -1132,7 +1132,7 @@ def insertbeaminfo_mfs(image, templateim):
 
 
 def do_fieldFFT(ms, image, imsize, cellsize, wsclean, mslist,
-                WSCleanRobust, WScleanWBgroup, numchanperms):
+                WSCleanRobust, WScleanWBgroup, numchanperms, tempdir=None):
     """
     Use WSClean to FT the model from a previous wsclean run so that it
     can be subtracted from the data.
@@ -1153,6 +1153,8 @@ def do_fieldFFT(ms, image, imsize, cellsize, wsclean, mslist,
     mem=getmem()
     if mem is not None:
         cmd+=' -absmem '+str(int(mem/1024**3))
+    if tempdir is not None:
+        cmd+=' -tempdir '+tempdir
     cmd+=' -predict -name ' + image + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
     cmd+= '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' '
     cmd+= '-cleanborder 0 -mgain 0.85 -fitbeam -datacolumn DATA '
@@ -1843,7 +1845,6 @@ if __name__ == "__main__":
                     if Padding:
                         # PAD MODEL IMAGES -- only useful if facets do
                         # not have wide borders, deprecated
-                # PAD MODEL IMAGES
                         imout_p=imout+'-padded'  
                         if len(mslist) > WScleanWBgroup: # WIDEBAND case
                             for modim in (glob.glob(imout + '-0*-model.fits')+glob.glob(imout + '-MFS-model.fits')):
@@ -1853,10 +1854,18 @@ if __name__ == "__main__":
                         logging.info('Padded model images to prevent aliasing')
 
                         # DO THE FFT
-                        do_fieldFFT(allbandspath + 'allbands.concat.shifted_'+source+'.ms',imout_p, imsize_p, cellsize, wsclean, msavglist, WSCleanRobust, WScleanWBgroup, numchanperms)
+                        do_fieldFFT(allbandspath +
+                                    'allbands.concat.shifted_'+source+'.ms',imout_p,
+                                    imsize_p, cellsize, wsclean, msavglist,
+                                    WSCleanRobust, WScleanWBgroup, numchanperms,
+                                    tempdir=tempdir)
                     else: # No padding
-                        do_fieldFFT(allbandspath + 'allbands.concat.shifted_'+source+'.ms',imout, imsizef, cellsize, wsclean,
-                             msavglist, WSCleanRobust, WScleanWBgroup, numchanperms)
+                        do_fieldFFT(allbandspath +
+                                    'allbands.concat.shifted_'+source+'.ms',imout,
+                                    imsizef, cellsize, wsclean,
+                                    msavglist, WSCleanRobust,
+                                    WScleanWBgroup, numchanperms,
+                                    tempdir=tempdir)
                     logging.info('FFTed model of DDE facet: ' + source)
 
                 # SHIFT PHASE CENTER BACK TO ORIGINAL
