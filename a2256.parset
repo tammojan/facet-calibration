@@ -37,6 +37,8 @@ uvrange       = 5.0 # wavelength
 WSCleanRobust = -0.25 # Briggs robust factor for facet imaging
 BlankField    = True # experimental, False is the default
 StefCal       = False # experimental, not working at the moment
+Padding       = False # True to reduce aliasing in FFT subtract
+
 
 # for wideband clean set WScleanWBgroup below (must be smaller then len(mslist))
 # for the -best- results use WScleanWBgroup=1, note this slows down the imaging considerably
