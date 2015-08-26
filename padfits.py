@@ -16,7 +16,7 @@ def padfits(infile,outfile,scalefactor=1.2,verbose=False):
     if verbose:
         print 'size is',xsize
 
-    padsize=int(xsize*1.2)
+    padsize=int(xsize*scalefactor)
     offset=(padsize-xsize)/2
     if verbose:
         print 'padding to',padsize
