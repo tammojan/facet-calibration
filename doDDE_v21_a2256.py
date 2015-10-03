@@ -1000,6 +1000,8 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl,
     cmd+= ' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' -casamask ' +  inputmask + ' '
     cmd+= '-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' -cleanborder 0 -threshold '+ cleandepth1 + ' '
     cmd+= '-minuv-l '+ str(uvrange) +' -mgain 0.6 -fitbeam -datacolumn DATA -no-update-model-required ' 
+    if mscale:
+        cmd+='-multiscale '
 
     if wideband:
         channelsout = numpy.int(numpy.ceil(numpy.float(len(mslist))/numpy.float(WScleanWBgroup)))
@@ -1081,6 +1083,8 @@ def make_image_wsclean(mslist, cluster, callnumber, threshpix, threshisl,
     cmd+=' -reorder -name ' + imout + ' -size ' + str(imsize) + ' ' + str(imsize) + ' '
     cmd+='-scale ' + cellsizeim + ' -weight briggs '+str(WSCleanRobust)+' -niter ' + str(niter) + ' -cleanborder 0 -threshold '+ cleandepth2 + ' '
     cmd+= '-minuv-l '+ str(uvrange) +' -mgain 0.6 -fitbeam -datacolumn DATA -no-update-model-required -casamask ' + mask_sources+' '
+    if mscale:
+        cmd+='-multiscale '
         
     if wideband:
         cmd+='-joinchannels -channelsout ' + str(channelsout) + ' '
