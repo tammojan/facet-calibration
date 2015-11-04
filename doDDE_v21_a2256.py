@@ -380,7 +380,7 @@ def create_phaseshift_parset(msin, msout, source, direction, imsize, dynamicrang
         if dynamicrange != 'HD':
             logging.error('dynamicrange {}'.format(dynamicrange))
             raise Exception('Wrong dynamicrange code, use "LD" or "HD"')
-        logging.warning('High dynamic range DDE cycle, eveything with be slow...')
+        logging.warning('High dynamic range DDE cycle, eveything will be slow...')
         f.write('avg1.freqstep = %s\n' % str(numchanperms/10)) # one channel per SB
 
     f.write('avg1.timestep = 1\n')
@@ -1320,6 +1320,20 @@ if __name__ == "__main__":
         verify_fail_action=default_verify_fail_action
 
     try:
+        rmscheck_fail_action
+    except NameError:
+        rmscheck_fail_action=default_verify_fail_action
+
+    try:
+        do_rmscheck
+    except NameError:
+        do_rmscheck=False
+
+    if do_rmscheck:
+        rms=1 # default large value
+        from rmscheck import getrms
+
+    try:
         tempdir
     except NameError:
         tempdir=None
@@ -1812,6 +1826,15 @@ if __name__ == "__main__":
                 logging.info('Imaged full DDE facet: ' + source)
                 if len(mslist) > WScleanWBgroup:
                     logging.info('WSCLEAN Wideband CLEAN algorithm was used')
+
+                if do_rmscheck:
+                    newrms=getrms(imout+'-image.fits')
+                    logging.info('New image blank-sky rms is '+str(newrms)+' Jy/beam')
+                    if newrms>rms*2.0:
+                        logging.error('New image is worse than previous image!')
+                        rmscheck_fail_action()
+                    else:
+                        rms=newrms
 
             ## STEP 4b -- post facet ##
 
