@@ -35,9 +35,9 @@ makemasks     = False  # not used anymore, keep to False
 do_ap         = True  # normally this should be True, correct with instrument_ap_smoothed
 uvrange       = 5.0 # wavelength
 WSCleanRobust = -0.25 # Briggs robust factor for facet imaging
-BlankField    = True # experimental, False is the default
+BlankField    = True  #  This blanks the field outside the facet boundary for the source detection, True should speed things up
 StefCal       = False # experimental, not working at the moment
-Padding       = False # True to reduce aliasing in FFT subtract
+Padding       = True #  To reduce aliasing in FFT subtract.
 
 
 # for wideband clean set WScleanWBgroup below (must be smaller then len(mslist))
