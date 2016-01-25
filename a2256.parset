@@ -37,7 +37,7 @@ uvrange       = 5.0 # wavelength
 WSCleanRobust = -0.25 # Briggs robust factor for facet imaging
 BlankField    = True  #  This blanks the field outside the facet boundary for the source detection, True should speed things up
 StefCal       = False # experimental, not working at the moment
-Padding       = True #  To reduce aliasing in FFT subtract.
+Padding       = False # To reduce aliasing in FFT subtract.
 
 
 # for wideband clean set WScleanWBgroup below (must be smaller then len(mslist))
