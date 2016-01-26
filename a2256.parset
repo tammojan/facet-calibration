@@ -13,6 +13,11 @@ os.system('cp /home/'+username+'/scripts/a2256_hba/*.rgn .')
 peelsourceinfo  =  '/home/'+username+'/scripts/a2256_hba/peel_source_info_a2256.txt'
 wsclean         =  '/home/rvweeren/software/WSClean/wsclean-1.7/build/wsclean'
 
+clusterdesc='bla'
+dbserver='bla'
+dbname='bla'
+dbuser='bla'
+
 
 BANDS = range(160,239,10)
 
