@@ -1408,12 +1408,7 @@ if __name__ == "__main__":
         logger.addHandler(fh)
         logging.info('\n')
 
-#    os.system('cp ' + SCRIPTPATH + '/coordinates_mode.py .')
-#    os.system('cp ' + SCRIPTPATH + '/blank.py .')
-    os.system('cp ' + SCRIPTPATH + '/ftw.xml .')
-    os.system('cp ' + SCRIPTPATH + '/task_ftw.py .')
 
-    os.system(buildmytasks) # make casapy tasks
 
 
     # freqavg_fullfacet = 5 # hardcoded for now

@@ -13,6 +13,15 @@ os.system('cp /home/'+username+'/scripts/a2256_hba/*.rgn .')
 peelsourceinfo  =  '/home/'+username+'/scripts/a2256_hba/peel_source_info_a2256.txt'
 wsclean         =  '/home/rvweeren/software/WSClean/wsclean-1.7/build/wsclean'
 
+import os
+os.system('cp ' + SCRIPTPATH + '/ftw.xml .')
+os.system('cp ' + SCRIPTPATH + '/task_ftw.py .')
+
+
+os.system(buildmytasks) # make casapy tasks
+# this might need fixing for some
+
+
 clusterdesc='bla'
 dbserver='bla'
 dbname='bla'
