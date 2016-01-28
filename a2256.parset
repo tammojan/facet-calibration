@@ -21,6 +21,8 @@ os.system('cp ' + SCRIPTPATH + '/task_ftw.py .')
 os.system(buildmytasks) # make casapy tasks
 # this might need fixing for some
 
+#config.update({"selfcal":"selfcalv19_ww_jsm"})
+
 
 clusterdesc='bla'
 dbserver='bla'
