@@ -21,6 +21,7 @@ os.system('cp ' + SCRIPTPATH + '/task_ftw.py .')
 os.system(buildmytasks) # make casapy tasks
 # this might need fixing for some
 
+#example to use another selfcal script, not the default
 #config.update({"selfcal":"selfcalv19_ww_jsm"})
 
 
