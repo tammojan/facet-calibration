@@ -226,7 +226,10 @@ def dec_to_degrees(dec_str, delim=' '):
             t = dec_str.split()
         else:
             t = dec_str.split(delim)
-        dec_deg = (float(t[0]) + float(t[1])/60. + float(t[2])/3600.)
+        if '-' in dec_str:
+        	dec_deg = (float(t[0]) - float(t[1])/60. - float(t[2])/3600.)
+	else:
+	        dec_deg = (float(t[0]) + float(t[1])/60. + float(t[2])/3600.)
         return dec_deg
     else:
         dec_deg = numpy.zeros(len(dec_str))
@@ -237,7 +240,10 @@ def dec_to_degrees(dec_str, delim=' '):
                 t = dec_s.split()
             else:
                 t = dec_s.split(delim)
-            dec_deg[i] = (float(t[0]) + float(t[1])/60. + float(t[2])/3600.)
+        if '-' in dec_str:
+        	dec_deg = (float(t[0]) - float(t[1])/60. - float(t[2])/3600.)
+	else:
+	        dec_deg = (float(t[0]) + float(t[1])/60. + float(t[2])/3600.)
         return dec_deg
 
 
@@ -252,7 +258,11 @@ def dir2pos(direction):
         decd = int(sdec.split('d')[0])
         decm = int(sdec.split('d')[1].split('m')[0])
         decs = float(sdec.split('d')[1].split('m')[1])
-        dec = decd+decm/60.+decs/3600.
+ 	if '-' in sdec:
+        	dec = decd-decm/60.-decs/3600.
+        else:
+	        dec = decd+decm/60.+decs/3600.
+	
         return ra,dec
 
     if isinstance(direction, numpy.ndarray) or  isinstance(direction, list):
@@ -1093,7 +1103,7 @@ if __name__=='__main__':
     regionfield = source_info_rec["regionfield"]
     peelskymodel = source_info_rec["peelskymodel"]
     outliersource = source_info_rec["outliersource"]
-
+    print sourcelist,directions
 
 
     sresolution = '{r:.1f}arcsec'.format(r=resolution)
@@ -1139,7 +1149,6 @@ if __name__=='__main__':
     #tesselate#
     print "doing tesselation"
     ra,dec = dir2pos(directions)
-
 
     x,y = image_world_to_image(dummy_image,ra,dec)
 
@@ -1288,6 +1297,7 @@ if __name__=='__main__':
         os.system('cp -r {im1} {im2}'.format(im1=dummy_image,im2=facet_image_name))
         for source_id,source in enumerate(sourcelist):
             value = int(source.replace('s',''))
+	    print value, directions[source_id]
             add_facet_mask(facet_image_name, poly[source_id], value, directions[source_id], newsizes[source_id], lowres=lowresolution, actualres=resolution)
         show_facets(facet_image_name, directions, directions2=directions, r=rad)
 
