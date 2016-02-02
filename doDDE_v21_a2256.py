@@ -1366,7 +1366,7 @@ if __name__ == "__main__":
             logging.warn('parmdb template %s does not exist, trying to create it' % dummyparmdb)
             # try to create it!
             ms = ["{name:s}_SB{b1:03d}-{b2:03d}.{res:s}.ms".format(name=NAME,res=RES,b1=b,b2=b+9) for b in BANDS][0]
-            run('calibrate-stand-alone '+ms+' '+SCRIPTPATH+'/'+create_parset)
+            run('calibrate-stand-alone -f '+ms+' '+SCRIPTPATH+'/'+create_parset+' '+SCRIPTPATH+'/'+'dummy.skymodel')
             run('mv '+ms+'/instrument '+dummyparmdb)
             logging.info('parmdb template %s created' % dummyparmdb)
     print 'importing local modules....'
@@ -1413,12 +1413,7 @@ if __name__ == "__main__":
         logger.addHandler(fh)
         logging.info('\n')
 
-#    os.system('cp ' + SCRIPTPATH + '/coordinates_mode.py .')
-#    os.system('cp ' + SCRIPTPATH + '/blank.py .')
-    os.system('cp ' + SCRIPTPATH + '/ftw.xml .')
-    os.system('cp ' + SCRIPTPATH + '/task_ftw.py .')
 
-    os.system(buildmytasks) # make casapy tasks
 
 
     # freqavg_fullfacet = 5 # hardcoded for now

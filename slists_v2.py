@@ -191,7 +191,11 @@ def cal_return_slist(imagename,skymodel, direction, imsize):
     dectmp = (dec.split('d')[1])
     dec2   = float(dectmp.split('m')[0])/60
     dec3   = float(dectmp.split('m')[1])/3600.
-    ref_dec= dec1 + dec2 +dec3
+
+    if '-' in dec.split('d')[0]:
+      ref_dec= dec1 - dec2 -dec3
+    else:
+      ref_dec= dec1 + dec2 +dec3
 
     fluxweight = False
 

@@ -13,6 +13,23 @@ os.system('cp /home/'+username+'/scripts/a2256_hba/*.rgn .')
 peelsourceinfo  =  '/home/'+username+'/scripts/a2256_hba/peel_source_info_a2256.txt'
 wsclean         =  '/home/rvweeren/software/WSClean/wsclean-1.7/build/wsclean'
 
+import os
+os.system('cp ' + SCRIPTPATH + '/ftw.xml .')
+os.system('cp ' + SCRIPTPATH + '/task_ftw.py .')
+
+
+os.system(buildmytasks) # make casapy tasks
+# this might need fixing for some
+
+#example to use another selfcal script, not the default
+#config.update({"selfcal":"selfcalv19_ww_jsm"})
+
+
+clusterdesc='bla'
+dbserver='bla'
+dbname='bla'
+dbuser='bla'
+
 
 BANDS = range(160,239,10)
 
@@ -35,11 +52,11 @@ makemasks     = False  # not used anymore, keep to False
 do_ap         = True  # normally this should be True, correct with instrument_ap_smoothed
 uvrange       = 5.0 # wavelength
 WSCleanRobust = -0.25 # Briggs robust factor for facet imaging
-BlankField    = True # experimental, False is the default
+BlankField    = True  #  This blanks the field outside the facet boundary for the source detection, True should speed things up
 StefCal       = False # experimental, not working at the moment
-Padding       = False # True to reduce aliasing in FFT subtract
+Padding       = False # To reduce aliasing in FFT subtract.
 
 
 # for wideband clean set WScleanWBgroup below (must be smaller then len(mslist))
 # for the -best- results use WScleanWBgroup=1, note this slows down the imaging considerably
-WScleanWBgroup= 1 # number of bocks over which the spectral index is assumed to be constant, used in Wideband clean
+WScleanWBgroup= 1 # number of blocks over which the spectral index is assumed to be constant, used in Wideband clean
