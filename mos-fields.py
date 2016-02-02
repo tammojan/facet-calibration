@@ -156,9 +156,20 @@ def main(args):
         dircoords = image.coordinates().get_coordinate('direction')
         nx = dircoords.get_axis_size(axis=1)
         ny = dircoords.get_axis_size(axis=0)
+        c=[]
+        c.append(image.toworld((0,0,0,0)))
+        c.append(image.toworld((0,0,0,nx)))
+        c.append(image.toworld((0,0,ny,0)))
+        c.append(image.toworld((0,0,ny,nx)))
+        c=np.array(c)
+        for i in range(4):
+            if c[i,3]<0:
+                c[i,3]+=2*np.pi
+
         inc = dircoords.get_increment()
         ref = dircoords.get_referencepixel()
         val = dircoords.get_referencevalue()
+
         # wsclean image header is weird
         if val[1]<0:
             val[1]+=2*np.pi
@@ -166,17 +177,18 @@ def main(args):
         dec_axis = (range(ny)-ref[0])*inc[0]+val[0]
         rainc.append(inc[1])
         decinc.append(inc[0])
-        declims.append(min(dec_axis))
-        declims.append(max(dec_axis))
-        mean_ra = np.mean(ra_axis)
-        print im,mean_ra
+        declims.append(np.min(c[:,2]))
+        declims.append(np.max(c[:,2]))
+        #mean_ra = np.mean(ra_axis)
         #ralims.append((min(ra_axis)-mean_ra)*np.cos(val[0])+mean_ra)
         #ralims.append((max(ra_axis)-mean_ra)*np.cos(val[0])+mean_ra)
-        raleft.append((ra_axis[0]-mean_ra)*np.cos(val[0])+mean_ra)
-        raright.append((ra_axis[-1]-mean_ra)*np.cos(val[0])+mean_ra)
+        #raleft.append((ra_axis[0]-mean_ra)*np.cos(val[0])+mean_ra)
+        #raright.append((ra_axis[-1]-mean_ra)*np.cos(val[0])+mean_ra)
+        raleft.append(np.max(c[:,3]))
+        raright.append(np.min(c[:,3]))
+        print im,raleft[-1],raright[-1],rainc[-1]
         pims.append(image)
         pfcs.append(pim.image(fa))
-
 
     # Generate the mosaic coordinate frame
     if not args.NCP:
@@ -189,7 +201,7 @@ def main(args):
             #    if ralims[i]>np.pi: ralims[i] = ralims[i]-2.*np.pi
             for i in range(len(raright)):
                 raright[i] = raright[i]-2.*np.pi
-        master_ra = np.arange(max(raleft),min(raright),max(rainc))
+        master_ra = np.arange(max(raleft),min(raright),max(rainc)/(np.cos(min(declims))))
         lmra = len(master_ra)
         if args.maxwidth != 0:
             if lmra > args.maxwidth:
