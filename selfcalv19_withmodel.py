@@ -180,7 +180,7 @@ def make_image(mslist, cluster, callnumber, threshpix, threshisl, nterms, atrous
     do_mask = True
     niter   = 1000 # 7500 causes nasty clean artifacts
     mscale  = 'False'
-    if atrous_do == 'True':
+    if atrous_do == True:
         mscale = 'True'
 
     average = True  # average the data a lot to speed up the imaging,
