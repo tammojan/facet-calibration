@@ -1337,6 +1337,11 @@ if __name__ == "__main__":
         tempdir
     except NameError:
         tempdir=None
+
+    try:
+        modellist
+    except NameError:
+        modellist=None
         
     if StefCal:
         TEC = "False" # cannot fit for TEC in StefCal
@@ -1438,8 +1443,19 @@ if __name__ == "__main__":
 
     sourcelist = sourcelist.tolist()
 
+    # read in a list of models, one per facet, to use with modelled selfcal.
 
-
+    if modellist is not None:
+        model_lines=open(modellist).readlines()
+        models=[]
+        for m in model_lines:
+            l=m.rstrip()
+            if l=='':
+                models.append(None)
+            else:
+                models.append(l)
+    else:
+        models=[None,]*len(sourcelist)
 
     mslistorig = ["{name:s}_SB{b1:03d}-{b2:03d}.{res:s}.ms".format(name=NAME,res=RES,b1=b,b2=b+9) for b in BANDS]
     mslistorigstr = ' '.join(mslistorig)
@@ -1700,7 +1716,9 @@ if __name__ == "__main__":
                            dbname,
                            SCRIPTPATH,
                            ncores=getcpu(),
-                           config=config)
+                           config=config,
+                           model=models[source_id],
+                )
 
             logging.info('Finished selfcal DDE patch: '+ source)
 

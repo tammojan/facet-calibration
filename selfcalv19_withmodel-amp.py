@@ -775,140 +775,186 @@ def do_selfcal(mslist, cluster, atrous_do, imsize, nterms,
     phasezero    = True # reset phases from ap calibration
 
 
+    if model is None:
 
-    #### MAKE IMAGE 0 ###
-    logging.info('Make image 0')
-    imout,mask = make_image(mslist, cluster, '0', 10, 6, nterms, atrous_do, imsize, region, ncores, SCRIPTPATH)
+        #### MAKE IMAGE 0 ###
+        logging.info('Make image 0')
+        imout,mask = make_image(mslist, cluster, '0', 10, 6, nterms, atrous_do, imsize, region, ncores, SCRIPTPATH)
 
-    #####################
+        #####################
 
-    ### CALIBRATE WITH BBS PHASE ONLY 1 ###
-    # create skymodel for BBS
-    run(SCRIPTPATH+'/casapy2bbs.py -m '+ mask + ' ' +'-t ' + str(nterms)+ ' ' + imout+'.model ' +  imout+'.skymodel')
-    if FFT:
-        os.system('casapy --nogui -c '+SCRIPTPATH+'/ft_v2.py ' + msinputlist + ' ' + imout+'.model' \
-                  + ' ' + str(nterms) + ' '+ str(wplanes))
+        ### CALIBRATE WITH BBS PHASE ONLY 1 ###
+        # create skymodel for BBS
+        run(SCRIPTPATH+'/casapy2bbs.py -m '+ mask + ' ' +'-t ' + str(nterms)+ ' ' + imout+'.model ' +  imout+'.skymodel')
+        if FFT:
+            os.system('casapy --nogui -c '+SCRIPTPATH+'/ft_v2.py ' + msinputlist + ' ' + imout+'.model' \
+                      + ' ' + str(nterms) + ' '+ str(wplanes))
 
-    # phase only calibrate
-    skymodel = imout+'.skymodel'
-    parset   = create_scalarphase_parset(cellsizetime_p, TEC, clock, group, FFT, uvrange)
+        # phase only calibrate
+        skymodel = imout+'.skymodel'
+        parset   = create_scalarphase_parset(cellsizetime_p, TEC, clock, group, FFT, uvrange)
 
-    runbbs(mslist, skymodel, parset, 'instrument', False, TEC, clusterdesc, dbserver, dbuser, dbname)
-    #NOTE WORK FROM MODEL_DATA (contains correct phase data from 10SB calibration)
-    ######################################
-
-
-    ### MAKE IMAGE 1 ###
-    logging.info('Make image 1')
-    imout,mask = make_image(mslist, cluster, '1', 15, 15, nterms, atrous_do, imsize, region, ncores, SCRIPTPATH)
-    ####################
+        runbbs(mslist, skymodel, parset, 'instrument', False, TEC, clusterdesc, dbserver, dbuser, dbname)
+        #NOTE WORK FROM MODEL_DATA (contains correct phase data from 10SB calibration)
+        ######################################
 
 
-    ### CALIBRATE WITH BBS PHASE ONLY 2 ###
-    # create skymodel for BBS
-    run(SCRIPTPATH+'/casapy2bbs.py -m '+ mask + ' ' +'-t ' + str(nterms)+ ' ' + imout+'.model ' +  imout+'.skymodel')
-    if FFT:
-        run('casapy --nogui -c '+SCRIPTPATH+'/ft_v2.py ' + msinputlist + ' ' + imout+'.model' \
-                  + ' ' + str(nterms) + ' '+ str(wplanes))
+        ### MAKE IMAGE 1 ###
+        logging.info('Make image 1')
+        imout,mask = make_image(mslist, cluster, '1', 15, 15, nterms, atrous_do, imsize, region, ncores, SCRIPTPATH)
+        ####################
 
 
-    # phase only calibrate
-    skymodel = imout+'.skymodel'
-    parset   = create_scalarphase_parset(cellsizetime_p, TEC, clock, group, FFT, uvrange)
-
-    runbbs(mslist, skymodel, parset, 'instrument', False, TEC,clusterdesc, dbserver, dbuser, dbname) #NOTE WORK FROM MODEL_DATA (contains correct phase data from 10SB calibration)
-    ######################################
-
-
-    ### MAKE IMAGE 2 ###
-    logging.info('Make image 2')
-    imout,mask = make_image(mslist, cluster, '2', 15, 15, nterms, atrous_do, imsize, region, ncores, SCRIPTPATH)
-    ####################
+        ### CALIBRATE WITH BBS PHASE ONLY 2 ###
+        # create skymodel for BBS
+        run(SCRIPTPATH+'/casapy2bbs.py -m '+ mask + ' ' +'-t ' + str(nterms)+ ' ' + imout+'.model ' +  imout+'.skymodel')
+        if FFT:
+            run('casapy --nogui -c '+SCRIPTPATH+'/ft_v2.py ' + msinputlist + ' ' + imout+'.model' \
+                      + ' ' + str(nterms) + ' '+ str(wplanes))
 
 
+        # phase only calibrate
+        skymodel = imout+'.skymodel'
+        parset   = create_scalarphase_parset(cellsizetime_p, TEC, clock, group, FFT, uvrange)
 
-    ### CALIBRATE WITH BBS PHASE+AMP 1 ###
-    run(SCRIPTPATH+'/casapy2bbs.py -m '+ mask + ' ' +'-t ' + str(nterms)+ ' ' + imout+'.model ' +  imout+'.skymodel')
-    if FFT:
-        run('casapy --nogui -c '+SCRIPTPATH+'/ft_v2.py ' + msinputlist + ' ' + imout+'.model' \
-                  + ' ' + str(nterms) + ' '+ str(wplanes))
+        runbbs(mslist, skymodel, parset, 'instrument', False, TEC,clusterdesc, dbserver, dbuser, dbname) #NOTE WORK FROM MODEL_DATA (contains correct phase data from 10SB calibration)
+        ######################################
 
-    skymodel = imout+'.skymodel'
-    parset   = create_scalarphase_parset_p(cellsizetime_p, TEC, clock, group, FFT, uvrange)
-    # solve +apply phases
-    runbbs(mslist, skymodel, parset, 'instrument_phase0', False, TEC, clusterdesc, dbserver, dbuser, dbname)
 
-    # solve amps
-    parmdb = 'instrument_amps0'
-    parset = create_amponly_parset(cellsizetime_a, FFT, uvrange)
-    runbbs(mslist, skymodel, parset, parmdb, False, False, clusterdesc, dbserver, dbuser, dbname)
-
-    for ms in mslist:
-        # remove outliers from the solutions
-        if phasors:
-            run('python '+SCRIPTPATH+'/smoothcal_rx42.py ' + ms + ' ' + ms+'/'+parmdb + ' ' + ms+'/'+parmdb+'_smoothed'+' > '+ms+'_'+parmdb+'_smoothed.log')
-        else:
-            run('python '+SCRIPTPATH+'/smoothcal_a2256_nophasors.py ' + ms + ' ' + ms+'/'+parmdb + ' ' + ms+'/'+parmdb+'_smoothed'+' > '+ms+'_'+parmdb+'_smoothed.log')
-
-    # apply amps
-    if smooth:
-        runbbs(mslist, skymodel,SCRIPTPATH+'/apply_amplitudeonly.parset', parmdb+'_smoothed', True, False, clusterdesc, dbserver, dbuser, dbname)
-    else:
-        runbbs(mslist, skymodel,SCRIPTPATH+'/apply_amplitudeonly.parset', parmdb, True, False, clusterdesc, dbserver, dbuser, dbname)
-
-    ### MAKE IMAGE 3 ###
-    logging.info('Make image 3')
-    imout,mask = make_image(mslist, cluster, '3', 10, 10, nterms, atrous_do, imsize, region, ncores, SCRIPTPATH)
+        ### MAKE IMAGE 2 ###
+        logging.info('Make image 2')
+        imout,mask = make_image(mslist, cluster, '2', 15, 15, nterms, atrous_do, imsize, region, ncores, SCRIPTPATH)
+        ####################
 
 
 
-    #### CALIBRATE  BBS PHASE+AMP 2 ###
-    # make model
-    run(SCRIPTPATH+'/casapy2bbs.py -m '+ mask + ' ' +'-t ' + str(nterms)+ ' ' + imout+'.model ' +  imout+'.skymodel')
-    if FFT:
-        run('casapy --nogui -c '+SCRIPTPATH+'/ft_v2.py ' + msinputlist + ' ' + imout+'.model' \
-                  + ' ' + str(nterms) + ' '+ str(wplanes))
+        ### CALIBRATE WITH BBS PHASE+AMP 1 ###
+        run(SCRIPTPATH+'/casapy2bbs.py -m '+ mask + ' ' +'-t ' + str(nterms)+ ' ' + imout+'.model ' +  imout+'.skymodel')
+        if FFT:
+            run('casapy --nogui -c '+SCRIPTPATH+'/ft_v2.py ' + msinputlist + ' ' + imout+'.model' \
+                      + ' ' + str(nterms) + ' '+ str(wplanes))
 
-    #parmdb keep from previous step
-    skymodel = imout+'.skymodel'
+        skymodel = imout+'.skymodel'
+        parset   = create_scalarphase_parset_p(cellsizetime_p, TEC, clock, group, FFT, uvrange)
+        # solve +apply phases
+        runbbs(mslist, skymodel, parset, 'instrument_phase0', False, TEC, clusterdesc, dbserver, dbuser, dbname)
 
+        # solve amps
+        parmdb = 'instrument_amps0'
+        parset = create_amponly_parset(cellsizetime_a, FFT, uvrange)
+        runbbs(mslist, skymodel, parset, parmdb, False, False, clusterdesc, dbserver, dbuser, dbname)
 
-    # reset the phases from instrument_amps0 to zero to prevent large phase corrections from incorrect AP solve
-    if phasezero:
-        inputparmdb  = parmdb +'_smoothed'
-        outputparmdb = parmdb +'_smoothed_phasezero'
         for ms in mslist:
-            run('python '+SCRIPTPATH+'/setphasezero.py ' + ms + ' ' + ms+'/'+inputparmdb +' ' + ms+'/'+outputparmdb)
-    else:
-        outputparmdb = parmdb +'_smoothed'
+            # remove outliers from the solutions
+            if phasors:
+                run('python '+SCRIPTPATH+'/smoothcal_rx42.py ' + ms + ' ' + ms+'/'+parmdb + ' ' + ms+'/'+parmdb+'_smoothed'+' > '+ms+'_'+parmdb+'_smoothed.log')
+            else:
+                run('python '+SCRIPTPATH+'/smoothcal_a2256_nophasors.py ' + ms + ' ' + ms+'/'+parmdb + ' ' + ms+'/'+parmdb+'_smoothed'+' > '+ms+'_'+parmdb+'_smoothed.log')
 
-
-    # phase only cal
-    skymodel = imout+'.skymodel'
-    parset   = create_scalarphase_parset_p(cellsizetime_p, TEC, clock, group, FFT, uvrange)
-    runbbs(mslist, skymodel, parset, 'instrument_phase1', False, TEC, clusterdesc, dbserver, dbuser, dbname)
-
-    # solve amps
-    parmdb   = 'instrument_amps1'
-    parset = create_amponly_parset(cellsizetime_a, FFT, uvrange)
-    runbbs(mslist, skymodel, parset,parmdb, False, False, clusterdesc, dbserver, dbuser, dbname)
-
-    for ms in mslist:
-        # remove outliers from the solutions
-        if phasors:
-            run('python '+SCRIPTPATH+'/smoothcal_rx42.py ' + ms + ' ' + ms+'/'+parmdb + ' ' + ms+'/'+parmdb+'_smoothed'+' > '+ms+'_'+parmdb+'_smoothed.log')
+        # apply amps
+        if smooth:
+            runbbs(mslist, skymodel,SCRIPTPATH+'/apply_amplitudeonly.parset', parmdb+'_smoothed', True, False, clusterdesc, dbserver, dbuser, dbname)
         else:
-            run('python '+SCRIPTPATH+'/smoothcal_a2256_nophasors.py ' + ms + ' ' + ms+'/'+parmdb + ' ' + ms+'/'+parmdb+'_smoothed'+' > '+ms+'_'+parmdb+'_smoothed.log')
+            runbbs(mslist, skymodel,SCRIPTPATH+'/apply_amplitudeonly.parset', parmdb, True, False, clusterdesc, dbserver, dbuser, dbname)
 
-    # apply amps
-    if smooth:
-        runbbs(mslist, skymodel,SCRIPTPATH+'/apply_amplitudeonly.parset',parmdb+'_smoothed', True, False, clusterdesc, dbserver, dbuser, dbname)
+        ### MAKE IMAGE 3 ###
+        logging.info('Make image 3')
+        imout,mask = make_image(mslist, cluster, '3', 10, 10, nterms, atrous_do, imsize, region, ncores, SCRIPTPATH)
+
+
+
+        #### CALIBRATE  BBS PHASE+AMP 2 ###
+        # make model
+        run(SCRIPTPATH+'/casapy2bbs.py -m '+ mask + ' ' +'-t ' + str(nterms)+ ' ' + imout+'.model ' +  imout+'.skymodel')
+        if FFT:
+            run('casapy --nogui -c '+SCRIPTPATH+'/ft_v2.py ' + msinputlist + ' ' + imout+'.model' \
+                      + ' ' + str(nterms) + ' '+ str(wplanes))
+
+        #parmdb keep from previous step
+        skymodel = imout+'.skymodel'
+
+
+        # reset the phases from instrument_amps0 to zero to prevent large phase corrections from incorrect AP solve
+        if phasezero:
+            inputparmdb  = parmdb +'_smoothed'
+            outputparmdb = parmdb +'_smoothed_phasezero'
+            for ms in mslist:
+                run('python '+SCRIPTPATH+'/setphasezero.py ' + ms + ' ' + ms+'/'+inputparmdb +' ' + ms+'/'+outputparmdb)
+        else:
+            outputparmdb = parmdb +'_smoothed'
+
+
+        # phase only cal
+        skymodel = imout+'.skymodel'
+        parset   = create_scalarphase_parset_p(cellsizetime_p, TEC, clock, group, FFT, uvrange)
+        runbbs(mslist, skymodel, parset, 'instrument_phase1', False, TEC, clusterdesc, dbserver, dbuser, dbname)
+
+        # solve amps
+        parmdb   = 'instrument_amps1'
+        parset = create_amponly_parset(cellsizetime_a, FFT, uvrange)
+        runbbs(mslist, skymodel, parset,parmdb, False, False, clusterdesc, dbserver, dbuser, dbname)
+
+        for ms in mslist:
+            # remove outliers from the solutions
+            if phasors:
+                run('python '+SCRIPTPATH+'/smoothcal_rx42.py ' + ms + ' ' + ms+'/'+parmdb + ' ' + ms+'/'+parmdb+'_smoothed'+' > '+ms+'_'+parmdb+'_smoothed.log')
+            else:
+                run('python '+SCRIPTPATH+'/smoothcal_a2256_nophasors.py ' + ms + ' ' + ms+'/'+parmdb + ' ' + ms+'/'+parmdb+'_smoothed'+' > '+ms+'_'+parmdb+'_smoothed.log')
+
+        # apply amps
+        if smooth:
+            runbbs(mslist, skymodel,SCRIPTPATH+'/apply_amplitudeonly.parset',parmdb+'_smoothed', True, False, clusterdesc, dbserver, dbuser, dbname)
+        else:
+            runbbs(mslist, skymodel,SCRIPTPATH+'/apply_amplitudeonly.parset',parmdb, True, False, clusterdesc, dbserver, dbuser, dbname)
+
+        ### MAKE IMAGE 4 ###
+        logging.info('Make image 4')
+        imout,mask = make_image(mslist, cluster, '4', 10, 10, nterms, atrous_do, imsize, region, ncores, SCRIPTPATH)
+
     else:
-        runbbs(mslist, skymodel,SCRIPTPATH+'/apply_amplitudeonly.parset',parmdb, True, False, clusterdesc, dbserver, dbuser, dbname)
+        ### As for image 4 ###
+        ### the model variable contains a full path to a CASA sky model for the field
+        logging.info('Calibrating using pre-existing model '+model)
+        imout='model_image_'+cluster
+        mask=imout+'.mask'
+        origmask=model.replace('model','mask')
+        # delete any old versions, and copy over the model
+        for suffix in ['model','mask']:
+            os.system('rm -rf '+imout+'.'+suffix)
+        run('cp -r '+model+' '+imout+'.model')
+        run('cp -r '+origmask+' '+imout+'.mask')
+        # now proceed as though this was the previous image!
+        run(SCRIPTPATH+'/casapy2bbs.py -m '+ mask + ' ' +'-t ' + str(nterms)+ ' ' + imout+'.model' + ' ' + imout+'.skymodel')
+        if FFT:
+            run('casapy --nogui -c '+SCRIPTPATH+'/ft_v2.py ' + msinputlist + ' ' + imout+'.model' \
+                      + ' ' + str(nterms) + ' '+ str(wplanes))
 
-    ### MAKE IMAGE 4 ###
-    logging.info('Make image 4')
-    imout,mask = make_image(mslist, cluster, '4', 10, 10, nterms, atrous_do, imsize, region, ncores, SCRIPTPATH)
+        skymodel = imout+'.skymodel'
+        parset   = create_scalarphase_parset_p(cellsizetime_p, TEC, clock, group, FFT, uvrange)
+        # solve +apply phases
+        runbbs(mslist, skymodel, parset, 'instrument_phase1', False, TEC, clusterdesc, dbserver, dbuser, dbname)
+
+        # solve amps
+        parmdb = 'instrument_amps1'
+        parset = create_amponly_parset(cellsizetime_a, FFT, uvrange)
+        runbbs(mslist, skymodel, parset, parmdb, False, False, clusterdesc, dbserver, dbuser, dbname)
+
+        for ms in mslist:
+            # remove outliers from the solutions
+            if phasors:
+                run('python '+SCRIPTPATH+'/smoothcal_rx42.py ' + ms + ' ' + ms+'/'+parmdb + ' ' + ms+'/'+parmdb+'_smoothed'+' > '+ms+'_'+parmdb+'_smoothed.log')
+            else:
+                run('python '+SCRIPTPATH+'/smoothcal_a2256_nophasors.py ' + ms + ' ' + ms+'/'+parmdb + ' ' + ms+'/'+parmdb+'_smoothed'+' > '+ms+'_'+parmdb+'_smoothed.log')
+
+        # apply amps
+        if smooth:
+            runbbs(mslist, skymodel,SCRIPTPATH+'/apply_amplitudeonly.parset', parmdb+'_smoothed', True, False, clusterdesc, dbserver, dbuser, dbname)
+        else:
+            runbbs(mslist, skymodel,SCRIPTPATH+'/apply_amplitudeonly.parset', parmdb, True, False, clusterdesc, dbserver, dbuser, dbname)
+
+        ### MAKE IMAGE 4 ###
+        logging.info('Make image 4')
+        imout,mask = make_image(mslist, cluster, '4', 10, 10, nterms, atrous_do, imsize, region, ncores, SCRIPTPATH)
 
 
     ### CREATE FINAL MODEL ###
