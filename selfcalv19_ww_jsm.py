@@ -206,7 +206,7 @@ def robust_sigma(in_y, zero=0):
 
 def do_selfcal(mslist, cluster, atrous_do, imsize, nterms, cellsizetime_a, cellsizetime_p,
                TECi, clocki, HRi, region, clusterdesc, dbserver, dbuser, dbname, SCRIPTPATH, 
-               ncores=8, config=None):
+               ncores=8, config=None, model=None):
 
     TEC  = False
     FFT  = False
