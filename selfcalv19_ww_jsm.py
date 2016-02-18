@@ -301,34 +301,47 @@ def do_selfcal(mslist, cluster, atrous_do, imsize, nterms, cellsizetime_a, cells
     #####################
     #####################
     
-    
-    #### MAKE IMAGE 0 ###
-    logging.info('Make image 0')
-    imout,mask = make_image(mslist, cluster, '0', 10, 6, nterms, atrous_do, imsize, region, ncores, SCRIPTPATH)
+    if model is None:
+        #### MAKE IMAGE 0 ###
+        logging.info('Make image 0')
+        imout,mask = make_image(mslist, cluster, '0', 10, 6, nterms, atrous_do, imsize, region, ncores, SCRIPTPATH)
 
-    #####################
+        #####################
 
-    ### CALIBRATE WITH BBS PHASE ONLY 1 ###
-    # create skymodel for BBS
-    run(SCRIPTPATH+'/casapy2bbs.py -m '+ mask + ' ' +'-t ' + str(nterms)+ ' ' + imout+'.model ' +  imout+'.skymodel')
-    if FFT:
-        os.system('casapy --nogui -c '+SCRIPTPATH+'/ft_v2.py ' + msinputlist + ' ' + imout+'.model' \
-                  + ' ' + str(nterms) + ' '+ str(wplanes))
+        ### CALIBRATE WITH BBS PHASE ONLY 1 ###
+        # create skymodel for BBS
+        run(SCRIPTPATH+'/casapy2bbs.py -m '+ mask + ' ' +'-t ' + str(nterms)+ ' ' + imout+'.model ' +  imout+'.skymodel')
+        if FFT:
+            os.system('casapy --nogui -c '+SCRIPTPATH+'/ft_v2.py ' + msinputlist + ' ' + imout+'.model' \
+                    + ' ' + str(nterms) + ' '+ str(wplanes))
 
-    # phase only calibrate
-    skymodel = imout+'.skymodel'
-    parset   = create_scalarphase_parset(cellsizetime_p, TEC, clock, group, FFT, uvrange)
+        # phase only calibrate
+        skymodel = imout+'.skymodel'
+        parset   = create_scalarphase_parset(cellsizetime_p, TEC, clock, group, FFT, uvrange)
 
-    runbbs(mslist, skymodel, parset, 'instrument', False, TEC, clusterdesc, dbserver, dbuser, dbname)
-    #NOTE WORK FROM MODEL_DATA (contains correct phase data from 10SB calibration)
-    ######################################
+        runbbs(mslist, skymodel, parset, 'instrument', False, TEC, clusterdesc, dbserver, dbuser, dbname)
+        #NOTE WORK FROM MODEL_DATA (contains correct phase data from 10SB calibration)
+        ######################################
 
 
-    ### MAKE IMAGE 1 ###
-    logging.info('Make image 1')
-    imout,mask = make_image(mslist, cluster, '1', 15, 15, nterms, atrous_do, imsize, region, ncores, SCRIPTPATH)
-    ####################
-
+        ### MAKE IMAGE 1 ###
+        logging.info('Make image 1')
+        imout,mask = make_image(mslist, cluster, '1', 15, 15, nterms, atrous_do, imsize, region, ncores, SCRIPTPATH)
+        ####################
+    else:
+        ### As for image 2 ###
+        ### the model variable contains a full path to a CASA sky model for the field
+        logging.info('Initial phase calibration using pre-existing model '+model)
+        logging.info('Skip image 0 and 1')
+        
+        imout='model_image_'+cluster
+        mask=imout+'.mask'
+        origmask=model.replace('model','mask')
+        # delete any old versions, and copy over the model
+        for suffix in ['model','mask']:
+            os.system('rm -rf '+imout+'.'+suffix)
+        run('cp -r '+model+' '+imout+'.model')
+        run('cp -r '+origmask+' '+imout+'.mask')
 
     ### CALIBRATE WITH BBS PHASE ONLY 2 ###
     # create skymodel for BBS
