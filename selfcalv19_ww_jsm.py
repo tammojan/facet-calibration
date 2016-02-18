@@ -13,6 +13,7 @@ from numpy import pi
 import pwd
 import logging
 from facet_utilities import run, bg
+from jsm_util import get_config
 
 # Import functions from the main implementation
 from selfcalv19_ww_cep3 import create_merged_parmdb_spline, create_merged_parmdb,\
@@ -290,10 +291,11 @@ def do_selfcal(mslist, cluster, atrous_do, imsize, nterms, cellsizetime_a, cells
     max_selfcalcycles = 16
     
     if config is not None:
-        number_forced_selfcalcycles = config.get("selfcal_forced_cycles", 8)
-        factor = config.get("selfcal_factor", 1.0125)
-        max_selfcalcycles = config.get("selfcal_max_cycles", 16)
-        empty_mask_cycle = config.get("selfcal_empty_cycle", 5)     
+        number_forced_selfcalcycles = get_config("selfcal_forced_cycles", config, default=8)
+        factor = get_config("selfcal_factor", config, default=1.0125)
+        max_selfcalcycles = get_config("selfcal_max_cycles", config, default=16)
+        empty_mask_cycle = get_config("selfcal_empty_cycle", config, default=5)
+        model_facet = get_config("model_facet", config, default="")
     
     logging.info('Selfcal loop params: forced {}; empty mask {}; max {}; factor {}'.format(
         number_forced_selfcalcycles, empty_mask_cycle, max_selfcalcycles, factor))
