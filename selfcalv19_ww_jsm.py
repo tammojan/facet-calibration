@@ -318,7 +318,11 @@ def do_selfcal(mslist, cluster, atrous_do, imsize, nterms, cellsizetime_a, cells
                     + ' ' + str(nterms) + ' '+ str(wplanes))
 
         # phase only calibrate
-        skymodel = imout+'.skymodel'
+        if model_facet == "":
+            skymodel = imout+'.skymodel'
+        else:
+            skymodel = model_facet
+            logging.info('Using config model '+model_facet+" skip model from image 0")
         parset   = create_scalarphase_parset(cellsizetime_p, TEC, clock, group, FFT, uvrange)
 
         runbbs(mslist, skymodel, parset, 'instrument', False, TEC, clusterdesc, dbserver, dbuser, dbname)
