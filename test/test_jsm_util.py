@@ -21,7 +21,7 @@ class TestConfig(unittest.TestCase):
                                    "s2": 5
                                    }
                         }
-
+        self.config2 = {'model_facet': '/data/models/output_2015-12/facet2/Facet_1.sky'}
 
     def test_param1(self):
         """
@@ -88,7 +88,13 @@ class TestConfig(unittest.TestCase):
             get_config("param4", self.config1, source="s2")
         with self.assertRaises(KeyError):
             get_config("param4", self.config1)
-        
+    
+    def test_real(self):
+        """
+        Test real case
+        """
+        self.assertEqual(get_config("model_facet", self.config2, default=""), 
+                         '/data/models/output_2015-12/facet2/Facet_1.sky')    
 
         
 if __name__ == '__main__':

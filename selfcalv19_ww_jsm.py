@@ -298,8 +298,8 @@ def do_selfcal(mslist, cluster, atrous_do, imsize, nterms, cellsizetime_a, cells
         empty_mask_cycle = get_config("selfcal_empty_cycle", config, default=5)
         model_facet = get_config("model_facet", config, default="")
     
-    logging.info('Selfcal loop params: forced {}; empty mask {}; max {}; factor {}; model_facet {}'.format(
-        number_forced_selfcalcycles, empty_mask_cycle, max_selfcalcycles, factor, model_facet))
+    logging.info('Selfcal loop params: forced {}; empty mask {}; max {}; factor {}; model {}; model_facet {}'.format(
+        number_forced_selfcalcycles, empty_mask_cycle, max_selfcalcycles, factor, model, model_facet))
     
     #####################
     #####################
@@ -319,11 +319,11 @@ def do_selfcal(mslist, cluster, atrous_do, imsize, nterms, cellsizetime_a, cells
                     + ' ' + str(nterms) + ' '+ str(wplanes))
 
         # phase only calibrate
-        if model_facet == "":
-            skymodel = imout+'.skymodel'
-        else:
+        if model_facet:
             skymodel = model_facet
             logging.info('Using config model '+model_facet+" skip model from image 0")
+        else:
+            skymodel = imout+'.skymodel'
         parset   = create_scalarphase_parset(cellsizetime_p, TEC, clock, group, FFT, uvrange)
 
         runbbs(mslist, skymodel, parset, 'instrument', False, TEC, clusterdesc, dbserver, dbuser, dbname)

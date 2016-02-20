@@ -1413,8 +1413,9 @@ if __name__ == "__main__":
         logger.addHandler(fh)
         logging.info('\n')
 
-
-
+    logging.info('============ START ============')
+    logging.debug("config")
+    logging.debug(config)
 
     # freqavg_fullfacet = 5 # hardcoded for now
     # it has to be set to a multiple of the number of channels per block,
@@ -1456,6 +1457,8 @@ if __name__ == "__main__":
                 models.append(l)
     else:
         models=[None,]*len(sourcelist)
+    logging.debug("models")
+    logging.debug(models)
 
     mslistorig = ["{name:s}_SB{b1:03d}-{b2:03d}.{res:s}.ms".format(name=NAME,res=RES,b1=b,b2=b+9) for b in BANDS]
     mslistorigstr = ' '.join(mslistorig)
