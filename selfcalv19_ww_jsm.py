@@ -289,6 +289,7 @@ def do_selfcal(mslist, cluster, atrous_do, imsize, nterms, cellsizetime_a, cells
     number_forced_selfcalcycles = 8
     factor           = 1.0125 # demand 1.25% improvement
     max_selfcalcycles = 16
+    model_facet = ""
     
     if config is not None:
         number_forced_selfcalcycles = get_config("selfcal_forced_cycles", config, default=8)
@@ -297,8 +298,8 @@ def do_selfcal(mslist, cluster, atrous_do, imsize, nterms, cellsizetime_a, cells
         empty_mask_cycle = get_config("selfcal_empty_cycle", config, default=5)
         model_facet = get_config("model_facet", config, default="")
     
-    logging.info('Selfcal loop params: forced {}; empty mask {}; max {}; factor {}'.format(
-        number_forced_selfcalcycles, empty_mask_cycle, max_selfcalcycles, factor))
+    logging.info('Selfcal loop params: forced {}; empty mask {}; max {}; factor {}; model_facet {}'.format(
+        number_forced_selfcalcycles, empty_mask_cycle, max_selfcalcycles, factor, model_facet))
     
     #####################
     #####################
