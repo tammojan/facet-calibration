@@ -180,39 +180,6 @@ def dec_to_str(ddec,ndec=1,delim=':'):
         sdec = '%02d%s%02d%s%04.1f' %(dd,delim1,dm,delim2,dsec)
     return sdec
 
-def dec_to_degrees(dec_str, delim=' '):
-    '''
-    converts array of strings or single string dec values to decimal degrees
-    '''
-    # string or array
-    if isinstance(dec_str,str):
-        if delim == 'd':
-            dec_str = dec_str.replace('d',' ')
-            dec_str = dec_str.replace('m',' ')
-            t = dec_str.split()
-        else:
-            t = dec_str.split(delim)
-        if '-' in dec_str:
-                dec_deg = (float(t[0]) - float(t[1])/60. - float(t[2])/3600.)
-        else:
-                dec_deg = (float(t[0]) + float(t[1])/60. + float(t[2])/3600.)
-        return dec_deg
-    else:
-        dec_deg = numpy.zeros(len(dec_str))
-        for i,dec_s in enumerate(dec_str):
-            if delim == 'd':
-                dec_s = dec_s.replace('d',' ')
-                dec_s = dec_s.replace('m',' ')
-                t = dec_s.split()
-            else:
-                t = dec_s.split(delim)
-        if '-' in dec_str:
-                dec_deg = (float(t[0]) - float(t[1])/60. - float(t[2])/3600.)
-        else:
-                dec_deg = (float(t[0]) + float(t[1])/60. + float(t[2])/3600.)
-        return dec_deg
-
-
 # Memory and CPU use for wsclean
 
 def getcpu():
