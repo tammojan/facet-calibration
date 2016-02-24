@@ -637,7 +637,7 @@ def add_facet_mask(maskout, region, value, direction, size,  lowres=15., actualr
     return
 
 
-def show_facets(facetmap, directions, directions2=None, maxsize=6400, lowres=15., actualres=1.5, r=[1.,2.]):
+def show_facets(facetmap, directions, directions2=None, maxsize=6400, lowres=15., actualres=1.5, r=[1.,2.], beam_ratio=1.):
 
     img    = pyrap.images.image(facetmap)
     pixels = numpy.copy(img.getdata())
@@ -657,10 +657,12 @@ def show_facets(facetmap, directions, directions2=None, maxsize=6400, lowres=15.
     x0 = NX/2
     y0 = NY/2
     theta = numpy.arange(0,2*pi,pi/1000)
+    
+    
     for ri in r:
         r1 = ri*3600./lowres
         xi = x0 + r1*numpy.cos(theta)
-        yi = y0 + r1*numpy.sin(theta)
+        yi = y0 + beam_ratio*r1*numpy.sin(theta)
         plt.plot(xi,yi,'k')
     plt.colorbar()
     plt.xlim(0,NX)
@@ -1120,6 +1122,18 @@ if __name__=='__main__':
     logging.info('Number of channels per ms is {:d}'.format(numchanperms))
     freq_tab.close()
 
+    try:
+        tab = pt.table(ms)
+        tab.getcol('AZEL1', rowincr=10000)
+    except:
+        pt.addDerivedMSCal(ms)
+        tab = pt.table(ms)
+        
+    mean_el = numpy.mean(tab.getcol('AZEL1', rowincr=10000)[:, 1])
+    beam_ratio = 1./numpy.sin(mean_el)
+    tab.close()
+    pt.removeDerivedMSCal(ms)
+
     #mslist = ['BOOTES24_SB190-199.2ch8s.ms']
     ### MAKE ALL THE MASKS AT ONCE ###
 
@@ -1218,7 +1232,7 @@ if __name__=='__main__':
             add_facet_mask(facet_image_name_huge, poly[source_id], value, directions[source_id], sizes[source_id], lowres=lowresolution, actualres=resolution)
 
 
-        show_facets(facet_image_name_huge, directions, r=rad)
+        show_facets(facet_image_name_huge, directions, r=rad, beam_ratio=beam_ratio)
 
 
 
@@ -1253,7 +1267,7 @@ if __name__=='__main__':
             add_facet_mask(facet_image_name, poly[source_id], value, directions[source_id], sizes[source_id], lowres=lowresolution, actualres=resolution)
 
 
-        show_facets(facet_image_name, directions, r=rad)
+        show_facets(facet_image_name, directions, r=rad, beam_ratio=beam_ratio)
 
 
     ## obsolete - never shift the facet centres
@@ -1299,7 +1313,7 @@ if __name__=='__main__':
             value = int(source.replace('s',''))
 	    print value, directions[source_id]
             add_facet_mask(facet_image_name, poly[source_id], value, directions[source_id], newsizes[source_id], lowres=lowresolution, actualres=resolution)
-        show_facets(facet_image_name, directions, directions2=directions, r=rad)
+        show_facets(facet_image_name, directions, directions2=directions, r=rad, beam_ratio=beam_ratio)
 
 
     sizes = newsizes
