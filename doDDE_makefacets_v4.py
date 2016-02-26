@@ -984,7 +984,7 @@ def find_newsize_lowresfacets(facetmap, region, direction, source, maxsize=6400,
     if debug : print 'span (real)', span, real_span
     #trysizes = numpy.copy(sorted([6400,6144,5600,5400,5184,5000,4800,4608,4320,4096,3840,3600,3200,3072,2880,2560,2304,2048, 1600, 1536, 1200, 1024, 800, 512]))
     # for testing at lowres
-    trysizes = numpy.copy(sorted([6400,6144,5600,5400,5184,5000,4800,4608,4320,4096,3840,3600,3200,3072,2880,2560,2304,2048, 1600, 1536, 1200, 1024, 800, 512, 256, 128, 64]))
+    trysizes = numpy.copy(sorted([8640,8192,8100,8000,7776,7680,7500,7290,7200,6912,6750,6561,6400,6250,6144,5600,5400,5184,5000,4800,4608,4320,4096,3840,3600,3200,3072,2880,2560,2304,2048, 1600, 1536, 1200, 1024, 800, 512, 256, 128, 64]))
     trysizes = trysizes*1.5/actualres  # set proper sizes when res is 1.5 arcsec
     trysizes = trysizes[trysizes<=maxrealsize]
     trysizes1 = numpy.copy(trysizes[::-1])
