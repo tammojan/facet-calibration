@@ -1019,7 +1019,7 @@ def find_newsize_centre_lowresfacets(facetmap, region, direction, source, maxsiz
     return new_position, new_real_span
 
 
-def find_newsize_lowresfacets(facetmap, region, direction, source, maxsize=6400, lowres=15., actualres=1.5, debug=True, findedge=None, edge=25):
+def find_newsize_lowresfacets(facetmap, region, direction, source, maxsize=6400, lowres=15., actualres=1.5, debug=False, findedge=None, edge=25):
 
 #if 1:
 
@@ -1284,7 +1284,13 @@ if __name__=='__main__':
     x0 = x0[0]
     y0 = y0[0]
     
-    faceting_radius_pix = 1.5*rad[0]*3600. / lowresolution  # radius in pixels
+    
+    try:
+        facet_radius_scale
+    except:
+        facet_radius_scale = 1.5
+    
+    faceting_radius_pix = facet_radius_scale*rad[0]*3600. / lowresolution  # radius in pixels
     fx = []
     fy = []
     for th in range(0, 360, 1):
@@ -1419,9 +1425,16 @@ if __name__=='__main__':
 
     reduce_sizes = True
     if reduce_sizes:
-        if max_fieldsize: 
+        try: 
+            max_fieldsize
+        except:
             print 'max_fieldsize, not used'
             print 'using sizes from maxoutliersize and maxcentralsize'
+            
+        try:
+            debug
+        except:
+            debug = False
 
 
         print "reducing image sizes where possible"
@@ -1432,7 +1445,8 @@ if __name__=='__main__':
         newsizes = []
         edges = []
         for source_id,source in enumerate(sourcelist):
-            new_size,new_edge = find_newsize_lowresfacets(facet_image_name_huge, poly[source_id], directions[source_id], source, maxsize=sizes[source_id], lowres=lowresolution, actualres=resolution, findedge=edge_scale)
+            
+            new_size,new_edge = find_newsize_lowresfacets(facet_image_name_huge, poly[source_id], directions[source_id], source, maxsize=sizes[source_id], lowres=lowresolution, actualres=resolution, findedge=edge_scale, debug=debug)
             newsizes.append(new_size)
             edges.append(new_edge)
 
@@ -1441,7 +1455,6 @@ if __name__=='__main__':
         os.system('cp -r {im1} {im2}'.format(im1=dummy_image,im2=facet_image_name))
         for source_id,source in enumerate(sourcelist):
             value = int(source.replace('s',''))
-	    print value, directions[source_id]
             add_facet_mask(facet_image_name, poly[source_id], value, directions[source_id], newsizes[source_id], lowres=lowresolution, actualres=resolution)
         show_facets(facet_image_name, directions, directions2=directions, r=rad, beam_ratio=beam_ratio)
 
@@ -1449,6 +1462,8 @@ if __name__=='__main__':
     sizes = newsizes
     positions = directions
 
+    if numpy.any(numpy.array(newsizes) > 6400):
+        print "WARNING You are using some large facets, you facet imaging may take a long time"
 
 
     for p,source in zip(poly,sourcelist):
