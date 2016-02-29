@@ -17,10 +17,19 @@ import matplotlib.transforms as mplTrans
 import lofar.parmdb
 from numpy import pi
 from facet_utilities import run, bg, angsep, dec_to_str, ra_to_str
+import shapely.geometry
 
 # Use scipy Voronoi tessellation to generate a set of masks
 # original code from Martin Hardcastle
 # Finite polygons code taken from https://gist.github.com/pv/8036995
+
+# 2016/02/29 
+# added beam shape
+# clip_at_beam = True makes edges of outer facets some factor of the beam
+# faceting_radius_pix = 1.5 sets scaling for beam edge
+# add ege info to add_facet_mask - so facets_final.image.png includes wsclean anti-aliasing margin
+# improve ds9 region files (includes separate point to label the facet so the label lies near the cetnre)
+# tidy up some code
 
 # v3
 # do the voronoi tesselation in image coordinates
@@ -502,6 +511,120 @@ def voronoi_finite_polygons_2d_box(vor, box):
     return numpy.asarray(newpoly)
 
 
+
+def voronoi_finite_polygons_2d_shape(vor, clipshape):
+    """
+    Reconstruct infinite voronoi regions in a 2D diagram to finite
+    box.
+
+    Parameters
+    ----------
+    vor : Voronoi
+        Input diagram
+    box : (2,2) float array
+        corners of bounding box
+        numpy.array([[x1,y1],[x2,y2]])
+
+    Returns
+    -------
+    poly : array of M (N,2) arrays
+        polygon coordinates for M revised Voronoi regions.
+
+    """
+
+    if vor.points.shape[1] != 2:
+        raise ValueError("Requires 2D input")
+    if clipshape.shape[1] != 2:
+        raise ValueError("Bounding box should be Nx2 array ((x1,y1),(x2,y2)...(xN,yN))")
+
+    # max sep in dec direction
+    radius = abs(numpy.max(clipshape[:,1]) - numpy.min(clipshape[:,1]))
+
+    # define the bounding box transform from the box extent - to be used to intersect with the regions
+    fovpath = mplTrans.Path(clipshape)
+
+    new_regions = []
+    new_vertices = vor.vertices.tolist()
+
+    center = vor.points.mean(axis=0)
+    if radius is None:
+        radius = vor.points.ptp().max()
+
+    # Construct a map containing all ridges for a given point
+    all_ridges = {}
+    for (p1, p2), (v1, v2) in zip(vor.ridge_points, vor.ridge_vertices):
+        all_ridges.setdefault(p1, []).append((p2, v1, v2))
+        all_ridges.setdefault(p2, []).append((p1, v1, v2))
+
+    # Reconstruct infinite regions
+    for p1, region in enumerate(vor.point_region):
+        vertices = vor.regions[region]
+
+        if all(v >= 0 for v in vertices):
+            # finite region
+            new_regions.append(vertices)
+            continue
+
+        # reconstruct a non-finite region
+        ridges = all_ridges[p1]
+        new_region = [v for v in vertices if v >= 0]
+
+        for p2, v1, v2 in ridges:
+            if v2 < 0:
+                v1, v2 = v2, v1
+            if v1 >= 0:
+                # finite ridge: already in the region
+                continue
+
+            # Compute the missing endpoint of an infinite ridge
+
+            t = vor.points[p2] - vor.points[p1] # tangent
+            t /= numpy.linalg.norm(t)
+            n = numpy.array([-t[1], t[0]])  # normal
+
+            midpoint = vor.points[[p1, p2]].mean(axis=0)
+            direction = numpy.sign(numpy.dot(midpoint - center, n)) * n
+            far_point = vor.vertices[v2] + direction * radius
+
+            new_region.append(len(new_vertices))
+            new_vertices.append(far_point.tolist())
+
+        # sort region counterclockwise
+        vs = numpy.asarray([new_vertices[v] for v in new_region])
+        c = vs.mean(axis=0)
+        angles = numpy.arctan2(vs[:,1] - c[1], vs[:,0] - c[0])
+        new_region = numpy.array(new_region)[numpy.argsort(angles)]
+
+        # finish
+        new_regions.append(new_region.tolist())
+
+    regions, imvertices = new_regions, numpy.asarray(new_vertices)
+    #return new_regions, numpy.asarray(new_vertices)
+
+    ## now force them to be in the bounding box
+    poly = numpy.asarray([imvertices[v] for v in regions])
+
+    newpoly = []
+    fov_shape = shapely.geometry.Polygon(fov_poly)
+
+    for p in poly:
+        p1 = shapely.geometry.Polygon(p)
+        if p1.intersects(fov_shape):
+            p1 = p1.intersection(fov_shape)
+        xyverts = numpy.array([[xp, yp] for xp, yp in
+                    zip(p1.exterior.coords.xy[0].tolist(),
+                    p1.exterior.coords.xy[1].tolist())])
+        newpoly.append(xyverts)
+            
+        
+        #polyPath = mplPath.Path(p)
+        #newpolyPath = polyPath.clip_to_bbox(fovpath)
+        #pp = newpolyPath.vertices.transpose()
+        #newpoly.append(pp.transpose())
+
+    return numpy.asarray(newpoly)
+
+
 def make_facet_mask(imname, maskout, region, pad=True, edge=25):
 
     os.system('rm -rf ' + maskout)
@@ -546,7 +669,7 @@ def make_facet_mask(imname, maskout, region, pad=True, edge=25):
     return
 
 
-def add_facet_mask(maskout, region, value, direction, size,  lowres=15., actualres=1.5):
+def add_facet_mask(maskout, region, value, direction, size,  lowres=15., actualres=1.5, edge=None):
     print "adding facet to " + maskout +" s"+str(value)+ " ("+str(size)+")"
 
     #os.system('rm -rf ' + maskout)
@@ -589,6 +712,13 @@ def add_facet_mask(maskout, region, value, direction, size,  lowres=15., actualr
 
     D = int(size*actualres/lowres)/2
     #print D
+    
+    # handle the margin dealing with wsclean aliasing
+    if edge is not None:
+        Dedge = int(edge*actualres/lowres)/2
+    else:
+        Dedge = 0
+    D  -= Dedge
 
     ## do the facet image mask
     imgmaskbox = Image.new('L', (sh[2], sh[3]), 0)
@@ -624,7 +754,7 @@ def add_facet_mask(maskout, region, value, direction, size,  lowres=15., actualr
     #pl.imshow(mask*imagefacetmaskmask)
     #pl.show()
     #print thismask
-    addmask = mask
+    addmask = mask.copy()
     addmask[~thismask] *= 0
 
     #new_facetmask = facetmask == 0
@@ -904,7 +1034,7 @@ def find_newsize_centre_lowresfacets(facetmap, region, direction, source, maxsiz
     return new_position, new_real_span
 
 
-def find_newsize_lowresfacets(facetmap, region, direction, source, maxsize=6400, lowres=15., actualres=1.5, debug=True, findedge=None, edge=25):
+def find_newsize_lowresfacets(facetmap, region, direction, source, maxsize=6400, lowres=15., actualres=1.5, debug=False, findedge=None, edge=25):
 
 #if 1:
 
@@ -1023,36 +1153,41 @@ def write_casapy_region(regfile, polygon, name):
     return
 
 
-def write_ds9_region(regfile, polygon, name):
+def write_ds9_region(regfile, polygon, name,ra,dec):
     s= '''global color=green dashlist=8 3 width=1 font="helvetica 10 normal roman" select=1 highlite=1 dash=0 fixed=0 edit=1 move=1 delete=1 include=1 source=1
 fk5
 '''
     s += 'polygon('
     dirs = ['{ra},{dec}'.format(ra=ra_to_str(p[0]), dec=dec_to_str(p[1])) for p in polygon]
     s += ', '.join(dirs)
-    s += r')# text={'
-    s+= '{name}'.format(name=name)
-    s+= r'} '+'\n'
+    s += r')'+'\n'
+    s += 'point({ra},{dec}) # point=cross text='.format(ra=ra_to_str(ra),dec=dec_to_str(dec))+'{'+name+'}' +'\n'
     with open(regfile,'w') as f:
         f.write(s)
     return
 
 
-def write_ds9_allregions(regfile, polygons, names):
+def write_ds9_allregions(regfile, polygons, names, directions):
     s= '''global color=green dashlist=8 3 width=1 font="helvetica 10 normal roman" select=1 highlite=1 dash=0 fixed=0 edit=1 move=1 delete=1 include=1 source=1
 fk5
 '''
 
     with open(regfile,'w') as f:
         f.write(s)
+        i=0
         for polygon, name in zip(polygons,names):
+            d = directions[i]
+            C = d.split(',')
+            ra = ra_to_degrees(C[0],delim='h')
+            dec = dec_to_degrees(C[1],delim='d')
+            
             s = 'polygon('
             dirs = ['{ra},{dec}'.format(ra=ra_to_str(p[0]), dec=dec_to_str(p[1])) for p in polygon]
             s += ', '.join(dirs)
-            s += r')# text={'
-            s+= '{name}'.format(name=name)
-            s+= r'} '+'\n'
+            s += r')'+'\n'
+            s += 'point({ra},{dec}) # point=cross text='.format(ra=ra_to_str(ra),dec=dec_to_str(dec))+'{'+name+'}' +'\n'
             f.write(s)
+            i +=1
     return
 
 
@@ -1085,6 +1220,11 @@ if __name__=='__main__':
         edge_scale
     except NameError:
         edge_scale=None
+        
+    try:
+        clip_at_beam
+    except NameError:
+        clip_at_beam = False
 
     source_info_rec = numpy.genfromtxt(peelsourceinfo, \
                                        dtype="S50,S25,S5,S5,i8,i8,i8,i8,S2,S255,S255,S255,S5", \
@@ -1160,6 +1300,25 @@ if __name__=='__main__':
 
     ra0,dec0 = image_centre(dummy_image)
 
+    x0,y0 = image_world_to_image(dummy_image,[ra0],[dec0])
+    x0 = x0[0]
+    y0 = y0[0]
+    
+    
+    try:
+        facet_radius_scale
+    except:
+        facet_radius_scale = 1.5
+    
+    faceting_radius_pix = facet_radius_scale*rad[0]*3600. / lowresolution  # radius in pixels
+    fx = []
+    fy = []
+    for th in range(0, 360, 1):
+        fx.append(faceting_radius_pix * numpy.cos(th * numpy.pi / 180.0) + x0)
+        fy.append(faceting_radius_pix * beam_ratio * numpy.sin(th * numpy.pi / 180.0) + y0)
+    fov_poly = numpy.array([(xp, yp) for xp, yp in zip(fx, fy)])
+
+
     #tesselate#
     print "doing tesselation"
     ra,dec = dir2pos(directions)
@@ -1175,9 +1334,15 @@ if __name__=='__main__':
     # use the image coordinates - as the non-linear sky is handled properly
     vor = Voronoi(numpy.array((x, y)).transpose())
 
-    # convert the voronoi object into something useful (array of regions, truncated to imagesize)
-    # impoly is an array of (n,2) arrays defining the polygon region
-    impoly = voronoi_finite_polygons_2d_box(vor, box)
+    
+    if clip_at_beam:
+        #truncate the tesselation at the fov
+        impoly = voronoi_finite_polygons_2d_shape(vor, fov_poly)
+
+    else:
+        # convert the voronoi object into something useful (array of regions, truncated to imagesize)
+        # impoly is an array of (n,2) arrays defining the polygon region
+        impoly = voronoi_finite_polygons_2d_box(vor, box)
 
     # convert image coordinates of regions to
     worldpoly = []
@@ -1243,6 +1408,17 @@ if __name__=='__main__':
         os.system('rm -rf {im2}'.format(im2=facet_image_name))
         os.system('cp -r {im1} {im2}'.format(im1=dummy_image,im2=facet_image_name))
 
+        
+        
+        # half power point defines fov
+        fx = []
+        fy = []
+        for th in range(0, 360, 1):
+            fx.append(rad[0] * numpy.cos(th * numpy.pi / 180.0) + ra0)
+            fy.append(rad[0] * beam_ratio * numpy.sin(th * numpy.pi / 180.0) + dec0)
+        outlier_fov = numpy.array([(xp, yp) for xp, yp in zip(fx, fy)])
+        outlier_fov_path = mplTrans.Path(outlier_fov)
+
 
         outlierdist = rad[0]  # make it at 0.5 power point
         # set max sizes
@@ -1255,11 +1431,11 @@ if __name__=='__main__':
             dec = dec_to_degrees(C[1],delim='d')
             dist_from_pointing = angsep(ra,dec,ra0,dec0)
 
-
-            if dist_from_pointing > outlierdist:
-                sizes.append(maxoutliersize)
-            else:
+            # use the fov to decide if the facet is central or not - central facets should join ideally
+            if outlier_fov_path.contains_point([ra,dec]):
                 sizes.append(maxcentralsize)
+            else:
+                sizes.append(maxoutliersize)
 
 
         for source_id,source in enumerate(sourcelist):
@@ -1270,61 +1446,57 @@ if __name__=='__main__':
         show_facets(facet_image_name, directions, r=rad, beam_ratio=beam_ratio)
 
 
-    ## obsolete - never shift the facet centres
-    ## get smallest size possible - with shifting the facet centre
-    ## but use the max image size
-    #newpositionsshift = []
-    #newsizesshift = []
-    #for source_id,source in enumerate(sourcelist):
-        #new_pos, new_size = find_newsize_centre_lowresfacets(facet_image_name_huge, poly[source_id], directions[source_id], source, maxsize=max_fieldsize, lowres=lowresolution, actualres=resolution)
-        #newpositionsshift.append(new_pos)
-        #newsizesshift.append(new_size)
-
-
-    #for source_id,source in enumerate(sourcelist):
-        #print source, newsizesshift[source_id], newsizes[source_id], sizes[source_id]
-
-    #facet_image_name = 'facets_wide_shifted.image'
-    #os.system('rm -rf {im2}'.format(im2=facet_image_name))
-    #os.system('cp -r {im1} {im2}'.format(im1=dummy_image,im2=facet_image_name))
-    #for source_id,source in enumerate(sourcelist):
-        #value = int(source.replace('s',''))
-        #add_facet_mask(facet_image_name, poly[source_id], value, newpositionsshift[source_id], newsizesshift[source_id], lowres=lowresolution, actualres=resolution)
-    #show_facets(facet_image_name, directions, directions2=newpositionsshift, r=rad)
-
-
     reduce_sizes = True
     if reduce_sizes:
+        try: 
+            max_fieldsize
+        except:
+            print 'max_fieldsize, not used'
+            print 'using sizes from maxoutliersize and maxcentralsize'
+            
+        try:
+            debug
+        except:
+            debug = False
+
 
         print "reducing image sizes where possible"
 
         # get smallest size possible - without shifting the facet centre
+        # check for sizes smaller than allowed by central/outlier sizes
+        ####  deprecates max_fieldsize
         newsizes = []
         edges = []
         for source_id,source in enumerate(sourcelist):
-            new_size,new_edge = find_newsize_lowresfacets(facet_image_name_huge, poly[source_id], directions[source_id], source, maxsize=max_fieldsize, lowres=lowresolution, actualres=resolution, findedge=edge_scale)
+            
+            new_size,new_edge = find_newsize_lowresfacets(facet_image_name_huge, poly[source_id], directions[source_id], source, maxsize=sizes[source_id], lowres=lowresolution, actualres=resolution, findedge=edge_scale, debug=debug)
             newsizes.append(new_size)
             edges.append(new_edge)
 
-        facet_image_name = 'facets.image'
+        facet_image_name = 'facets_final.image'
         os.system('rm -rf {im2}'.format(im2=facet_image_name))
         os.system('cp -r {im1} {im2}'.format(im1=dummy_image,im2=facet_image_name))
         for source_id,source in enumerate(sourcelist):
             value = int(source.replace('s',''))
-	    print value, directions[source_id]
-            add_facet_mask(facet_image_name, poly[source_id], value, directions[source_id], newsizes[source_id], lowres=lowresolution, actualres=resolution)
+            add_facet_mask(facet_image_name, poly[source_id], value, directions[source_id], newsizes[source_id], lowres=lowresolution, actualres=resolution, edge=edges[source_id])
         show_facets(facet_image_name, directions, directions2=directions, r=rad, beam_ratio=beam_ratio)
 
 
     sizes = newsizes
     positions = directions
 
+    if numpy.any(numpy.array(newsizes) >= 6400):
+        print "WARNING You are using some large facets, you facet imaging may take a long time"
 
 
     for p,source in zip(poly,sourcelist):
-        write_ds9_region('peel_facet_{source}.reg'.format(source=source), p, source)
+        d = directions[source_id]
+        C = d.split(',')
+        ra = ra_to_degrees(C[0],delim='h')
+        dec = dec_to_degrees(C[1],delim='d')
+        write_ds9_region('peel_facet_{source}.reg'.format(source=source), p, source,ra,dec)
         write_casapy_region('peel_facet_{source}.rgn'.format(source=source), p, source)
-    write_ds9_allregions('peel_facets.reg', poly, sourcelist)
+    write_ds9_allregions('peel_facets.reg', poly, sourcelist, directions)
 
     #sys.exit()
 
@@ -1365,8 +1537,6 @@ if __name__=='__main__':
         tmpn  = ms.split('.')[0] +'_ndppp_avgphaseshift.'+source+'.parset'
         os.system('rm -rf '+tmpn)
 
-    #mask_cmds = ["casapy --nogui --nologfile -c ~/para/scripts/dde_weeren/bootes_hba/make_mask_from_region.py templatemask0_{source}  peel_facet_{source}.rgn templatemask0_{source}.masktmp False".format(source=source) for source in sourcelist]
-    #run_parallel(mask_cmds, nthreads=1,logs='auto')
 
     for source_id,source in enumerate(sourcelist):
         make_facet_mask("templatemask_{source}".format(source=source), "templatemask_{source}.masktmp".format(source=source), poly[source_id], pad=True, edge=edges[source_id])
