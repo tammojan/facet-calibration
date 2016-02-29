@@ -1410,17 +1410,17 @@ if __name__=='__main__':
 
         
         
+        outlierdist = rad[0]  # make it at 0.5 power point
         # half power point defines fov
         fx = []
         fy = []
         for th in range(0, 360, 1):
-            fx.append(rad[0] * numpy.cos(th * numpy.pi / 180.0) + ra0)
-            fy.append(rad[0] * beam_ratio * numpy.sin(th * numpy.pi / 180.0) + dec0)
+            fx.append(outlierdist * numpy.cos(th * numpy.pi / 180.0) + ra0)
+            fy.append(outlierdist * beam_ratio * numpy.sin(th * numpy.pi / 180.0) + dec0)
         outlier_fov = numpy.array([(xp, yp) for xp, yp in zip(fx, fy)])
         outlier_fov_path = mplTrans.Path(outlier_fov)
 
 
-        outlierdist = rad[0]  # make it at 0.5 power point
         # set max sizes
         sizes = []
         for source_id,source in enumerate(sourcelist):
