@@ -661,7 +661,7 @@ def make_facet_mask(imname, maskout, region, pad=True, edge=25):
     return
 
 
-def add_facet_mask(maskout, region, value, direction, size,  lowres=15., actualres=1.5):
+def add_facet_mask(maskout, region, value, direction, size,  lowres=15., actualres=1.5, edge=None):
     print "adding facet to " + maskout +" s"+str(value)+ " ("+str(size)+")"
 
     #os.system('rm -rf ' + maskout)
@@ -704,6 +704,13 @@ def add_facet_mask(maskout, region, value, direction, size,  lowres=15., actualr
 
     D = int(size*actualres/lowres)/2
     #print D
+    
+    # handle the margin dealing with wsclean aliasing
+    if edge is not None:
+        Dedge = int(edge*actualres/lowres)/2
+    else:
+        Dedge = 0
+    D  -= Dedge
 
     ## do the facet image mask
     imgmaskbox = Image.new('L', (sh[2], sh[3]), 0)
@@ -739,7 +746,7 @@ def add_facet_mask(maskout, region, value, direction, size,  lowres=15., actualr
     #pl.imshow(mask*imagefacetmaskmask)
     #pl.show()
     #print thismask
-    addmask = mask
+    addmask = mask.copy()
     addmask[~thismask] *= 0
 
     #new_facetmask = facetmask == 0
@@ -1450,12 +1457,12 @@ if __name__=='__main__':
             newsizes.append(new_size)
             edges.append(new_edge)
 
-        facet_image_name = 'facets.image'
+        facet_image_name = 'facets_final.image'
         os.system('rm -rf {im2}'.format(im2=facet_image_name))
         os.system('cp -r {im1} {im2}'.format(im1=dummy_image,im2=facet_image_name))
         for source_id,source in enumerate(sourcelist):
             value = int(source.replace('s',''))
-            add_facet_mask(facet_image_name, poly[source_id], value, directions[source_id], newsizes[source_id], lowres=lowresolution, actualres=resolution)
+            add_facet_mask(facet_image_name, poly[source_id], value, directions[source_id], newsizes[source_id], lowres=lowresolution, actualres=resolution, edge=edges[source_id])
         show_facets(facet_image_name, directions, directions2=directions, r=rad, beam_ratio=beam_ratio)
 
 
