@@ -423,7 +423,7 @@ def create_phaseshift_parset_formasks(msin, msout, source, direction):
     return ndppp_parset
 
 
-def create_phaseshift_parset_field(msin, msout, source, direction, numchanperms):
+def create_phaseshift_parset_field(msin, msout, source, direction, numchanperms, imsize):
     """
     Create a parset for the phase shift (for the individual MS? FIXME).
       field version (FIXME). The input column is "CORRECTED_DATA".
@@ -439,10 +439,23 @@ def create_phaseshift_parset_field(msin, msout, source, direction, numchanperms)
     Output:
       * The name of the output parset
     """
+    
     ndppp_parset = msin.split('.')[0] +'ndppp_avgphaseshift_field.parset'
     os.system('rm -f ' + ndppp_parset)
 
-    freqavg = numpy.int(numchanperms/5)
+    # start from 8192 and work down so the averaging is updated for smaller imsizes
+    if imsize <= 8192:
+       freqavg = numpy.int(numchanperms/20)
+       timeavg = 1
+
+    if imsize <= 4096:
+       freqavg = numpy.int(numchanperms/10)
+       timeavg = 2
+       
+    if imsize <= 2048:
+       freqavg = numpy.int(numchanperms/5)
+       timeavg = 3
+
 
     f=open(ndppp_parset, 'w')
     f.write('msin ="%s"\n' % msin)
@@ -455,7 +468,7 @@ def create_phaseshift_parset_field(msin, msout, source, direction, numchanperms)
     f.write('shift.phasecenter = [%s]\n' % direction)
     f.write('avg1.type = squash\n')
     f.write('avg1.freqstep = %s\n'% str(freqavg))
-    f.write('avg1.timestep = 3\n')
+    f.write('avg1.timestep = %s\n'% str(timeavg))
     f.close()
     return ndppp_parset
 
@@ -1493,6 +1506,8 @@ if __name__ == "__main__":
     numchanperms = freq_tab.getcol('NUM_CHAN')[0]
     logging.info('Number of channels per ms is {:d}'.format(numchanperms))
     freq_tab.close()
+    if numchanperms < 20: # to prevent problems with the averaging for the imfield images
+       raise Exception('Less than 20 channels per block, this is not supported')
 
     # check if skymodels are present
     for ms in mslist:
@@ -1816,9 +1831,10 @@ if __name__ == "__main__":
                         msavglist.append(ms.split('.')[0] + '.' + source + '.ms.avgfield')
 
                     b=bg(maxp=numcpu_ndppp_phaseshift)
+                    imsizef = image_size_from_mask(output_template_im +'.masktmp')
                     for ms_id, ms in enumerate(mslist):
                         parset = create_phaseshift_parset_field(ms, msavglist[ms_id], source,
-                                   directions[source_id], numchanperms)
+                                   directions[source_id], numchanperms, imsizef)
 
                         os.system('rm -rf ' + msavglist[ms_id])
                         b.run('NDPPP ' + parset)
