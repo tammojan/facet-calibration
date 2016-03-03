@@ -449,13 +449,16 @@ def create_phaseshift_parset_field(msin, msout, source, direction, numchanperms,
        timeavg = 1
 
     if imsize <= 4096:
-       freqavg = numpy.int(numchanperms/10)
+       freqavg = numpy.int(numchanperms/20)
        timeavg = 2
        
     if imsize <= 2048:
-       freqavg = numpy.int(numchanperms/5)
+       freqavg = numpy.int(numchanperms/10)
        timeavg = 3
 
+    if imsize <= 1024:
+       freqavg = numpy.int(numchanperms/5)
+       timeavg = 6
 
     f=open(ndppp_parset, 'w')
     f.write('msin ="%s"\n' % msin)
