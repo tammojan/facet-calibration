@@ -671,7 +671,7 @@ def get_group(thismslist):
     elif nms == 25:    group = "5,5,5,5,5"
     elif nms == 24:    group = "6,6,6,6"
     elif nms == 23:    group = "5,6,6,6"
-    elif nms == 22:    group = "5,5,6,6,"
+    elif nms == 22:    group = "5,5,6,6"
     elif nms == 21:    group = "5,5,5,6"
     elif nms == 20:    group = "5,5,5,5"
 
