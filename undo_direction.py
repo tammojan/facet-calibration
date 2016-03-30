@@ -51,7 +51,9 @@ if __name__ == "__main__":
     config = {}
     execfile(sys.argv[1])
 
-    mslist = ["{name:s}_SB{b1:03d}-{b2:03d}.{res:s}.ms".format(name=NAME,res=RES,b1=b,b2=b+9) for b in BANDS]
+    mslistorig = ["{name:s}_SB{b1:03d}-{b2:03d}.{res:s}.ms".format(name=NAME,res=RES,b1=b,b2=b+9) for b in BANDS]
+    
+    mslist = [ms for ms in mslistorig if os.path.exists(ms)]
 
     undo_direction(mslist)
 
