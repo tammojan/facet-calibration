@@ -61,9 +61,14 @@ def solplot_scalarphase(parmdb, imageroot, refstationi, plot_international=False
     phase_ref = soldict['CommonScalarPhase:{s}'.format(s=refstation)]['values']
     times= soldict['CommonScalarPhase:{s}'.format(s=refstation)]['times']
 
-    Nr = int(np.ceil(np.sqrt(Nstat)))
-    Nc = int(np.ceil(np.float(Nstat)/Nr))
-    f, ax = plt.subplots(Nr, Nc, sharex=True, sharey=True, figsize=(16,12))
+
+    #Nr = int(np.ceil(np.sqrt(Nstat)))
+    #Nc = int(np.ceil(np.float(Nstat)/Nr))
+
+    Nr = int(Nstat)
+    Nc = 1
+    
+    f, ax = plt.subplots(Nr, Nc, sharex=True, sharey=True, figsize=(12,72))
     axs = ax.reshape((Nr*Nc,1))
     for istat, station in enumerate(stationsnames):
         phase = soldict['CommonScalarPhase:{s}'.format(s=station)]['values']
@@ -116,9 +121,13 @@ def solplot_tec(parmdb, imageroot, refstationi, plot_international=False, freq=N
     phase_ref = soldict['CommonScalarPhase:{s}'.format(s=refstation)]['values']
     tec_ref = soldict['TEC:{s}'.format(s=refstation)]['values']
 
-    Nr = int(np.ceil(np.sqrt(Nstat)))
-    Nc = int(np.ceil(np.float(Nstat)/Nr))
-    f, ax = plt.subplots(Nr, Nc, sharex=True, sharey=True, figsize=(16,12))
+    #Nr = int(np.ceil(np.sqrt(Nstat)))
+    #Nc = int(np.ceil(np.float(Nstat)/Nr))
+
+    Nr = int(Nstat)
+    Nc = 1
+    
+    f, ax = plt.subplots(Nr, Nc, sharex=True, sharey=True, figsize=(12,72))
     axs = ax.reshape((Nr*Nc,1))
     ymin = 2
     ymax = 0
