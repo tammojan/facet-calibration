@@ -318,7 +318,7 @@ Nc = int(numpy.ceil(numpy.float(len(antenna_list))/Nr))
 
 
 
-if nchans < 7: # do 1D spline in this case
+if nchans < 1000: # do 1D spline in this case
  if plotting:
     fa, axa = plt.subplots(Nr, Nc, sharex=True, sharey=True, figsize=(16,12))
     axsa = axa.reshape((Nr*Nc,1)) 
