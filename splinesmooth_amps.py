@@ -297,7 +297,6 @@ instrument_name_smoothed = str(sys.argv[2]) # ouput
 
 
 
-pol_list = ['0:0','1:1']  # need to be updated to work with all four polarizations
 gain = 'Gain'
 
 pdb = lofar.parmdb.parmdb(instrument_name)
@@ -306,7 +305,19 @@ parms = pdb.getValuesGrid('*')
 key_names = parms.keys()
 nchans = len(parms[key_names[0]]['freqs'])
 
-#print parms[key_names[0]]['freqs']
+# determine the number of polarizations in parmdb (2 or 4)
+if any(gain+':0:1:' in s for s in key_names):
+   pol_list = ['0:0','1:1','0:1','1:0']
+else:
+  pol_list = ['0:0','1:1']
+
+print pol_list
+
+times = numpy.copy( parms[key_names[0]]['times'])
+freqs = numpy.copy( parms[key_names[0]]['freqs'])/1e6 # get this in MHz
+
+# times not used at the moment, I assume the time axis for a parmdb is regular and does not contain gaps
+times = (times - numpy.min(times))/24. #so we get an axis in hrs
 
 # Get station names
 antenna_list = set([s.split(':')[-1] for s in pdb.getNames()])
