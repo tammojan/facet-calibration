@@ -26,7 +26,7 @@ import matplotlib.image as mpimg
 plotting = True
 
 if plotting:
-  mpl.rc('font',size =8 )
+  mpl.rc('font',size =6 )
   mpl.rc('figure.subplot',left=0.05, bottom=0.05, right=0.95, top=0.95 )
 
 
@@ -88,6 +88,24 @@ def findscatter(datavector):
   #scatter = sum(abs(shifted_vec - datavector))/numpy.float(len(datavector))
   scatter = numpy.median(abs(shifted_vec - datavector))
   return scatter
+
+
+def findscatter_time(dataarray):
+  scattervec = []
+  for freq in range(0,len(dataarray[:,0])): 
+    #print 'findscatter_time', freq
+    scatter = findscatter(dataarray[freq,:])
+    scattervec.append(scatter)
+  return numpy.median(scattervec)
+
+def findscatter_freq(dataarray):
+  scattervec = []
+  for time in range(0,len(dataarray[0,:])):
+    #print 'findscatter_freq', time
+    scatter = findscatter(dataarray[:,time])
+    scattervec.append(scatter)
+  return numpy.median(scattervec)
+
 
 def findnoisevec(datavector):
   shifted_vec = numpy.roll(datavector, 1)
@@ -179,7 +197,7 @@ def spline1D(amp_orig):
              
   # filter bad data and determine average scatter of amplitudes
   idx = numpy.where(amp != 0.0) # log10(1.0) = 0.0
-  if len(idx) != 0:
+  if numpy.any(idx): # so we do not have an empty array    
     scatter = findscatter(amp[idx])
     # remove some really bad stuff, by putting weights to zero.
     idxbadi1 = numpy.where(amp > (numpy.median(amp) + (8.*std(amp)))) 
@@ -190,7 +208,7 @@ def spline1D(amp_orig):
     #sys.exit()
   else:
     scatter = 0.02 # just that we have a value to prevent crashes in case all amplitudes are 1.0
-    print 'No valid data for found for this anntenna'
+    print 'No valid data for found for this anntenna: ', antenna
 
 
   # make the noisevec
@@ -204,16 +222,21 @@ def spline1D(amp_orig):
     noisevec = (numpy.copy(amp) * 0.) + 1.0 # just make constant noise, if we have too little datapoints
 
   
+  #print scatter, antenna
+  
   if scatter < 0.005:
   #Interior knots t must satisfy Schoenberg-Whitney conditions
      scatter = 0.005 # otherwise we fit more parameters than we have data points
-  knotfactor = 0.4e3*scatter  # normalize based on trial and error
-             
+  knotfactor = 0.5e3*scatter  # normalize based on trial and error
+  
+  #print scatter, antenna, len(amp), knotfactor
   
   timevec = numpy.arange(0,len(amp))
   knotvec = f(numpy.int(len(amp)/knotfactor),len(amp))
   #print antenna, 'knots', knotvec, noisevec[knotvec]
-             
+  
+  #print 'knots OR', knotvec
+  
   # simple optimization knot selection for vectors that have at least 30 data points
   # based on the noisevector
   # removes even numbered knots if the noise is high
@@ -238,7 +261,7 @@ def spline1D(amp_orig):
     if scatter > 0.2:
       splineorder = 1 # very bad data
              
-  #print 'knots', knotvec
+  #print 'knots CL', knotvec
   spl2 = LSQUnivariateSpline(timevec, amp, knotvec, w=weights, k=splineorder)
 
   # now find bad data devatiating from the fit 30 x scatter 
@@ -307,14 +330,13 @@ nchans = len(parms[key_names[0]]['freqs'])
 
 # determine the number of polarizations in parmdb (2 or 4)
 if any(gain+':0:1:' in s for s in key_names):
-   pol_list = ['0:0','1:1','0:1','1:0']
+  pol_list = ['0:0','1:1','0:1','1:0']
 else:
   pol_list = ['0:0','1:1']
 
-print pol_list
 
-times = numpy.copy( parms[key_names[0]]['times'])
-freqs = numpy.copy( parms[key_names[0]]['freqs'])/1e6 # get this in MHz
+times = numpy.copy(sorted( parms[key_names[0]]['times']))
+freqs = numpy.copy(sorted( parms[key_names[0]]['freqs']))/1e6 # get this in MHz
 
 # times not used at the moment, I assume the time axis for a parmdb is regular and does not contain gaps
 times = (times - numpy.min(times))/24. #so we get an axis in hrs
@@ -329,7 +351,7 @@ Nc = int(numpy.ceil(numpy.float(len(antenna_list))/Nr))
 
 
 
-if nchans < 1000: # do 1D spline in this case
+if nchans < 66: # do 1D spline in this case
  if plotting:
     fa, axa = plt.subplots(Nr, Nc, sharex=True, sharey=True, figsize=(16,12))
     axsa = axa.reshape((Nr*Nc,1)) 
@@ -454,8 +476,20 @@ else:
  #plt.show()
  ##sys.exit()
 
+
+ freqs_orig = numpy.copy(freqs)
+ if plotting:
+    
+    Nr = len(antenna_list)
+    Nc = int(4)
+
+    fa, axa = plt.subplots(Nr, Nc, sharex=True, sharey=True, figsize=(8,108),)
+    axsa = axa.reshape((Nr*Nc,1)) 
+
  for pol in pol_list:
-        for antenna in sorted(antenna_list)[::-1]:
+        for istat, antenna in enumerate(sorted(antenna_list)[::-1]):
+	#for istat, antenna in enumerate(['CS001HBA0','RS208HBA']):
+	  
             channel_parms_real = [parms[gain + ':' + pol + ':Real:'+ antenna]['values'][:, chan] for chan in range(nchans)]
             channel_parms_imag = [parms[gain + ':' + pol + ':Imag:'+ antenna]['values'][:, chan] for chan in range(nchans)]
 
@@ -463,7 +497,7 @@ else:
             channel_parms_real =  numpy.asarray(channel_parms_real)
             channel_parms_imag =  numpy.asarray(channel_parms_imag)
             amp_orig = numpy.sqrt(channel_parms_real[:]**2 + channel_parms_imag[:]**2)
-            print numpy.shape(amp_orig)
+            #print numpy.shape(amp_orig)
             orinal_size = numpy.shape(amp_orig)
             
             
@@ -471,80 +505,196 @@ else:
             amp_orig = numpy.pad(amp_orig, ((numpy.shape(amp_orig)[0],numpy.shape(amp_orig)[0]),\
 	               (numpy.shape(amp_orig)[1],numpy.shape(amp_orig)[1])),mode='reflect')
             
-            print numpy.shape(amp_orig)
+            #print freqs
+            # extending freq array (to avoid edge effects in spline fit)
+            #freqs_orig = numpy.copy(freqs)
+            freqs = numpy.array( [freqs_orig-(max(freqs_orig)-min(freqs_orig))-(freqs_orig[1]-freqs_orig[0]),freqs_orig,freqs_orig+(max(freqs_orig)-min(freqs_orig))+(freqs_orig[1]-freqs_orig[0])])
+            freqs = numpy.ndarray.flatten(freqs)
+            
+            #print freqs
+
+            #print numpy.shape(amp_orig)
             
             
             # ------
             amp = numpy.log10(amp_orig)
 
-            xsize  = numpy.shape(amp)[0]
-            ysize  = numpy.shape(amp)[1]
-            print '(xsize, ysize)', xsize, ysize
-            amp_transpose = numpy.transpose(amp)
+            # find the really bad stuff, remove that to prevent it fomr affecting the spline fit
+            #scatter = numpy.median(abs(  (numpy.roll((numpy.roll(amp,1,0)),1,1))  -amp))
+            #print 'overall scatter', scatter
+            # intialize the weights
+            weights = (0.*numpy.copy(amp)) + 1.
             
-            tx = numpy.linspace(0,numpy.shape(amp)[0]-1,numpy.shape(amp)[0])
-            ty = numpy.linspace(0,numpy.shape(amp)[1]-1,numpy.shape(amp)[1])
+
+           # remove some really bad stuff, by putting weights to 1e-10 (zero not allowed).
+            idxbadi1 = numpy.where(amp > (numpy.median(amp) + (8.*std(amp)))) 
+            weights[idxbadi1] = 1e-10 # small value, zero generates NaN in spline
+            idxbadi2 = numpy.where(amp < (numpy.median(amp) - (8.*std(amp))))
+            weights[idxbadi2] = 1e-10  # small value, zero generates NaN in spline
+            #print 'scatter', scatter,  numpy.median(amp), idxbadi
+
+            
+            print std(amp)
+            sys.exit()
+            
+            
+            xsize  = numpy.shape(amp)[0] # freq
+            ysize  = numpy.shape(amp)[1] # time
+            print '(3*xsize (freq), 3*ysize (time))', xsize, ysize
+            
+            # find the scatter
+            scatter_time=findscatter_time(amp)
+            scatter_freq=findscatter_freq(amp)
+            
+            print '(scatter_freq, scatter_time)', scatter_freq, scatter_time
+          
+            amp_transpose = numpy.transpose(amp)
+            weights_transpose = numpy.transpose(weights)
+            #tx = numpy.linspace(0,numpy.shape(amp)[0]-1,numpy.shape(amp)[0]) # freq axis
+            
+            tx = freqs # freq axis
+            ty = numpy.linspace(0,numpy.shape(amp)[1]-1,numpy.shape(amp)[1]) # time axis
+            
 
             domain = numpy.meshgrid(ty,tx)
             X, Y = domain
             
+
     
-            tx = numpy.linspace(0,xsize,5)[1:-1]  # this is the freq axis
-            ty = numpy.linspace(0,ysize,19)[1:-1]  # this is the time axis
-            korderx = 3 # freq direction
+            # knots along time axis min scatter
+            if scatter_time < 0.005:
+                 #Interior knots t must satisfy Schoenberg-Whitney conditions
+                 scatter_time = 0.005 # otherwise we fit more parameters than we have data points
+            knotfactor_time = 0.4e3*scatter_time  # normalize based on trial and error
+ 
+             # knots along freq axis min scatter
+            if scatter_freq < 0.005:
+                 #Interior knots t must satisfy Schoenberg-Whitney conditions
+                 scatter_freq = 0.005 # otherwise we fit more parameters than we have data points
+            knotfactor_freq = 0.4e3*scatter_freq  # normalize based on trial and error
+ 
+            #fbla = lambda m, n: [i*n//m + n//(2*m) for i in range(m)]
+            #knotvec_time = fbla(numpy.int(ysize/knotfactor_time),ysize)
+            knotvec_time = numpy.linspace(0,ysize,numpy.float(ysize)/knotfactor_time)
+            knotvec_freq = numpy.linspace(min(freqs),max(freqs),numpy.float(xsize)/knotfactor_freq)
+            print knotvec_time
+            print knotvec_freq
+            #print knotvec_time2
+            #sys.exit()
+            
+    
+            #tx = numpy.linspace(min(freqs),max(freqs),5)[1:-1]  # this is the freq axis 
+            #ty = numpy.linspace(0,ysize,19)[1:-1]  # this is the time axis
+            
+            
+            
+            #print freqs
+            #print freqs_orig
+            
+            # asign midpoint if not enough data points/20
+            if len (knotvec_time) < 3: # because we are working with a 3x larger mirrored array
+	      knotvec_time = numpy.array([ysize*0.25,ysize/2.,ysize*0.75])
+              print 'extending knotvec_time to', knotvec_time         
+            
+            if len (knotvec_freq) < 3: # because we are working with a 3x larger mirrored array
+              knotvec_freq = numpy.array([  numpy.mean(freqs[0:len(freqs_orig)])  , numpy.mean(freqs_orig),  
+                                            numpy.mean(freqs[2*len(freqs_orig):len(freqs)])  ])
+              print 'extending knotvec_freq to', knotvec_freq  
+
+            
+            #tx = knotvec_freq
+            #ty = knotvec_time
+            
+            
+            korderx = 5 # freq direction
+            
             kordery = 5 # time direction
             
 
-            print tx, ty
+
+            if len(knotvec_time) == 3 and scatter_time > 0.1:
+              kordery = 3 # reduce order, data is  bad
+              print 'getting in here1'
+              if scatter_time > 0.2:
+                kordery = 1 # very bad data
+            
+            if len(knotvec_freq) == 3 and scatter_freq > 0.1:
+              korderx = 3 # reduce order, data is  bad
+              print 'getting in here2'
+              if scatter_freq > 0.2:
+                korderx = 1 # very bad data
+
+            #print tx, ty
    
             X = X.ravel()
             Y = Y.ravel()
             Z = amp_transpose.ravel()
+            ww = weights_transpose.ravel()
             #print numpy.shape(Z), numpy.shape(amp_transpose.ravel())
             
-            # have to reverse ty, tx order here, not clear to me why, I confused the order X, Y and tranpose?
-            spl2 = LSQBivariateSpline(X, Y, Z, ty, tx, kx=korderx, ky=kordery)
+            # have to reverse ty, tx order here, not clear to me why, I confused the order X, Y and transpose?
+            spl2 = LSQBivariateSpline(X, Y, Z, knotvec_time, knotvec_freq, ww, kx=korderx, ky=kordery)
             #domain = numpy.meshgrid(xaxis,yaxis)
             #print numpy.shape(domain)
         
             img1D = spl2.ev(X,Y)
             img2D = numpy.reshape(img1D,(ysize,xsize))
             
-            padidx = [orinal_size[0],2*orinal_size[0],orinal_size[1],2*orinal_size[1]]
-            print padidx
             
-            plt.subplot(1,3,1)
+            
+            #plt.subplot(1,3,1)
             amp_orig = numpy.transpose(amp_orig)
             
             print  orinal_size
             print numpy.shape(amp_orig)
             print numpy.shape(amp_orig[orinal_size[1]:2*orinal_size[1],orinal_size[0]:2*orinal_size[0]])
             
-            plt.imshow(amp_orig[orinal_size[1]:2*orinal_size[1],orinal_size[0]:2*orinal_size[0]],interpolation='none',origin='lower',clim=(0.5, 1.5),aspect='auto')
-            plt.xlabel('freq')
-            plt.ylabel('time')
-            plt.title('Original')
+            im = axsa[4*istat][0].imshow(amp_orig[orinal_size[1]:2*orinal_size[1],orinal_size[0]:2*orinal_size[0]],interpolation='none',origin='lower',clim=(0.5, 1.5),aspect='auto')
+            
+            axsa[4*istat][0].set_xlabel('freq')
+            axsa[4*istat][0].set_ylabel('time')
+            axsa[4*istat][0].set_title('Original' + '    ' + antenna)
+      
          
+            #axa[istat].cbar_axes.colorbar(im)
+         
+         
+            #plt.xticks([int(j) for j in range(-4,5)])
+            #for label in plt.xticklabels() + plt.yticklabels():
+            #    label.fontsize(15)
+
+     
             
-            plt.subplot(1,3,2)
-            plt.imshow(10**(img2D[orinal_size[1]:2*orinal_size[1],orinal_size[0]:2*orinal_size[0]]),interpolation='none',origin='lower',aspect='auto', clim=(0.5,1.5))            
-            plt.xlabel('freq')
-            plt.ylabel('time')
-            plt.title('2D spline fit')
+            #plt.subplot(1,3,2)
+            axsa[4*istat+1][0].imshow(10**(img2D[orinal_size[1]:2*orinal_size[1],orinal_size[0]:2*orinal_size[0]]),interpolation='none',origin='lower',aspect='auto', clim=(0.5,1.5))            
+            axsa[4*istat+1][0].set_xlabel('freq')
+            axsa[4*istat+1][0].set_ylabel('time')
+            axsa[4*istat+1][0].set_title('2D spline fit')
             
             
-            plt.subplot(1,3,3)
-            plt.imshow(abs((10**(img2D[orinal_size[1]:2*orinal_size[1],orinal_size[0]:2*orinal_size[0]]))-\
+            #plt.subplot(1,3,3)
+            axsa[4*istat+2][0].imshow(abs((10**(img2D[orinal_size[1]:2*orinal_size[1],orinal_size[0]:2*orinal_size[0]]))-\
 	              (amp_orig[orinal_size[1]:2*orinal_size[1],orinal_size[0]:2*orinal_size[0]])),interpolation='none',origin='lower',clim=(0.0, 0.3),aspect='auto')
             
-            plt.xlabel('freq')
-            plt.ylabel('time')
-            plt.title('2D spline fit')
+            axsa[4*istat+2][0].set_xlabel('freq')
+            axsa[4*istat+2][0].set_ylabel('time')
+            axsa[4*istat+2][0].set_title('abs(Residual)')
+            #plt.colorbar()
+        
+        
+            axsa[4*istat+3][0].imshow((weights_transpose[orinal_size[1]:2*orinal_size[1],orinal_size[0]:2*orinal_size[0]]),\
+	                              interpolation='none',origin='lower',clim=(0.0, 2.0),aspect='auto', cmap='gnuplot')
             
-            plt.show()
+            axsa[4*istat+3][0].set_xlabel('freq')
+            axsa[4*istat+3][0].set_ylabel('time')
+            axsa[4*istat+3][0].set_title('abs(Residual)')
+        
+            #amp = numpy.copy(numpy.log10(amp))
+        plt.show()
+        fa.tight_layout()    
+        fa.savefig('test.png')
+            #sys.exit()
             
-            sys.exit()
-            amp = numpy.copy(numpy.log10(amp))
             
           
             
