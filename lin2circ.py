@@ -38,6 +38,8 @@ Version 1.1 (18 March 2012) adds update of POLARIZATION table
 Version 1.2 (July 6, 2012) - added inverse capability, convert from circular
 to linear polarization.
 
+Version 1.3 (2014, Reinout van Weeren)) - corrected the flux error, factor of 0.5 (/2) was missing. Added option to convert back from circular to linear
+
 Since the transformation matrices are hermitian, C_A ^-1 = C+_A and C+_A^-1 = C_A.
 So, we have: 
 
