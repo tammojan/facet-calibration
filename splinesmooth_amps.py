@@ -119,7 +119,7 @@ def findnoisevec(datavector):
 def spline1D(amp_orig):
   # to compute knot points
   f = lambda m, n: [i*n//m + n//(2*m) for i in range(m)]
-  
+    
   # expand array and mirror full array around edges
   ndata = len(amp_orig)
   amp = numpy.zeros(ndata+2*ndata)
@@ -134,6 +134,7 @@ def spline1D(amp_orig):
     amp[ndata+ndata+i] = amp_orig[idx]
 
   # work in log-sapce
+  amp_orig_ext = numpy.copy(amp)
   amp = numpy.log10(amp)
   weights = (0.*numpy.copy(amp)) + 1 # initialize weights to 1           
              
@@ -143,12 +144,10 @@ def spline1D(amp_orig):
   if numpy.any(idx): # so we do not have an empty array    
     scatter = findscatter(amp[idx])
     # remove some really bad stuff, by putting weights to zero.
-    idxbadi1 = numpy.where(amp > (numpy.median(amp) + (8.*std(amp)))) 
+    idxbadi1 = numpy.where(amp > (numpy.median(amp) + (35.*std(amp)))) 
     weights[idxbadi1] = 1e-10 # small value, zero generates NaN in spline
-    idxbadi2 = numpy.where(amp < (numpy.median(amp) - (8.*std(amp))))
+    idxbadi2 = numpy.where(amp < (numpy.median(amp) - (35.*std(amp))))
     weights[idxbadi2] = 1e-10  # small value, zero generates NaN in spline
-    #print 'scatter', scatter,  numpy.median(amp), idxbadi2,idxbadi1
-    #sys.exit()
   else:
     scatter = 0.02 # just that we have a value to prevent crashes in case all amplitudes are 1.0
     #print 'No valid data for found for this anntenna: ', antenna
@@ -206,7 +205,7 @@ def spline1D(amp_orig):
              
   #print 'knots CL', knotvec
   spl2 = LSQUnivariateSpline(timevec, amp, knotvec, w=weights, k=splineorder)
-
+  
   # now find bad data devatiating from the fit 30 x scatter 
   residual = numpy.abs(spl2(timevec)-amp)
   idx      = numpy.where(residual > 15.*scatter)
@@ -220,6 +219,8 @@ def spline1D(amp_orig):
   residual = numpy.abs(spl2(timevec)-amp)
   idx      = numpy.where(residual > 8.*scatter)
   
+
+  
   # third iteration
   if numpy.any(idx):
     ampcopy = numpy.copy(amp)
@@ -232,12 +233,17 @@ def spline1D(amp_orig):
   # replace the bad data with model
   model    =spl2(timevec)
   
+ 
   #if len(idx) != 0:
   amp[idx] = model[idx]
 
   # go out of log-space
+  
+
+  #idxnodata = numpy.where(amp_orig_ext == 1.0)
+  #amp[idxnodata] = 0.0 # to avoid problem with amplitudes that are 1.0
   amp = 10**amp
- 
+  
   amp_clean = amp[ndata:ndata + ndata]
     
   idxbad = numpy.where(amp_clean != amp_orig)      
@@ -288,7 +294,6 @@ def median2Dampfilter(amp):
   amp_cleaned = 10**amp_cleaned
 
   #back to original size            
-  #amp = amp[orinal_size[0]:2*orinal_size[0],orinal_size[1]:2*orinal_size[1]]
   amp_median = amp_median[orinal_size[0]:2*orinal_size[0],orinal_size[1]:2*orinal_size[1]]
   baddata   = baddata[orinal_size[0]:2*orinal_size[0],orinal_size[1]:2*orinal_size[1]]
   amp_cleaned = amp_cleaned[orinal_size[0]:2*orinal_size[0],orinal_size[1]:2*orinal_size[1]]
@@ -307,7 +312,7 @@ def median2Dampfilter(amp):
 
 
 
-plotting = False
+plotting = True
 normalize = False
 
 
@@ -384,6 +389,7 @@ for pol in pol_list:
 		amp_orig = numpy.sqrt(channel_parms_real[chan]**2 + channel_parms_imag[chan]**2)
                 phase = numpy.arctan2(channel_parms_imag[chan], channel_parms_real[chan]**2)
                 # now find the bad data
+                #print antenna, pol, chan
 		amp_cleaned, model, noisevec, scatter, n_knots, idxbad, weights = spline1D(amp_orig)
 		
 		# put back the results
@@ -400,7 +406,7 @@ for pol in pol_list:
 		timevec = numpy.arange(0,len(amp_orig))
 		
 		# only plot channel, just to verify code works
-		if plotting and chan == nchans-1: # plot last channel
+		if plotting and chan == 3: #nchans-1: # plot last channel
 		  axsa[istat][0].plot(timevec,amp_cleaned,  marker=fmt, ls=ls, markersize=0.1*len(amp_cleaned), c=cc,mec=cc)
 		  axsa[istat][0].plot(timevec,noisevec, c=cc, lw=0.75, ls='--')
 		  
