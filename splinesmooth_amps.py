@@ -1,5 +1,6 @@
 """
 Script to smooth and normalize amplitude solutions
+Reinout van Weeren, April 2016
 """
 import argparse
 from argparse import RawTextHelpFormatter
@@ -8,20 +9,16 @@ import numpy
 import os
 import lofar.parmdb
 import math
-import scipy.signal
 import shutil
 import multiprocessing
 import itertools
 import matplotlib.pyplot as plt
-from scipy.interpolate import UnivariateSpline
 from scipy.interpolate import LSQUnivariateSpline
-from scipy.interpolate import LSQBivariateSpline
 import sys
-from scipy.signal import medfilt
-import scipy.ndimage #.filters.median_filter
+import scipy.ndimage 
 import astropy.convolution
 import matplotlib as mpl
-import matplotlib.image as mpimg
+
 
 def std(inputData, Zero=False, axis=None, dtype=None):
 	"""
