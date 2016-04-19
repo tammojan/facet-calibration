@@ -403,7 +403,7 @@ for pol in pol_list:
 		timevec = numpy.arange(0,len(amp_orig))
 		
 		# only plot channel, just to verify code works
-		if plotting and chan == 3: #nchans-1: # plot last channel
+		if plotting and chan == nchans-1: # plot last channel
 		  axsa[istat][0].plot(timevec,amp_cleaned,  marker=fmt, ls=ls, markersize=0.1*len(amp_cleaned), c=cc,mec=cc)
 		  axsa[istat][0].plot(timevec,noisevec, c=cc, lw=0.75, ls='--')
 		  
