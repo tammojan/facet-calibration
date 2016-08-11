@@ -21,17 +21,50 @@ def make_image(ra,dec,data,cdelt):
 
 def load_bbs_skymodel(infilename):
     tmp_input = infilename + '.tmp'
+    
+    # Read the first line to check if the new format is used
+    with open(infilename, "r") as skymodel:
+        line = skymodel.readline()
+    
+    if line.startswith("FORMAT"): # New format
+        with open(infilename, "r") as skymodel, open(tmp_input, "w") as temp_file:
+            for line in skymodel:
+                if line.startswith("component"):
+                    temp_file.write(line)
+        types = numpy.dtype({'names':['Name', 'Type', 'Patch', 'Ra', 'Dec', 'I', 'Q', 'U', 'V'],
+                             'formats':['S100', 'S100', 'S100', 'S100', 'S100', 
+                                        numpy.float, numpy.float, numpy.float, numpy.float]})
+        data  = numpy.loadtxt(tmp_input, comments='format', unpack=True, delimiter=', ', dtype=types)
+        n = len(data[0])
+        additional_columns = [('Maj', numpy.float, 0.), 
+                              ('Min', numpy.float, 0.), 
+                              ('PA', numpy.float, 0.), 
+                              ('RefFreq', numpy.float, 1.5e+8), 
+                              ('Spidx', 'S100', '[0.0]')]
+        for column in additional_columns:
+            if column[2] == 0.:
+                tmp_col = numpy.zeros(n, dtype=column[1])
+                data.append(tmp_col)
+            elif column[2] != '[0.0]':
+                tmp_col = numpy.ones(n, dtype=column[1]) * column[2]
+                data.append(tmp_col)
+            else: 
+                tmp_col = numpy.empty(n, dtype=column[1])
+                tmp_col[:] = column[2]
+                data.append(tmp_col)
+        #print data.shape
+        
+    else: # Old format
+        # remove empty lines sed '/^$/d'
+        # remove format line grep -v 'format'
+        # remove comment lines  grep -v '#'
+        os.system("grep -v '00:00:00, +00.00.00' " + infilename+ " | grep -v '#' |  grep -v '00:00:00, +90.00.00' | grep -v 'format' | sed '/^$/d'>" + tmp_input) # to remove patches headers from skymodel
 
-    # remove empty lines sed '/^$/d'
-    # remove format line grep -v 'format'
-    # remove comment lines  grep -v '#'
-    os.system("grep -v '00:00:00, +00.00.00' " + infilename+ " | grep -v '#' |  grep -v '00:00:00, +90.00.00' | grep -v 'format' | sed '/^$/d'>" + tmp_input) # to remove patches headers from skymodel
-
-    types = numpy.dtype({'names':['Name', 'Type','Patch','Ra', 'Dec', 'I', 'Q', 'U', 'V', 'Maj', 'Min', 'PA', 'RefFreq', 'Spidx'],\
-           'formats':['S100','S100','S100','S100','S100',numpy.float,numpy.float,numpy.float,numpy.float,numpy.float,numpy.float,numpy.float,numpy.float,'S100']})
+        types = numpy.dtype({'names':['Name', 'Type','Patch','Ra', 'Dec', 'I', 'Q', 'U', 'V', 'Maj', 'Min', 'PA', 'RefFreq', 'Spidx'],\
+            'formats':['S100','S100','S100','S100','S100',numpy.float,numpy.float,numpy.float,numpy.float,numpy.float,numpy.float,numpy.float,numpy.float,'S100']})
 
 
-    data  = numpy.loadtxt(tmp_input, comments='format', unpack=True, delimiter=', ', dtype=types)
+        data  = numpy.loadtxt(tmp_input, comments='format', unpack=True, delimiter=', ', dtype=types)
     os.system('rm ' + tmp_input)
 
     return data
