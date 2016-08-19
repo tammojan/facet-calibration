@@ -743,15 +743,9 @@ def join_parmdb(ms, parmdb_selfcal, parmdb_nondde, parmdb_template, parmdb_out, 
 
     for pol in pol_list:
         for antenna in antenna_list:
-
-            real1 = numpy.copy(parms_p[gain + ':' + pol + ':Real:'+ antenna]['values'][:, 0])
-            imag1 = numpy.copy(parms_p[gain + ':' + pol + ':Imag:'+ antenna]['values'][:, 0])
-
             real2 = numpy.copy(parms_s[gain + ':' + pol + ':Real:'+ antenna]['values'][:, 0])
             imag2 = numpy.copy(parms_s[gain + ':' + pol + ':Imag:'+ antenna]['values'][:, 0])
 
-
-            G1 = real1 + 1j*imag1
             G2 = real2 + 1j*imag2
 
             #G_new = G_nondde*G_selfcal
@@ -759,6 +753,9 @@ def join_parmdb(ms, parmdb_selfcal, parmdb_nondde, parmdb_template, parmdb_out, 
             if TEC == "True":
                 Gnew = numpy.copy(G2)
             else:
+                real1 = numpy.copy(parms_p[gain + ':' + pol + ':Real:'+ antenna]['values'][:, 0])
+                imag1 = numpy.copy(parms_p[gain + ':' + pol + ':Imag:'+ antenna]['values'][:, 0])
+                G1 = real1 + 1j*imag1
                 Gnew = numpy.copy(G1*G2)
 
 
