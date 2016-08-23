@@ -236,7 +236,7 @@ def runbbs_diffskymodel_addback(mslist, parmdb, replacesource, direction, imsize
     return
 
 
-def runbbs_diffskymodel_addbackfield(mslist, parmdb, replacesource, direction, imsize, output_template_im, do_ap):
+def runbbs_diffskymodel_addbackfield(mslist, parmdb, replacesource, direction, imsize, output_template_im, do_ap, phase_solutions=False):
     """
     FIXME
     """
@@ -265,7 +265,7 @@ def runbbs_diffskymodel_addbackfield(mslist, parmdb, replacesource, direction, i
         logging.debug('Field source added back are: '+str(addback_sourcelist))
 
         if len(addback_sourcelist) != 0: # otherwise do not have to add
-            parset = create_add_parset_field_ms(addback_sourcelist, ms, do_ap)
+            parset = create_add_parset_field_ms(addback_sourcelist, ms, do_ap, phase_solutions=phase_solutions)
             if replacesource:
                 cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1'
             else:
@@ -553,7 +553,7 @@ def create_add_parset_field(source):
     return bbs_parset
 
 
-def create_add_parset_field_ms(source, ms, do_ap):
+def create_add_parset_field_ms(source, ms, do_ap, phase_solutions=False):
     """
     Create a parset to add sources to the individual MSs ? FIXME. field
       version FIXME.
@@ -577,7 +577,10 @@ def create_add_parset_field_ms(source, ms, do_ap):
     f.write('Strategy.Steps       = [add]\n\n\n')
     f.write('Step.add.Model.Sources                   = [%s]\n' % source)
     f.write('Step.add.Model.Cache.Enable              = T\n')
-    f.write('Step.add.Model.Phasors.Enable            = F\n')
+    if phase_solutions:
+        f.write('Step.add.Model.Phasors.Enable            = T\n')
+    else:
+        f.write('Step.add.Model.Phasors.Enable            = F\n')
     f.write('Step.add.Model.DirectionalGain.Enable    = F\n')
     if do_ap:
         f.write('Step.add.Model.Gain.Enable               = T\n')
@@ -1821,7 +1824,7 @@ if __name__ == "__main__":
                     ## STEP 3: prep for facet ##
                     parmdb_master_out="instrument_master_" + source
                     logging.info('Adding back rest of the field for DDE facet ' + source)
-                    runbbs_diffskymodel_addbackfield(mslist, 'instrument_ap_smoothed', True,  directions[source_id],imsizes[source_id], output_template_im, do_ap)
+                    runbbs_diffskymodel_addbackfield(mslist, 'instrument_ap_smoothed', True,  directions[source_id],imsizes[source_id], output_template_im, do_ap, phase_solutions=config["phase_solutions"])
 
                     logging.info('Correct field with self-cal instrument table')
                     if TEC=='True':
