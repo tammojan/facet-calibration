@@ -196,7 +196,7 @@ def create_predict_parset(outputcolumn):
     return bbs_parset
 
 
-def runbbs_diffskymodel_addback(mslist, parmdb, replacesource, direction, imsize, output_template_im, do_ap,maxcpu=None):
+def runbbs_diffskymodel_addback(mslist, parmdb, replacesource, direction, imsize, output_template_im, do_ap,maxcpu=None, phase_solutions=False):
     """
     FIXME
     """
@@ -220,7 +220,7 @@ def runbbs_diffskymodel_addback(mslist, parmdb, replacesource, direction, imsize
         logging.debug('Adding back for calibration: '+str(callist))
 
         if len(callist)>0: # otherwise do not have to add
-            parset = create_add_parset_ms(callist, ms, do_ap)
+            parset = create_add_parset_ms(callist, ms, do_ap, phase_solutions=phase_solutions)
             if replacesource:
                 cmd = 'calibrate-stand-alone --replace-sourcedb --parmdb-name ' + parmdb + ' ' + ms + ' ' + parset + ' ' + skymodel + '>' + log + ' 2>&1'
             else:
@@ -476,7 +476,7 @@ def create_phaseshift_parset_field(msin, msout, source, direction, numchanperms,
     return ndppp_parset
 
 
-def create_add_parset_ms(source, ms, do_ap):
+def create_add_parset_ms(source, ms, do_ap, phase_solutions=False):
     """
     Create a parset to add sources to the individual MSs.
     The name of the output parset depends on the input MS name and has
@@ -499,7 +499,10 @@ def create_add_parset_ms(source, ms, do_ap):
     f.write('Strategy.Steps       = [add]\n\n\n')
     f.write('Step.add.Model.Sources                   = [%s]\n' % source)
     f.write('Step.add.Model.Cache.Enable              = T\n')
-    f.write('Step.add.Model.Phasors.Enable            = F\n')
+    if phase_solutions:
+        f.write('Step.add.Model.Phasors.Enable            = T\n')
+    else:
+        f.write('Step.add.Model.Phasors.Enable            = F\n')
     f.write('Step.add.Model.DirectionalGain.Enable    = F\n')
     if do_ap:
         f.write('Step.add.Model.Gain.Enable               = T\n')
@@ -1214,7 +1217,8 @@ if __name__ == "__main__":
     # parms.update({"parm1":"value1"})
     config = {
         "selfcal_stefcal": "selfcalv20.py",
-        "selfcal": ""
+        "selfcal": "",
+        "phase_solutions": False,
         }
     
     
@@ -1653,9 +1657,9 @@ if __name__ == "__main__":
             logging.info('START: preSC')
             ## FIXME -- hard-wired CPU limit in what follows
             if len(mslist) > 32:
-                runbbs_diffskymodel_addback(mslist, 'instrument_ap_smoothed', True, directions[source_id],imsizes[source_id],output_template_im, do_ap, maxcpu=16)
+                runbbs_diffskymodel_addback(mslist, 'instrument_ap_smoothed', True, directions[source_id],imsizes[source_id],output_template_im, do_ap, maxcpu=16, phase_solutions=config["phase_solutions"])
             else:
-                runbbs_diffskymodel_addback(mslist, 'instrument_ap_smoothed', True, directions[source_id],imsizes[source_id],output_template_im, do_ap)
+                runbbs_diffskymodel_addback(mslist, 'instrument_ap_smoothed', True, directions[source_id],imsizes[source_id],output_template_im, do_ap, phase_solutions=config["phase_solutions"])
 
             ## average and phaseshift with NDPPP
             b=bg(maxp=numcpu_ndppp_phaseshift)
