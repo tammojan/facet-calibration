@@ -1687,7 +1687,7 @@ if __name__ == "__main__":
         if StartAtStep in ['preSC', 'doSC']:
             logging.info('START: doSC')
             # correct with amps and phases from selfcal, needs to be done here because CORRECTED_DATA needs to be reset for the selfcal
-            if do_ap:
+            if do_ap or config["phase_solutions"]:
                 runbbs_2(msavglist, mslist, dummyskymodel ,SCRIPTPATH+'/correct.parset','instrument_ap_smoothed')
 
             logging.info('selfcal started '+source)
